@@ -8,9 +8,11 @@ import {
 } from "@vis.gl/react-maplibre";
 import "maplibre-gl/dist/maplibre-gl.css"; // See notes below
 import { useState } from "react";
+import faultData from "./assets/philippines_faults_2020.json";
 import { Switch } from "./components/ui/switch";
 
 function App() {
+  console.log(faultData);
   const [showFault, setShowFault] = useState(true);
   const [mapIndex, setMapIndex] = useState(0);
   const MAP_STYLE: {
@@ -189,11 +191,7 @@ function App() {
         <ScaleControl />
         <NavigationControl />
         {showFault && (
-          <Source
-            id="my-data"
-            type="geojson"
-            data={"./src/assets/philippines_faults_2020.geojson"}
-          >
+          <Source id="my-data" type="geojson" data={faultData}>
             <Layer
               id="shapefile"
               type="line"
