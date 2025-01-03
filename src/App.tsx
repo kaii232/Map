@@ -1,13 +1,17 @@
 import {
+  Layer,
   Map,
   MapStyle,
   NavigationControl,
   ScaleControl,
+  Source,
 } from "@vis.gl/react-maplibre";
 import "maplibre-gl/dist/maplibre-gl.css"; // See notes below
 import { useState } from "react";
+import { Switch } from "./components/ui/switch";
 
 function App() {
+  const [showFault, setShowFault] = useState(true);
   const [mapIndex, setMapIndex] = useState(0);
   const MAP_STYLE: {
     style: MapStyle | string;
@@ -134,32 +138,44 @@ function App() {
 
   return (
     <main className="h-screen w-full">
-      <div className="absolute left-4 top-4 z-10 flex flex-col gap-2 rounded-xl bg-white p-4 shadow-md">
-        <span className="mb-2 text-xs font-medium text-zinc-700">
-          Basemap provider
-        </span>
-        {MAP_STYLE.map((style, index) => {
-          return (
-            <label className="min-w-fit grow" key={style.label}>
-              <input
-                type="radio"
-                name="map"
-                value={style.label}
-                defaultChecked={index === 0}
-                className="peer sr-only"
-                onClick={() => setMapIndex(index)}
-              />
-              <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 px-4 py-2 font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
-                <img
-                  src={style.img}
-                  className="h-20 w-full rounded-md"
-                  alt={style.label}
+      <div className="absolute left-4 top-4 z-10 flex flex-col gap-4">
+        <div className="flex flex-col gap-2 rounded-xl bg-white p-4 shadow-md">
+          <span className="mb-2 text-xs font-medium text-zinc-700">
+            Basemap provider
+          </span>
+          {MAP_STYLE.map((style, index) => {
+            return (
+              <label className="min-w-fit grow" key={style.label}>
+                <input
+                  type="radio"
+                  name="map"
+                  value={style.label}
+                  defaultChecked={index === 0}
+                  className="peer sr-only"
+                  onClick={() => setMapIndex(index)}
                 />
-                {style.label}
-              </div>
-            </label>
-          );
-        })}
+                <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 px-4 py-2 font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
+                  <img
+                    src={style.img}
+                    className="h-20 w-full rounded-md"
+                    alt={style.label}
+                  />
+                  {style.label}
+                </div>
+              </label>
+            );
+          })}
+        </div>
+        <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-md">
+          <label htmlFor="switch" className="text-xs font-medium text-zinc-700">
+            Show faults
+          </label>
+          <Switch
+            id="switch"
+            checked={showFault}
+            onCheckedChange={(e) => setShowFault(e)}
+          />
+        </div>
       </div>
       <Map
         initialViewState={{
@@ -172,6 +188,39 @@ function App() {
       >
         <ScaleControl />
         <NavigationControl />
+        {showFault && (
+          <Source
+            id="my-data"
+            type="geojson"
+            data={"./src/assets/philippines_faults_2020.geojson"}
+          >
+            <Layer
+              id="shapefile"
+              type="line"
+              paint={{
+                "line-color": "#f43f5e",
+                "line-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  1,
+                  15,
+                  6,
+                ],
+                "line-opacity": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  1,
+                  15,
+                  0.6,
+                ],
+              }}
+            />
+          </Source>
+        )}
       </Map>
     </main>
   );
