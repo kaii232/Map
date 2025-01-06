@@ -10,9 +10,16 @@ import {
   Source,
   useMap,
 } from "@vis.gl/react-maplibre";
-import "maplibre-gl/dist/maplibre-gl.css"; // See notes below
+import { ChevronsUpDown, Download } from "lucide-react";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useState } from "react";
-import faultData from "./assets/philippines_faults_2020.json";
+import faultData from "./assets/philippines_faults_2020.geojson";
+import { Button } from "./components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./components/ui/collapsible";
 import { Switch } from "./components/ui/switch";
 
 const MAP_STYLE: {
@@ -181,45 +188,61 @@ function App() {
 
   return (
     <main className="h-screen w-full">
-      <div className="absolute left-4 top-4 z-10 flex flex-col gap-4">
-        <div className="flex flex-col gap-2 rounded-xl bg-white p-4 shadow-md">
-          <span className="mb-2 text-xs font-medium text-zinc-700">
+      <Collapsible
+        className="absolute left-4 top-4 z-10 flex max-h-[calc(100vh-32px)] w-52 flex-col gap-4"
+        defaultOpen={false}
+      >
+        <div className="flex flex-col overflow-hidden rounded-xl bg-white p-2 shadow-md">
+          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md p-3 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
             Basemap provider
-          </span>
-          {MAP_STYLE.map((style, index) => {
-            return (
-              <label className="min-w-fit grow" key={style.label}>
-                <input
-                  type="radio"
-                  name="map"
-                  value={style.label}
-                  defaultChecked={index === 0}
-                  className="peer sr-only"
-                  onClick={() => setMapIndex(index)}
-                />
-                <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 px-4 py-2 font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
-                  <img
-                    src={style.img}
-                    className="h-20 w-full rounded-md"
-                    alt={style.label}
+            <ChevronsUpDown />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="flex shrink flex-col gap-2 overflow-auto data-[state=open]:p-1">
+            {MAP_STYLE.map((style, index) => {
+              return (
+                <label className="min-w-fit grow" key={style.label}>
+                  <input
+                    type="radio"
+                    name="map"
+                    value={style.label}
+                    defaultChecked={index === 0}
+                    className="peer sr-only"
+                    onClick={() => setMapIndex(index)}
                   />
-                  {style.label}
-                </div>
-              </label>
-            );
-          })}
+                  <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 px-4 py-2 font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
+                    <img
+                      src={style.img}
+                      className="h-20 w-full rounded-md"
+                      alt={style.label}
+                    />
+                    {style.label}
+                  </div>
+                </label>
+              );
+            })}
+          </CollapsibleContent>
         </div>
-        <div className="flex items-center justify-between rounded-xl bg-white p-4 shadow-md">
-          <label htmlFor="switch" className="text-xs font-medium text-zinc-700">
-            Show faults
-          </label>
-          <Switch
-            id="switch"
-            checked={showFault}
-            onCheckedChange={(e) => setShowFault(e)}
-          />
+        <div className="flex flex-col gap-2 rounded-xl bg-white p-4 shadow-md">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="switch"
+              className="text-xs font-medium text-zinc-700"
+            >
+              Show faults
+            </label>
+            <Switch
+              id="switch"
+              checked={showFault}
+              onCheckedChange={(e) => setShowFault(e)}
+            />
+          </div>
+          <Button asChild className="w-full">
+            <a href="./assets/philippines_faults_2020.geojson" download>
+              <Download /> Download
+            </a>
+          </Button>
         </div>
-      </div>
+      </Collapsible>
       <Map
         id="map"
         initialViewState={{
