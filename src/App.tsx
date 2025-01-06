@@ -10,9 +10,11 @@ import {
   Source,
   useMap,
 } from "@vis.gl/react-maplibre";
+import { Feature, FeatureCollection } from "geojson";
 import { ChevronsUpDown, Download } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useState } from "react";
+import volcanoes from "./assets/EOS_volcanoes.xlsx?sheetjs";
 import faultData from "./assets/philippines_faults_2020.geojson";
 import { Button } from "./components/ui/button";
 import {
@@ -185,6 +187,32 @@ function App() {
     },
     [hoverInfo, map],
   );
+  const xlsxToGeojson = (
+    input: Record<string, string | number>[],
+  ): FeatureCollection => {
+    const features: Feature[] = [];
+    for (let i = 0; i < input.length; i++) {
+      features.push({
+        type: "Feature",
+        properties: {
+          ...input[i],
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [
+            input[i].Longitude as number,
+            input[i].Latitude as number,
+          ],
+        },
+      });
+    }
+    return {
+      type: "FeatureCollection",
+      features: features,
+    };
+  };
+
+  const volcanoData = xlsxToGeojson(volcanoes);
 
   return (
     <main className="h-screen w-full">
@@ -257,6 +285,45 @@ function App() {
       >
         <ScaleControl />
         <NavigationControl />
+        <Source
+          id="volcanoSource"
+          type="geojson"
+          data={volcanoData}
+          promoteId="Volcano Number"
+        >
+          <Layer
+            id="volcanoes"
+            type="circle"
+            paint={{
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                5,
+                ["case", ["boolean", ["feature-state", "hover"], false], 4, 2],
+                15,
+                [
+                  "case",
+                  ["boolean", ["feature-state", "hover"], false],
+                  16,
+                  12,
+                ],
+              ],
+              "circle-opacity": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                5,
+                1,
+                15,
+                0.6,
+              ],
+              "circle-stroke-color": "#292524",
+              "circle-stroke-width": 1,
+              "circle-color": "#059669",
+            }}
+          />
+        </Source>
         {showFault && (
           <Source
             id="fault"
@@ -291,7 +358,6 @@ function App() {
                     6,
                   ],
                 ],
-                "line-width-transition": { duration: 500 },
                 "line-opacity": [
                   "interpolate",
                   ["linear"],
