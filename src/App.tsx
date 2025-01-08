@@ -236,7 +236,7 @@ function App() {
       }
     };
     addImages();
-  }, [map, mapIndex]);
+  }, [map]);
 
   return (
     <main className="h-screen w-full">
@@ -390,6 +390,8 @@ function App() {
               visibility: showVolcanoes ? "visible" : "none",
             }}
             paint={{
+              "text-halo-color": "#F8FAFCCC",
+              "text-halo-width": 2,
               "text-opacity": {
                 stops: [
                   [7, 0],
