@@ -407,14 +407,15 @@ function App() {
                 <div className="mb-2 text-lg font-semibold">
                   {hoverInfo.feature.properties.d_fname}
                 </div>
-                <div className="text-sm">
-                  <span className="font-semibold">ttcode:</span>{" "}
-                  {hoverInfo.feature.properties.d_ttcode}
-                </div>
-                <div className="text-sm">
-                  <span className="font-semibold">fccode:</span>{" "}
-                  {hoverInfo.feature.properties.d_fccode}
-                </div>
+                {Object.entries(hoverInfo.feature.properties).map(
+                  ([key, value]) => {
+                    return (
+                      <div className="text-sm">
+                        <span className="font-semibold">{key}:</span> {value}
+                      </div>
+                    );
+                  },
+                )}
               </>
             )}
             {hoverInfo.feature.layer.id === "volcanoes" && (
@@ -422,14 +423,15 @@ function App() {
                 <div className="mb-2 text-lg font-semibold">
                   {hoverInfo.feature.properties.VOLCANO}
                 </div>
-                <div className="text-sm">
-                  <span className="font-semibold">Classification:</span>{" "}
-                  {hoverInfo.feature.properties.Classification}
-                </div>
-                <div className="text-sm">
-                  <span className="font-semibold">Elevation (m):</span>{" "}
-                  {hoverInfo.feature.properties["Elevation (m)"]}
-                </div>
+                {Object.entries(hoverInfo.feature.properties).map(
+                  ([key, value]) => {
+                    return (
+                      <div className="text-sm">
+                        <span className="font-semibold">{key}:</span> {value}
+                      </div>
+                    );
+                  },
+                )}
               </>
             )}
           </Popup>
