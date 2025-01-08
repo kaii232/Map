@@ -8,6 +8,7 @@ import {
   Popup,
   ScaleControl,
   Source,
+  TerrainControl,
   useMap,
 } from "@vis.gl/react-maplibre";
 import { Feature, FeatureCollection } from "geojson";
@@ -156,6 +157,7 @@ function App() {
   const { map } = useMap();
   const [showFault, setShowFault] = useState(true);
   const [showVolcanoes, setShowVolcanoes] = useState(true);
+  const [showHillshade, setShowHillshade] = useState(true);
   const [hoverInfo, setHoverInfo] = useState<{
     feature: MapGeoJSONFeature;
     lng: number;
@@ -234,7 +236,7 @@ function App() {
       }
     };
     addImages();
-  }, [map]);
+  }, [map, mapIndex]);
 
   return (
     <main className="h-screen w-full">
@@ -310,6 +312,20 @@ function App() {
               <Download /> Download
             </a>
           </Button> */}
+          <Separator className="my-4" />
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="switch"
+              className="text-xs font-medium text-zinc-700"
+            >
+              Show hillshading
+            </label>
+            <Switch
+              id="switch"
+              checked={showHillshade}
+              onCheckedChange={(e) => setShowHillshade(e)}
+            />
+          </div>
         </div>
       </Collapsible>
       <Map
@@ -326,6 +342,32 @@ function App() {
       >
         <ScaleControl />
         <NavigationControl />
+        <TerrainControl source={"terrain"} exaggeration={1.5} />
+        <Source
+          id="terrain"
+          type="raster-dem"
+          tiles={[
+            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+          ]}
+          maxzoom={13}
+          tileSize={256}
+          encoding="terrarium"
+          terrain={{ source: "terrain", exaggeration: 1.5 }}
+          attribution={
+            "* ArcticDEM terrain data DEM(s) were created from DigitalGlobe, Inc., imagery and funded under National Science Foundation awards 1043681, 1559691, and 1542736;\n* Australia terrain data © Commonwealth of Australia (Geoscience Australia) 2017;\n* Austria terrain data © offene Daten Österreichs – Digitales Geländemodell (DGM) Österreich;\n* Canada terrain data contains information licensed under the Open Government Licence – Canada;\n* Europe terrain data produced using Copernicus data and information funded by the European Union - EU-DEM layers;\n* Global ETOPO1 terrain data U.S. National Oceanic and Atmospheric Administration\n* Mexico terrain data source: INEGI, Continental relief, 2016;\n* New Zealand terrain data Copyright 2011 Crown copyright (c) Land Information New Zealand and the New Zealand Government (All rights reserved);\n* Norway terrain data © Kartverket;\n* United Kingdom terrain data © Environment Agency copyright and/or database right 2015. All rights reserved;\n* United States 3DEP (formerly NED) and global GMTED2010 and SRTM terrain data courtesy of the U.S. Geological Survey."
+          }
+        >
+          <Layer
+            type="hillshade"
+            id="terrainHillshade"
+            paint={{
+              "hillshade-shadow-color": "#473B24",
+            }}
+            layout={{
+              visibility: showHillshade ? "visible" : "none",
+            }}
+          />
+        </Source>
         <Source
           id="volcanoSource"
           type="geojson"
@@ -416,7 +458,7 @@ function App() {
                 {Object.entries(hoverInfo.feature.properties).map(
                   ([key, value]) => {
                     return (
-                      <div className="text-sm">
+                      <div className="text-sm" key={key}>
                         <span className="font-semibold">{key}:</span> {value}
                       </div>
                     );
@@ -432,7 +474,7 @@ function App() {
                 {Object.entries(hoverInfo.feature.properties).map(
                   ([key, value]) => {
                     return (
-                      <div className="text-sm">
+                      <div className="text-sm" key={key}>
                         <span className="font-semibold">{key}:</span> {value}
                       </div>
                     );
