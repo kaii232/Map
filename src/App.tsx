@@ -11,18 +11,18 @@ import {
   useMap,
 } from "@vis.gl/react-maplibre";
 import { Feature, FeatureCollection } from "geojson";
-import { ChevronsUpDown, Download } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useState } from "react";
 import volcanoes from "./assets/EOS_volcanoes.xlsx?sheetjs";
 import faultData from "./assets/philippines_faults_2020.geojson";
 import volanoIcon from "./assets/volcano_icon.png";
-import { Button } from "./components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./components/ui/collapsible";
+import { Separator } from "./components/ui/separator";
 import { Switch } from "./components/ui/switch";
 
 const MAP_STYLE: {
@@ -286,11 +286,12 @@ function App() {
               onCheckedChange={(e) => setShowFault(e)}
             />
           </div>
-          <Button asChild className="w-full">
+          {/* <Button asChild className="w-full">
             <a href="./assets/philippines_faults_2020.geojson" download>
               <Download /> Download
             </a>
-          </Button>
+          </Button> */}
+          <Separator className="my-4" />
           <div className="flex items-center justify-between">
             <label
               htmlFor="switch"
@@ -304,6 +305,11 @@ function App() {
               onCheckedChange={(e) => setShowVolcanoes(e)}
             />
           </div>
+          {/* <Button asChild className="w-full">
+            <a href="./assets/EOS_volcanoes.xlsx" download>
+              <Download /> Download
+            </a>
+          </Button> */}
         </div>
       </Collapsible>
       <Map
