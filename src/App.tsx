@@ -13,9 +13,10 @@ import {
 import { Feature, FeatureCollection } from "geojson";
 import { ChevronsUpDown, Download } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import volcanoes from "./assets/EOS_volcanoes.xlsx?sheetjs";
 import faultData from "./assets/philippines_faults_2020.geojson";
+import volanoIcon from "./assets/volcano_icon.png";
 import { Button } from "./components/ui/button";
 import {
   Collapsible,
@@ -54,6 +55,7 @@ const MAP_STYLE: {
           source: "osm",
         },
       ],
+      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
     },
     label: "Openstreetmap",
     img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Soho_-_map_1.png/220px-Soho_-_map_1.png",
@@ -77,6 +79,7 @@ const MAP_STYLE: {
           source: "otm",
         },
       ],
+      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
     },
     label: "Opentopomap",
     img: "https://latlong.blog/img/blog/2023-10-02-tracestack-topo.webp",
@@ -102,6 +105,7 @@ const MAP_STYLE: {
           source: "esri",
         },
       ],
+      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
     },
     label: "Satellite",
     img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXhvrlM50ZXAuvt7S8uXh9My90_uTQf9cyYg&s",
@@ -141,6 +145,7 @@ const MAP_STYLE: {
           source: "oceanRef",
         },
       ],
+      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
     },
     label: "Ocean",
     img: "https://learn.arcgis.com/en/projects/find-ocean-bathymetry-data/GUID-FE9C4F4D-E9AA-46CD-9C3F-D7DB28FBCBCC-web.png",
@@ -150,6 +155,7 @@ const MAP_STYLE: {
 function App() {
   const { map } = useMap();
   const [showFault, setShowFault] = useState(true);
+  const [showVolcanoes, setShowVolcanoes] = useState(true);
   const [hoverInfo, setHoverInfo] = useState<{
     feature: MapGeoJSONFeature;
     lng: number;
@@ -166,19 +172,25 @@ function App() {
       if (hoveredFeature && map) {
         if (hoverInfo) {
           map.setFeatureState(
-            { source: "fault", id: hoverInfo.feature.id },
+            {
+              source: hoverInfo.feature.layer.source,
+              id: hoverInfo.feature.id,
+            },
             { hover: false },
           );
         }
         setHoverInfo({ feature: hoveredFeature, lng, lat });
         map.setFeatureState(
-          { source: "fault", id: hoveredFeature.id },
+          { source: hoveredFeature.layer.source, id: hoveredFeature.id },
           { hover: true },
         );
       } else if (map) {
         if (hoverInfo) {
           map.setFeatureState(
-            { source: "fault", id: hoverInfo.feature.id },
+            {
+              source: hoverInfo.feature.layer.source,
+              id: hoverInfo.feature.id,
+            },
             { hover: false },
           );
         }
@@ -213,6 +225,16 @@ function App() {
   };
 
   const volcanoData = xlsxToGeojson(volcanoes);
+
+  useEffect(() => {
+    const addImages = async () => {
+      if (map) {
+        const image = await map.loadImage(volanoIcon);
+        map.addImage("volcano_icon", image.data);
+      }
+    };
+    addImages();
+  }, [map]);
 
   return (
     <main className="h-screen w-full">
@@ -269,6 +291,19 @@ function App() {
               <Download /> Download
             </a>
           </Button>
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="switch"
+              className="text-xs font-medium text-zinc-700"
+            >
+              Show volcanoes
+            </label>
+            <Switch
+              id="switch"
+              checked={showVolcanoes}
+              onCheckedChange={(e) => setShowVolcanoes(e)}
+            />
+          </div>
         </div>
       </Collapsible>
       <Map
@@ -281,7 +316,7 @@ function App() {
         maxZoom={15}
         mapStyle={MAP_STYLE[mapIndex].style}
         onMouseMove={onHover}
-        interactiveLayerIds={["faultLines"]}
+        interactiveLayerIds={["faultLines", "volcanoes"]}
       >
         <ScaleControl />
         <NavigationControl />
@@ -293,23 +328,49 @@ function App() {
         >
           <Layer
             id="volcanoes"
-            type="circle"
+            type="symbol"
+            layout={{
+              "icon-image": "volcano_icon",
+              "text-field": ["get", "VOLCANO"],
+              "text-font": ["Noto Sans Regular"],
+              "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.3, 10, 1],
+              "text-offset": [0, 1],
+              "text-anchor": "top",
+              "text-size": 12,
+              "text-optional": true,
+              "icon-overlap": "always",
+              visibility: showVolcanoes ? "visible" : "none",
+            }}
             paint={{
-              "circle-radius": [
+              "text-opacity": {
+                stops: [
+                  [7, 0],
+                  [8, 1],
+                ],
+              },
+            }}
+          />
+        </Source>
+        <Source id="fault" type="geojson" data={faultData} promoteId="globalid">
+          <Layer
+            id="faultLines"
+            type="line"
+            layout={{
+              "line-cap": "round",
+              visibility: showFault ? "visible" : "none",
+            }}
+            paint={{
+              "line-color": "#f43f5e",
+              "line-width": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
                 5,
-                ["case", ["boolean", ["feature-state", "hover"], false], 4, 2],
+                ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
                 15,
-                [
-                  "case",
-                  ["boolean", ["feature-state", "hover"], false],
-                  16,
-                  12,
-                ],
+                ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
               ],
-              "circle-opacity": [
+              "line-opacity": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
@@ -318,59 +379,9 @@ function App() {
                 15,
                 0.6,
               ],
-              "circle-stroke-color": "#292524",
-              "circle-stroke-width": 1,
-              "circle-color": "#059669",
             }}
           />
         </Source>
-        {showFault && (
-          <Source
-            id="fault"
-            type="geojson"
-            data={faultData}
-            promoteId="globalid"
-          >
-            <Layer
-              id="faultLines"
-              type="line"
-              layout={{
-                "line-cap": "round",
-              }}
-              paint={{
-                "line-color": "#f43f5e",
-                "line-width": [
-                  "interpolate",
-                  ["linear"],
-                  ["zoom"],
-                  5,
-                  [
-                    "case",
-                    ["boolean", ["feature-state", "hover"], false],
-                    6,
-                    1,
-                  ],
-                  15,
-                  [
-                    "case",
-                    ["boolean", ["feature-state", "hover"], false],
-                    16,
-                    6,
-                  ],
-                ],
-                "line-opacity": [
-                  "interpolate",
-                  ["linear"],
-                  ["zoom"],
-                  5,
-                  1,
-                  15,
-                  0.6,
-                ],
-              }}
-            />
-          </Source>
-        )}
         {hoverInfo && (
           <Popup
             longitude={hoverInfo.lng}
@@ -386,21 +397,41 @@ function App() {
               right: [-12, 0],
             }}
             closeButton={false}
+            closeOnClick={false}
             className={
               "[&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
           >
-            <div className="mb-2 text-lg font-semibold">
-              {hoverInfo.feature.properties.d_fname}
-            </div>
-            <div className="text-sm">
-              <span className="font-semibold">ttcode:</span>{" "}
-              {hoverInfo.feature.properties.d_ttcode}
-            </div>
-            <div className="text-sm">
-              <span className="font-semibold">fccode:</span>{" "}
-              {hoverInfo.feature.properties.d_fccode}
-            </div>
+            {hoverInfo.feature.layer.id === "faultLines" && (
+              <>
+                <div className="mb-2 text-lg font-semibold">
+                  {hoverInfo.feature.properties.d_fname}
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold">ttcode:</span>{" "}
+                  {hoverInfo.feature.properties.d_ttcode}
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold">fccode:</span>{" "}
+                  {hoverInfo.feature.properties.d_fccode}
+                </div>
+              </>
+            )}
+            {hoverInfo.feature.layer.id === "volcanoes" && (
+              <>
+                <div className="mb-2 text-lg font-semibold">
+                  {hoverInfo.feature.properties.VOLCANO}
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold">Classification:</span>{" "}
+                  {hoverInfo.feature.properties.Classification}
+                </div>
+                <div className="text-sm">
+                  <span className="font-semibold">Elevation (m):</span>{" "}
+                  {hoverInfo.feature.properties["Elevation (m)"]}
+                </div>
+              </>
+            )}
           </Popup>
         )}
       </Map>
