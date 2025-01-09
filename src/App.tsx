@@ -232,11 +232,15 @@ function App() {
     const addImages = async () => {
       if (map) {
         const image = await map.loadImage(volanoIcon);
-        map.addImage("volcano_icon", image.data);
+        try {
+          map.addImage("volcano_icon", image.data);
+        } catch {
+          console.log("Image already exists");
+        }
       }
     };
     addImages();
-  }, [map]);
+  }, [map, mapIndex]);
 
   return (
     <main className="h-screen w-full">
@@ -333,7 +337,7 @@ function App() {
         initialViewState={{
           longitude: 110,
           latitude: 5,
-          zoom: 5,
+          zoom: 4.6,
         }}
         maxZoom={15}
         mapStyle={MAP_STYLE[mapIndex].style}
@@ -361,7 +365,9 @@ function App() {
             type="hillshade"
             id="terrainHillshade"
             paint={{
-              "hillshade-shadow-color": "#473B24",
+              "hillshade-shadow-color": "#17292b",
+              "hillshade-highlight-color": "#ebf0f5",
+              "hillshade-exaggeration": 0.4,
             }}
             layout={{
               visibility: showHillshade ? "visible" : "none",
