@@ -15,7 +15,8 @@ import { Feature, FeatureCollection } from "geojson";
 import { ChevronsUpDown } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useState } from "react";
-import volcanoes from "./assets/EOS_volcanoes.xlsx?sheetjs";
+import volcanoes from "./assets/EOS_volcanoes.xlsx";
+import earthquakes from "./assets/isc-ehb.csv";
 import faultData from "./assets/philippines_faults_2020.geojson";
 import volanoIcon from "./assets/volcano_icon.png";
 import {
@@ -157,6 +158,7 @@ function App() {
   const { map } = useMap();
   const [showFault, setShowFault] = useState(true);
   const [showVolcanoes, setShowVolcanoes] = useState(true);
+  const [showEarthquakes, setShowEarthquakes] = useState(true);
   const [showHillshade, setShowHillshade] = useState(true);
   const [hoverInfo, setHoverInfo] = useState<{
     feature: MapGeoJSONFeature;
@@ -226,7 +228,30 @@ function App() {
     };
   };
 
+  const csvToGeojson = (
+    input: Record<string, string | number>[],
+  ): FeatureCollection => {
+    const features: Feature[] = [];
+    for (let i = 0; i < input.length; i++) {
+      features.push({
+        type: "Feature",
+        properties: {
+          ...input[i],
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [input[i].lon as number, input[i].lat as number],
+        },
+      });
+    }
+    return {
+      type: "FeatureCollection",
+      features: features,
+    };
+  };
+
   const volcanoData = xlsxToGeojson(volcanoes);
+  const earthquakeData = csvToGeojson(earthquakes);
 
   useEffect(() => {
     const addImages = async () => {
@@ -322,6 +347,20 @@ function App() {
               htmlFor="switch"
               className="text-xs font-medium text-zinc-700"
             >
+              Show earthquakes
+            </label>
+            <Switch
+              id="switch"
+              checked={showEarthquakes}
+              onCheckedChange={(e) => setShowEarthquakes(e)}
+            />
+          </div>
+          <Separator className="my-4" />
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="switch"
+              className="text-xs font-medium text-zinc-700"
+            >
               Show hillshading
             </label>
             <Switch
@@ -342,7 +381,7 @@ function App() {
         maxZoom={15}
         mapStyle={MAP_STYLE[mapIndex].style}
         onMouseMove={onHover}
-        interactiveLayerIds={["faultLines", "volcanoes"]}
+        interactiveLayerIds={["faultLines", "volcanoes", "earthquakes"]}
       >
         <ScaleControl />
         <NavigationControl />
@@ -407,6 +446,62 @@ function App() {
             }}
           />
         </Source>
+        <Source
+          id="earthquakeSource"
+          type="geojson"
+          data={earthquakeData}
+          promoteId={"mw"}
+        >
+          <Layer
+            id="earthquakes"
+            type="circle"
+            layout={{ visibility: showEarthquakes ? "visible" : "none" }}
+            paint={{
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                8,
+                ["interpolate", ["exponential", 2], ["get", "mw"], 2, 2, 9, 16],
+                15,
+                [
+                  "interpolate",
+                  ["exponential", 2],
+                  ["get", "mw"],
+                  2,
+                  12,
+                  9,
+                  48,
+                ],
+              ],
+              "circle-stroke-width": 0,
+              "circle-opacity": 0.7,
+              "circle-color": [
+                "interpolate",
+                ["linear"],
+                ["get", "depth"],
+                4,
+                "#fff7ec",
+                8,
+                "#fee8c8",
+                16,
+                "#fdd49e",
+                32,
+                "#fdbb84",
+                64,
+                "#eb7c49",
+                128,
+                "#db5235",
+                256,
+                "#b52112",
+                512,
+                "#750606",
+                640,
+                "#120504",
+              ],
+            }}
+          />
+        </Source>
         <Source id="fault" type="geojson" data={faultData} promoteId="globalid">
           <Layer
             id="faultLines"
@@ -459,36 +554,23 @@ function App() {
             }
           >
             {hoverInfo.feature.layer.id === "faultLines" && (
-              <>
-                <div className="mb-2 text-lg font-semibold">
-                  {hoverInfo.feature.properties.d_fname}
-                </div>
-                {Object.entries(hoverInfo.feature.properties).map(
-                  ([key, value]) => {
-                    return (
-                      <div className="text-sm" key={key}>
-                        <span className="font-semibold">{key}:</span> {value}
-                      </div>
-                    );
-                  },
-                )}
-              </>
+              <div className="mb-2 text-lg font-semibold">
+                {hoverInfo.feature.properties.d_fname}
+              </div>
             )}
             {hoverInfo.feature.layer.id === "volcanoes" && (
-              <>
-                <div className="mb-2 text-lg font-semibold">
-                  {hoverInfo.feature.properties.VOLCANO}
-                </div>
-                {Object.entries(hoverInfo.feature.properties).map(
-                  ([key, value]) => {
-                    return (
-                      <div className="text-sm" key={key}>
-                        <span className="font-semibold">{key}:</span> {value}
-                      </div>
-                    );
-                  },
-                )}
-              </>
+              <div className="mb-2 text-lg font-semibold">
+                {hoverInfo.feature.properties.VOLCANO}
+              </div>
+            )}
+            {Object.entries(hoverInfo.feature.properties).map(
+              ([key, value]) => {
+                return (
+                  <div className="text-sm" key={key}>
+                    <span className="font-semibold">{key}:</span> {value}
+                  </div>
+                );
+              },
             )}
           </Popup>
         )}
