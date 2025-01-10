@@ -474,7 +474,15 @@ function App() {
                   48,
                 ],
               ],
-              "circle-stroke-width": 0,
+              "circle-stroke-width": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                8,
+                0,
+                13,
+                2,
+              ],
               "circle-opacity": 0.7,
               "circle-color": [
                 "interpolate",
