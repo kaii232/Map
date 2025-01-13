@@ -269,13 +269,13 @@ function App() {
 
   return (
     <main className="h-screen w-full">
-      <Collapsible
-        className="absolute left-4 top-4 z-10 flex max-h-[calc(100vh-32px)] w-52 flex-col gap-4"
-        defaultOpen={false}
-      >
-        <div className="flex flex-col overflow-hidden rounded-xl bg-white p-2 shadow-md">
+      <div className="absolute left-4 top-4 z-10 flex max-h-[calc(100vh-32px)] w-40 flex-col gap-3">
+        <Collapsible
+          defaultOpen={false}
+          className="flex flex-col overflow-hidden rounded-xl bg-white p-2 shadow-md"
+        >
           <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md p-3 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-            Basemap provider
+            Basemap
             <ChevronsUpDown />
           </CollapsibleTrigger>
           <CollapsibleContent className="flex shrink flex-col gap-2 overflow-auto data-[state=open]:p-1">
@@ -290,7 +290,7 @@ function App() {
                     className="peer sr-only"
                     onClick={() => setMapIndex(index)}
                   />
-                  <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 px-4 py-2 font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
+                  <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 p-2 font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
                     <img
                       src={style.img}
                       className="h-20 w-full rounded-md"
@@ -302,75 +302,81 @@ function App() {
               );
             })}
           </CollapsibleContent>
-        </div>
-        <div className="flex flex-col gap-2 rounded-xl bg-white p-4 shadow-md">
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="switch"
-              className="text-xs font-medium text-zinc-700"
-            >
-              Show faults
-            </label>
-            <Switch
-              id="switch"
-              checked={showFault}
-              onCheckedChange={(e) => setShowFault(e)}
-            />
-          </div>
-          {/* <Button asChild className="w-full">
+        </Collapsible>
+        <Collapsible className="flex flex-col rounded-xl bg-white p-2 shadow-md">
+          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md p-3 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+            Data overlay
+            <ChevronsUpDown />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="flex shrink flex-col gap-2 overflow-auto data-[state=open]:p-1">
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="switch"
+                className="text-xs font-medium text-zinc-700"
+              >
+                Faults
+              </label>
+              <Switch
+                id="switch"
+                checked={showFault}
+                onCheckedChange={(e) => setShowFault(e)}
+              />
+            </div>
+            {/* <Button asChild className="w-full">
             <a href="./assets/philippines_faults_2020.geojson" download>
               <Download /> Download
             </a>
           </Button> */}
-          <Separator className="my-4" />
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="switch"
-              className="text-xs font-medium text-zinc-700"
-            >
-              Show volcanoes
-            </label>
-            <Switch
-              id="switch"
-              checked={showVolcanoes}
-              onCheckedChange={(e) => setShowVolcanoes(e)}
-            />
-          </div>
-          {/* <Button asChild className="w-full">
+            <Separator className="my-4" />
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="switch"
+                className="text-xs font-medium text-zinc-700"
+              >
+                Volcanoes
+              </label>
+              <Switch
+                id="switch"
+                checked={showVolcanoes}
+                onCheckedChange={(e) => setShowVolcanoes(e)}
+              />
+            </div>
+            {/* <Button asChild className="w-full">
             <a href="./assets/EOS_volcanoes.xlsx" download>
               <Download /> Download
             </a>
           </Button> */}
-          <Separator className="my-4" />
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="switch"
-              className="text-xs font-medium text-zinc-700"
-            >
-              Show earthquakes
-            </label>
-            <Switch
-              id="switch"
-              checked={showEarthquakes}
-              onCheckedChange={(e) => setShowEarthquakes(e)}
-            />
-          </div>
-          <Separator className="my-4" />
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="switch"
-              className="text-xs font-medium text-zinc-700"
-            >
-              Show hillshading
-            </label>
-            <Switch
-              id="switch"
-              checked={showHillshade}
-              onCheckedChange={(e) => setShowHillshade(e)}
-            />
-          </div>
-        </div>
-      </Collapsible>
+            <Separator className="my-4" />
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="switch"
+                className="text-xs font-medium text-zinc-700"
+              >
+                Earthquakes
+              </label>
+              <Switch
+                id="switch"
+                checked={showEarthquakes}
+                onCheckedChange={(e) => setShowEarthquakes(e)}
+              />
+            </div>
+            <Separator className="my-4" />
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="switch"
+                className="text-xs font-medium text-zinc-700"
+              >
+                Hillshading
+              </label>
+              <Switch
+                id="switch"
+                checked={showHillshade}
+                onCheckedChange={(e) => setShowHillshade(e)}
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
       <Map
         id="map"
         initialViewState={{
