@@ -159,8 +159,8 @@ function App() {
   const [showFault, setShowFault] = useState(true);
   const [showVolcanoes, setShowVolcanoes] = useState(true);
   const [showEarthquakes, setShowEarthquakes] = useState(true);
-  const [showHillshade, setShowHillshade] = useState(true);
-  const [showSeafloor, setShowSeafloor] = useState(true);
+  const [showHillshade, setShowHillshade] = useState(false);
+  const [showSeafloor, setShowSeafloor] = useState(false);
   const [hoverInfo, setHoverInfo] = useState<{
     feature: MapGeoJSONFeature;
     lng: number;
@@ -408,6 +408,20 @@ function App() {
         <NavigationControl />
         <TerrainControl source={"terrain"} exaggeration={1.5} />
         <Source
+          id="seafloorSource"
+          type="raster"
+          tiles={[
+            "https://api.mapbox.com/v4/lance-ntu.seafloor/{z}/{x}/{y}.webp?access_token=sk.eyJ1IjoibGFuY2UtbnR1IiwiYSI6ImNtNXc2amQ1aTA1dzkyb3NjYzc3aXIzYmcifQ.KfY3J858jdlByiz_LgRu_w",
+          ]}
+        >
+          <Layer
+            type="raster"
+            id="seafloor"
+            paint={{ "raster-opacity": 0.7 }}
+            layout={{ visibility: showSeafloor ? "visible" : "none" }}
+          />
+        </Source>
+        <Source
           id="terrain"
           type="raster-dem"
           tiles={[
@@ -432,20 +446,6 @@ function App() {
             layout={{
               visibility: showHillshade ? "visible" : "none",
             }}
-          />
-        </Source>
-        <Source
-          id="seafloorSource"
-          type="raster"
-          tiles={[
-            "https://api.mapbox.com/v4/lance-ntu.seafloor/{z}/{x}/{y}.webp?access_token=sk.eyJ1IjoibGFuY2UtbnR1IiwiYSI6ImNtNXc2amQ1aTA1dzkyb3NjYzc3aXIzYmcifQ.KfY3J858jdlByiz_LgRu_w",
-          ]}
-        >
-          <Layer
-            type="raster"
-            id="seafloor"
-            paint={{ "raster-opacity": 0.7 }}
-            layout={{ visibility: showSeafloor ? "visible" : "none" }}
           />
         </Source>
         <Source
