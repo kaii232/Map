@@ -160,6 +160,7 @@ function App() {
   const [showVolcanoes, setShowVolcanoes] = useState(true);
   const [showEarthquakes, setShowEarthquakes] = useState(true);
   const [showHillshade, setShowHillshade] = useState(true);
+  const [showSeafloor, setShowSeafloor] = useState(true);
   const [hoverInfo, setHoverInfo] = useState<{
     feature: MapGeoJSONFeature;
     lng: number;
@@ -366,6 +367,20 @@ function App() {
                 htmlFor="switch"
                 className="text-xs font-medium text-zinc-700"
               >
+                Seafloor Age
+              </label>
+              <Switch
+                id="switch"
+                checked={showSeafloor}
+                onCheckedChange={(e) => setShowSeafloor(e)}
+              />
+            </div>
+            <Separator className="my-4" />
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="switch"
+                className="text-xs font-medium text-zinc-700"
+              >
                 Hillshading
               </label>
               <Switch
@@ -417,6 +432,20 @@ function App() {
             layout={{
               visibility: showHillshade ? "visible" : "none",
             }}
+          />
+        </Source>
+        <Source
+          id="seafloorSource"
+          type="raster"
+          tiles={[
+            "https://api.mapbox.com/v4/lance-ntu.seafloor/{z}/{x}/{y}.webp?access_token=sk.eyJ1IjoibGFuY2UtbnR1IiwiYSI6ImNtNXc2amQ1aTA1dzkyb3NjYzc3aXIzYmcifQ.KfY3J858jdlByiz_LgRu_w",
+          ]}
+        >
+          <Layer
+            type="raster"
+            id="seafloor"
+            paint={{ "raster-opacity": 0.7 }}
+            layout={{ visibility: showSeafloor ? "visible" : "none" }}
           />
         </Source>
         <Source
