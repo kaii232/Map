@@ -166,7 +166,17 @@ function App() {
     lng: number;
     lat: number;
   } | null>(null);
+
+  const [selectedFeatures, setSelectedFeatures] = useState<
+    {
+      feature: MapGeoJSONFeature;
+      lng: number;
+      lat: number;
+    }[]
+  >([]);
+
   const [mapIndex, setMapIndex] = useState(0);
+
   const onHover = useCallback(
     (event: MapLayerMouseEvent) => {
       const {
@@ -184,11 +194,15 @@ function App() {
             { hover: false },
           );
         }
-        setHoverInfo({ feature: hoveredFeature, lng, lat });
-        map.setFeatureState(
-          { source: hoveredFeature.layer.source, id: hoveredFeature.id },
-          { hover: true },
-        );
+        if (
+          !selectedFeatures.some((val) => val.feature.id === hoveredFeature.id)
+        ) {
+          setHoverInfo({ feature: hoveredFeature, lng, lat });
+          map.setFeatureState(
+            { source: hoveredFeature.layer.source, id: hoveredFeature.id },
+            { hover: true },
+          );
+        }
       } else if (map) {
         if (hoverInfo) {
           map.setFeatureState(
@@ -202,8 +216,27 @@ function App() {
         setHoverInfo(null);
       }
     },
-    [hoverInfo, map],
+    [hoverInfo, map, selectedFeatures],
   );
+
+  const onClick = useCallback(
+    (event: MapLayerMouseEvent) => {
+      const {
+        features,
+        lngLat: { lng, lat },
+      } = event;
+      const clicked = features && features[0];
+      if (clicked && map) {
+        if (!selectedFeatures.some((val) => val.feature.id === clicked.id))
+          setSelectedFeatures((prev) => [
+            ...prev,
+            { feature: clicked, lng, lat },
+          ]);
+      }
+    },
+    [map, selectedFeatures],
+  );
+
   const xlsxToGeojson = (
     input: Record<string, string | number>[],
   ): FeatureCollection => {
@@ -402,6 +435,7 @@ function App() {
         maxZoom={15}
         mapStyle={MAP_STYLE[mapIndex].style}
         onMouseMove={onHover}
+        onClick={onClick}
         interactiveLayerIds={["faultLines", "volcanoes", "earthquakes"]}
       >
         <ScaleControl />
@@ -617,6 +651,51 @@ function App() {
             )}
           </Popup>
         )}
+        {selectedFeatures.map((feature) => (
+          <Popup
+            key={`${feature.feature.id}click`}
+            longitude={feature.lng}
+            latitude={feature.lat}
+            offset={{
+              top: [0, 12],
+              "top-left": [0, 12],
+              "top-right": [0, 12],
+              bottom: [0, -12],
+              "bottom-left": [0, -12],
+              "bottom-right": [0, -12],
+              left: [12, 0],
+              right: [-12, 0],
+            }}
+            closeButton={true}
+            onClose={() =>
+              setSelectedFeatures((prev) =>
+                prev.filter((val) => val.feature.id !== feature.feature.id),
+              )
+            }
+            closeOnClick={false}
+            className={
+              "[&_.maplibregl-popup-close-button]:px-1 [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
+            }
+          >
+            {feature.feature.layer.id === "faultLines" && (
+              <div className="mb-2 text-lg font-semibold">
+                {feature.feature.properties.d_fname}
+              </div>
+            )}
+            {feature.feature.layer.id === "volcanoes" && (
+              <div className="mb-2 text-lg font-semibold">
+                {feature.feature.properties.VOLCANO}
+              </div>
+            )}
+            {Object.entries(feature.feature.properties).map(([key, value]) => {
+              return (
+                <div className="text-sm" key={key}>
+                  <span className="font-semibold">{key}:</span> {value}
+                </div>
+              );
+            })}
+          </Popup>
+        ))}
       </Map>
     </main>
   );
