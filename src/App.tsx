@@ -303,12 +303,12 @@ function App() {
 
   return (
     <main className="h-screen w-full">
-      <div className="absolute left-4 top-4 z-10 flex max-h-[calc(100vh-32px)] w-40 flex-col gap-3">
+      <div className="absolute left-4 top-4 z-10 flex max-h-[calc(100vh-32px)] w-40 flex-col gap-2">
         <Collapsible
           defaultOpen={false}
-          className="flex flex-col overflow-hidden rounded-xl bg-white p-2 shadow-md"
+          className="flex flex-col overflow-hidden rounded-xl bg-white p-1 shadow-md"
         >
-          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md p-3 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
             Basemap
             <ChevronsUpDown />
           </CollapsibleTrigger>
@@ -337,8 +337,8 @@ function App() {
             })}
           </CollapsibleContent>
         </Collapsible>
-        <Collapsible className="flex flex-col rounded-xl bg-white p-2 shadow-md">
-          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md p-3 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+        <Collapsible className="flex flex-col rounded-xl bg-white p-1 shadow-md">
+          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
             Data overlay
             <ChevronsUpDown />
           </CollapsibleTrigger>
@@ -361,7 +361,7 @@ function App() {
               <Download /> Download
             </a>
           </Button> */}
-            <Separator className="my-4" />
+            <Separator className="my-2" />
             <div className="flex items-center justify-between">
               <label
                 htmlFor="switch"
@@ -380,7 +380,7 @@ function App() {
               <Download /> Download
             </a>
           </Button> */}
-            <Separator className="my-4" />
+            <Separator className="my-2" />
             <div className="flex items-center justify-between">
               <label
                 htmlFor="switch"
@@ -394,7 +394,7 @@ function App() {
                 onCheckedChange={(e) => setShowEarthquakes(e)}
               />
             </div>
-            <Separator className="my-4" />
+            <Separator className="my-2" />
             <div className="flex items-center justify-between">
               <label
                 htmlFor="switch"
@@ -408,7 +408,16 @@ function App() {
                 onCheckedChange={(e) => setShowSeafloor(e)}
               />
             </div>
-            <Separator className="my-4" />
+            {showSeafloor && (
+              <div>
+                <div className="mb-1 h-10 w-full bg-gradient-to-r from-black to-white"></div>
+                <div className="flex w-full justify-between text-xs">
+                  <p>0</p>
+                  <p>194</p>
+                </div>
+              </div>
+            )}
+            <Separator className="my-2" />
             <div className="flex items-center justify-between">
               <label
                 htmlFor="switch"
@@ -451,7 +460,6 @@ function App() {
           <Layer
             type="raster"
             id="seafloor"
-            paint={{ "raster-opacity": 0.7 }}
             layout={{ visibility: showSeafloor ? "visible" : "none" }}
           />
         </Source>
