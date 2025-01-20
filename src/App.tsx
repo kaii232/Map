@@ -165,15 +165,13 @@ function App() {
     feature: MapGeoJSONFeature;
     lng: number;
     lat: number;
-  } | null>(null);
+  }>();
 
-  const [selectedFeatures, setSelectedFeatures] = useState<
-    {
-      feature: MapGeoJSONFeature;
-      lng: number;
-      lat: number;
-    }[]
-  >([]);
+  const [selectedFeature, setselectedFeature] = useState<{
+    feature: MapGeoJSONFeature;
+    lng: number;
+    lat: number;
+  }>();
 
   const [mapIndex, setMapIndex] = useState(0);
 
@@ -195,7 +193,8 @@ function App() {
           );
         }
         if (
-          !selectedFeatures.some((val) => val.feature.id === hoveredFeature.id)
+          !selectedFeature ||
+          (selectedFeature && selectedFeature.feature.id !== hoveredFeature.id)
         ) {
           setHoverInfo({ feature: hoveredFeature, lng, lat });
           map.setFeatureState(
@@ -213,10 +212,10 @@ function App() {
             { hover: false },
           );
         }
-        setHoverInfo(null);
+        setHoverInfo(undefined);
       }
     },
-    [hoverInfo, map, selectedFeatures],
+    [hoverInfo, map, selectedFeature],
   );
 
   const onClick = useCallback(
@@ -227,14 +226,10 @@ function App() {
       } = event;
       const clicked = features && features[0];
       if (clicked && map) {
-        if (!selectedFeatures.some((val) => val.feature.id === clicked.id))
-          setSelectedFeatures((prev) => [
-            ...prev,
-            { feature: clicked, lng, lat },
-          ]);
+        setselectedFeature({ feature: clicked, lng, lat });
       }
     },
-    [map, selectedFeatures],
+    [map],
   );
 
   const xlsxToGeojson = (
@@ -633,7 +628,7 @@ function App() {
               right: [-12, 0],
             }}
             closeButton={false}
-            closeOnClick={false}
+            closeOnClick={true}
             className={
               "[&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
@@ -659,11 +654,11 @@ function App() {
             )}
           </Popup>
         )}
-        {selectedFeatures.map((feature) => (
+        {selectedFeature && (
           <Popup
-            key={`${feature.feature.id}click`}
-            longitude={feature.lng}
-            latitude={feature.lat}
+            key={`${selectedFeature.feature.id}click`}
+            longitude={selectedFeature.lng}
+            latitude={selectedFeature.lat}
             offset={{
               top: [0, 12],
               "top-left": [0, 12],
@@ -675,35 +670,33 @@ function App() {
               right: [-12, 0],
             }}
             closeButton={true}
-            onClose={() =>
-              setSelectedFeatures((prev) =>
-                prev.filter((val) => val.feature.id !== feature.feature.id),
-              )
-            }
+            onClose={() => setselectedFeature(undefined)}
             closeOnClick={false}
             className={
-              "[&_.maplibregl-popup-close-button]:px-1 [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
+              "[&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
           >
-            {feature.feature.layer.id === "faultLines" && (
+            {selectedFeature.feature.layer.id === "faultLines" && (
               <div className="mb-2 text-lg font-semibold">
-                {feature.feature.properties.d_fname}
+                {selectedFeature.feature.properties.d_fname}
               </div>
             )}
-            {feature.feature.layer.id === "volcanoes" && (
+            {selectedFeature.feature.layer.id === "volcanoes" && (
               <div className="mb-2 text-lg font-semibold">
-                {feature.feature.properties.VOLCANO}
+                {selectedFeature.feature.properties.VOLCANO}
               </div>
             )}
-            {Object.entries(feature.feature.properties).map(([key, value]) => {
-              return (
-                <div className="text-sm" key={key}>
-                  <span className="font-semibold">{key}:</span> {value}
-                </div>
-              );
-            })}
+            {Object.entries(selectedFeature.feature.properties).map(
+              ([key, value]) => {
+                return (
+                  <div className="text-sm" key={key}>
+                    <span className="font-semibold">{key}:</span> {value}
+                  </div>
+                );
+              },
+            )}
           </Popup>
-        ))}
+        )}
       </Map>
     </main>
   );
