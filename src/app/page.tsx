@@ -455,6 +455,8 @@ function Home() {
           tiles={[
             `https://api.mapbox.com/v4/lance-ntu.seafloor/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
           ]}
+          maxzoom={5}
+          tileSize={256}
         >
           <Layer
             type="raster"
