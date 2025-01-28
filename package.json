@@ -1,18 +1,17 @@
 {
-  "name": "vite-project",
+  "name": "map",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
   "prettier": {
     "plugins": [
       "prettier-plugin-tailwindcss"
     ]
-  },
-  "scripts": {
-    "dev": "vite --host",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.2",
@@ -24,36 +23,28 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "csv-parse": "^5.6.0",
-    "leaflet": "^1.9.4",
     "lucide-react": "^0.469.0",
     "maplibre-gl": "^5.0.0",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "react-leaflet": "^5.0.0-rc.2",
+    "next": "15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tailwind-merge": "^2.6.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/leaflet": "^1.9.15",
-    "@types/node": "^22.10.5",
-    "@types/react": "19.0.0",
-    "@types/react-dom": "19.0.0",
-    "@vitejs/plugin-react-swc": "^3.5.0",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^9.17.0",
-    "eslint-plugin-react": "^7.37.3",
-    "eslint-plugin-react-hooks": "^5.0.0",
-    "eslint-plugin-react-refresh": "^0.4.16",
-    "eslint-plugin-tailwindcss": "^3.17.5",
-    "globals": "^15.14.0",
-    "postcss": "^8.4.49",
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "csv-loader": "^3.0.5",
+    "eslint": "^9",
+    "eslint-config-next": "15.1.6",
+    "json-loader": "^0.5.7",
+    "postcss": "^8",
     "prettier": "^3.4.2",
-    "prettier-plugin-tailwindcss": "^0.6.9",
-    "tailwindcss": "^3.4.17",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "~5.6.2",
-    "typescript-eslint": "^8.18.2",
-    "vite": "^6.0.5"
+    "typescript": "^5"
   }
 }

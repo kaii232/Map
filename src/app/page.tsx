@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Layer,
   Map,
@@ -15,17 +17,17 @@ import { Feature, FeatureCollection } from "geojson";
 import { ChevronsUpDown } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useState } from "react";
-import volcanoes from "./assets/EOS_volcanoes.xlsx";
-import earthquakes from "./assets/isc-ehb.csv";
-import faultData from "./assets/philippines_faults_2020.geojson";
-import volanoIcon from "./assets/volcano_icon.png";
+import volcanoes from "../assets/EOS_volcanoes.xlsx";
+import earthquakes from "../assets/isc-ehb.csv";
+import faultData from "../assets/philippines_faults_2020.geojson";
+import volanoIcon from "../assets/volcano_icon.png";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "./components/ui/collapsible";
-import { Separator } from "./components/ui/separator";
-import { Switch } from "./components/ui/switch";
+} from "../components/ui/collapsible";
+import { Separator } from "../components/ui/separator";
+import { Switch } from "../components/ui/switch";
 
 const MAP_STYLE: {
   style: MapStyle | string;
@@ -154,7 +156,7 @@ const MAP_STYLE: {
   },
 ];
 
-function App() {
+function Home() {
   const { map } = useMap();
   const [showFault, setShowFault] = useState(true);
   const [showVolcanoes, setShowVolcanoes] = useState(true);
@@ -285,7 +287,7 @@ function App() {
   useEffect(() => {
     const addImages = async () => {
       if (map) {
-        const image = await map.loadImage(volanoIcon);
+        const image = await map.loadImage(volanoIcon.src);
         try {
           map.addImage("volcano_icon", image.data);
         } catch {
@@ -320,6 +322,7 @@ function App() {
                     onClick={() => setMapIndex(index)}
                   />
                   <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 p-2 font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={style.img}
                       className="h-20 w-full rounded-md"
@@ -348,7 +351,7 @@ function App() {
               <Switch
                 id="switch"
                 checked={showFault}
-                onCheckedChange={(e) => setShowFault(e)}
+                onCheckedChange={(e: boolean) => setShowFault(e)}
               />
             </div>
             {/* <Button asChild className="w-full">
@@ -367,7 +370,7 @@ function App() {
               <Switch
                 id="switch"
                 checked={showVolcanoes}
-                onCheckedChange={(e) => setShowVolcanoes(e)}
+                onCheckedChange={(e: boolean) => setShowVolcanoes(e)}
               />
             </div>
             {/* <Button asChild className="w-full">
@@ -386,7 +389,7 @@ function App() {
               <Switch
                 id="switch"
                 checked={showEarthquakes}
-                onCheckedChange={(e) => setShowEarthquakes(e)}
+                onCheckedChange={(e: boolean) => setShowEarthquakes(e)}
               />
             </div>
             <Separator className="my-2" />
@@ -400,7 +403,7 @@ function App() {
               <Switch
                 id="switch"
                 checked={showSeafloor}
-                onCheckedChange={(e) => setShowSeafloor(e)}
+                onCheckedChange={(e: boolean) => setShowSeafloor(e)}
               />
             </div>
             {showSeafloor && (
@@ -423,7 +426,7 @@ function App() {
               <Switch
                 id="switch"
                 checked={showHillshade}
-                onCheckedChange={(e) => setShowHillshade(e)}
+                onCheckedChange={(e: boolean) => setShowHillshade(e)}
               />
             </div>
           </CollapsibleContent>
@@ -441,6 +444,7 @@ function App() {
         onMouseMove={onHover}
         onClick={onClick}
         interactiveLayerIds={["faultLines", "volcanoes", "earthquakes"]}
+        reuseMaps
       >
         <ScaleControl />
         <NavigationControl />
@@ -449,7 +453,7 @@ function App() {
           id="seafloorSource"
           type="raster"
           tiles={[
-            "https://api.mapbox.com/v4/lance-ntu.seafloor/{z}/{x}/{y}.webp?access_token=sk.eyJ1IjoibGFuY2UtbnR1IiwiYSI6ImNtNXc2amQ1aTA1dzkyb3NjYzc3aXIzYmcifQ.KfY3J858jdlByiz_LgRu_w",
+            `https://api.mapbox.com/v4/lance-ntu.seafloor/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
           ]}
         >
           <Layer
@@ -701,4 +705,4 @@ function App() {
     </main>
   );
 }
-export default App;
+export default Home;
