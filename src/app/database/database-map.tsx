@@ -24,6 +24,8 @@ import { FeatureCollection } from "geojson";
 import { ChevronsUpDown } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useState } from "react";
+import gnssIcon from "../../assets/GNSS_icon.png";
+import seamountIcon from "../../assets/seamount_icon.png";
 import volanoIcon from "../../assets/volcano_icon.png";
 
 const MAP_STYLE: {
@@ -153,9 +155,19 @@ const MAP_STYLE: {
   },
 ];
 
-export default function DatabaseMap({ vlc }: { vlc: FeatureCollection }) {
+export default function DatabaseMap({
+  vlc,
+  smt,
+  gnss,
+}: {
+  vlc: FeatureCollection;
+  smt: FeatureCollection;
+  gnss: FeatureCollection;
+}) {
   const { map } = useMap();
   const [showVolcanoes, setShowVolcanoes] = useState(true);
+  const [showSeamounts, setShowSeamounts] = useState(true);
+  const [showGNSS, setShowGNSS] = useState(true);
   const [showHillshade, setShowHillshade] = useState(false);
   const [showSeafloor, setShowSeafloor] = useState(false);
   const [hoverInfo, setHoverInfo] = useState<{
@@ -235,10 +247,16 @@ export default function DatabaseMap({ vlc }: { vlc: FeatureCollection }) {
     const addImages = async () => {
       if (map) {
         try {
-          const image = await map.loadImage(volanoIcon.src);
-          map.addImage("volcano_icon", image.data);
+          const [volcanoImg, smtImg, gnssImg] = await Promise.all([
+            map.loadImage(volanoIcon.src),
+            map.loadImage(seamountIcon.src),
+            map.loadImage(gnssIcon.src),
+          ]);
+          map.addImage("volcano_icon", volcanoImg.data);
+          map.addImage("smt_icon", smtImg.data);
+          map.addImage("gnss_icon", gnssImg.data);
         } catch {
-          console.log("Image already exists");
+          console.log("Images already exists");
         }
       }
     };
@@ -247,7 +265,7 @@ export default function DatabaseMap({ vlc }: { vlc: FeatureCollection }) {
 
   return (
     <>
-      <div className="absolute left-4 top-4 z-10 flex max-h-[calc(100vh-32px)] w-40 flex-col gap-2">
+      <div className="absolute left-2.5 top-2.5 z-10 flex max-h-[calc(100vh-20px)] w-40 flex-col gap-2">
         <Collapsible
           defaultOpen={false}
           className="flex flex-col overflow-hidden rounded-xl bg-white p-1 shadow-md"
@@ -284,28 +302,10 @@ export default function DatabaseMap({ vlc }: { vlc: FeatureCollection }) {
         </Collapsible>
         <Collapsible className="flex flex-col rounded-xl bg-white p-1 shadow-md">
           <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-            Data overlay
+            Map Options
             <ChevronsUpDown />
           </CollapsibleTrigger>
           <CollapsibleContent className="flex shrink flex-col gap-2 overflow-auto data-[state=open]:p-1">
-            {vlc && (
-              <>
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="switch"
-                    className="text-xs font-medium text-zinc-700"
-                  >
-                    Volcanoes
-                  </label>
-                  <Switch
-                    id="switch"
-                    checked={showVolcanoes}
-                    onCheckedChange={(e: boolean) => setShowVolcanoes(e)}
-                  />
-                </div>
-                <Separator className="my-2" />
-              </>
-            )}
             <div className="flex items-center justify-between">
               <label
                 htmlFor="switch"
@@ -344,6 +344,65 @@ export default function DatabaseMap({ vlc }: { vlc: FeatureCollection }) {
             </div>
           </CollapsibleContent>
         </Collapsible>
+        <Collapsible className="flex flex-col rounded-xl bg-white p-1 shadow-md">
+          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+            Data Visibility
+            <ChevronsUpDown />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="flex shrink flex-col gap-2 overflow-auto data-[state=open]:p-1">
+            {vlc && (
+              <>
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="switch"
+                    className="text-xs font-medium text-zinc-700"
+                  >
+                    Volcanoes
+                  </label>
+                  <Switch
+                    id="switch"
+                    checked={showVolcanoes}
+                    onCheckedChange={(e: boolean) => setShowVolcanoes(e)}
+                  />
+                </div>
+                <Separator className="my-2" />
+              </>
+            )}
+            {smt && (
+              <>
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="switch"
+                    className="text-xs font-medium text-zinc-700"
+                  >
+                    Seamounts
+                  </label>
+                  <Switch
+                    id="switch"
+                    checked={showSeamounts}
+                    onCheckedChange={(e: boolean) => setShowSeamounts(e)}
+                  />
+                </div>
+                <Separator className="my-2" />
+              </>
+            )}
+            {gnss && (
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="switch"
+                  className="text-xs font-medium text-zinc-700"
+                >
+                  GNSS Stations
+                </label>
+                <Switch
+                  id="switch"
+                  checked={showGNSS}
+                  onCheckedChange={(e: boolean) => setShowGNSS(e)}
+                />
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
       </div>
       <Map
         id="map"
@@ -356,7 +415,7 @@ export default function DatabaseMap({ vlc }: { vlc: FeatureCollection }) {
         mapStyle={MAP_STYLE[mapIndex].style}
         onMouseMove={onHover}
         onClick={onClick}
-        interactiveLayerIds={["volcanoes"]}
+        interactiveLayerIds={["volcanoes", "seamounts", "gnss"]}
         reuseMaps
       >
         <ScaleControl />
@@ -428,6 +487,82 @@ export default function DatabaseMap({ vlc }: { vlc: FeatureCollection }) {
                 "text-optional": true,
                 "icon-overlap": "always",
                 visibility: showVolcanoes ? "visible" : "none",
+              }}
+              paint={{
+                "text-halo-color": "#F8FAFCCC",
+                "text-halo-width": 2,
+                "text-opacity": {
+                  stops: [
+                    [7, 0],
+                    [8, 1],
+                  ],
+                },
+              }}
+            />
+          </Source>
+        )}
+        {smt && (
+          <Source id="seamountSource" type="geojson" data={smt}>
+            <Layer
+              id="seamounts"
+              type="symbol"
+              layout={{
+                "icon-image": "smt_icon",
+                "text-field": ["get", "name"],
+                "text-font": ["Noto Sans Regular"],
+                "icon-size": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  0.3,
+                  10,
+                  1,
+                ],
+                "text-offset": [0, 1],
+                "text-anchor": "top",
+                "text-size": 12,
+                "text-optional": true,
+                "icon-overlap": "always",
+                visibility: showSeamounts ? "visible" : "none",
+              }}
+              paint={{
+                "text-halo-color": "#F8FAFCCC",
+                "text-halo-width": 2,
+                "text-opacity": {
+                  stops: [
+                    [7, 0],
+                    [8, 1],
+                  ],
+                },
+              }}
+            />
+          </Source>
+        )}
+        {smt && (
+          <Source id="gnssSource" type="geojson" data={gnss}>
+            <Layer
+              id="gnss"
+              type="symbol"
+              layout={{
+                "icon-image": "gnss_icon",
+                "text-field": ["get", "name"],
+                "text-font": ["Noto Sans Regular"],
+                "icon-size": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  0.3,
+                  10,
+                  1,
+                ],
+                "text-offset": [0, 1],
+                "text-anchor": "top",
+                "text-size": 12,
+                "text-optional": true,
+                "icon-overlap": "always",
+                visibility: showGNSS ? "visible" : "none",
               }}
               paint={{
                 "text-halo-color": "#F8FAFCCC",

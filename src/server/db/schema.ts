@@ -73,8 +73,8 @@ export const seisInInvest = invest.table(
     seisMw: doublePrecision("seis_mw"),
     seisMs: doublePrecision("seis_ms"),
     seisMb: doublePrecision("seis_mb"),
-    seisDate: timestamp("seis_date", { mode: "string" }),
-    seisLoaddate: timestamp("seis_loaddate", { mode: "string" })
+    seisDate: timestamp("seis_date", { mode: "date" }),
+    seisLoaddate: timestamp("seis_loaddate", { mode: "date" })
       .defaultNow()
       .notNull(),
     seisCatId: integer("seis_cat_id"),
@@ -137,7 +137,7 @@ export const vlcInInvest = invest.table(
     vlcGeom: geometry("vlc_geom"),
     vlcElev: doublePrecision("vlc_elev"),
     vlcClass: varchar("vlc_class"),
-    vlcLoaddate: timestamp("vlc_loaddate", { mode: "string" })
+    vlcLoaddate: timestamp("vlc_loaddate", { mode: "date" })
       .defaultNow()
       .notNull(),
     vlcCatSrc: varchar("vlc_cat_src"),
@@ -262,9 +262,9 @@ export const gnssStnInInvest = invest.table(
     gnssGeom: geometry("gnss_geom"),
     gnssElev: doublePrecision("gnss_elev"),
     gnssProj: varchar("gnss_proj"),
-    gnssInstDate: timestamp("gnss_inst_date", { mode: "string" }),
-    gnssDecomDate: timestamp("gnss_decom_date", { mode: "string" }),
-    gnssLoaddate: timestamp("gnss_loaddate", { mode: "string" }).defaultNow(),
+    gnssInstDate: timestamp("gnss_inst_date", { mode: "date" }),
+    gnssDecomDate: timestamp("gnss_decom_date", { mode: "date" }),
+    gnssLoaddate: timestamp("gnss_loaddate", { mode: "date" }).defaultNow(),
     gnssCmt: varchar("gnss_cmt"),
     stnTypeId: integer("stn_type_id"),
     countryId: integer("country_id").notNull(),
@@ -324,7 +324,7 @@ export const smtInInvest = invest.table(
     smtBw: doublePrecision("smt_bw"),
     smtBa: doublePrecision("smt_ba"),
     smtClass: varchar("smt_class"),
-    smtLoaddate: timestamp("smt_loaddate", { mode: "string" })
+    smtLoaddate: timestamp("smt_loaddate", { mode: "date" })
       .defaultNow()
       .notNull(),
     smtSrcId: integer("smt_src_id"),
