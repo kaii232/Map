@@ -1,18 +1,17 @@
 "use client";
 
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
+  FltFilters,
+  GnssFilters,
+  SeisFilters,
+  SmtFilters,
+  VlcFilters,
+} from "@/lib/types";
 import {
   Layer,
   Map,
   MapGeoJSONFeature,
   MapLayerMouseEvent,
-  MapStyle,
   NavigationControl,
   Popup,
   ScaleControl,
@@ -20,156 +19,45 @@ import {
   TerrainControl,
   useMap,
 } from "@vis.gl/react-maplibre";
-import { FeatureCollection } from "geojson";
-import { ChevronsUpDown } from "lucide-react";
+import { useAtomValue } from "jotai";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useState } from "react";
 import gnssIcon from "../../assets/GNSS_icon.png";
 import seamountIcon from "../../assets/seamount_icon.png";
 import volanoIcon from "../../assets/volcano_icon.png";
-
-const MAP_STYLE: {
-  style: MapStyle | string;
-  label: string;
-  img: string;
-}[] = [
-  {
-    style: "https://tiles.openfreemap.org/styles/liberty",
-    label: "Openfreemap",
-    img: "https://d4.alternativeto.net/JtcJ1s6H8N100N4sgtNEm2YThMGoMBeD53KKBPzGn3w/rs:fill:309:197:1/g:no:0:0/YWJzOi8vZGlzdC9zL29wZW5mcmVlbWFwXzk3MDE0OV9mdWxsLnBuZw.jpg",
-  },
-  {
-    style: {
-      version: 8,
-      sources: {
-        osm: {
-          type: "raster",
-          tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-          tileSize: 256,
-          attribution:
-            "&copy; <a href='https://openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> Contributors",
-          maxzoom: 19,
-        },
-      },
-      layers: [
-        {
-          id: "osm",
-          type: "raster",
-          source: "osm",
-        },
-      ],
-      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    },
-    label: "Openstreetmap",
-    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Soho_-_map_1.png/220px-Soho_-_map_1.png",
-  },
-  {
-    style: {
-      version: 8,
-      sources: {
-        otm: {
-          type: "raster",
-          tiles: ["https://tile.opentopomap.org/{z}/{x}/{y}.png "],
-          maxzoom: 15,
-          attribution:
-            "map data: &copy; <a href='https://openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> Contributors, <a href='http://viewfinderpanoramas.org/' target='_blank'>SRTM</a> | map style: &copy; <a href='https://opentopomap.org/' target='_blank'>OpenTopoMap</a>",
-        },
-      },
-      layers: [
-        {
-          id: "otm",
-          type: "raster",
-          source: "otm",
-        },
-      ],
-      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    },
-    label: "Opentopomap",
-    img: "https://latlong.blog/img/blog/2023-10-02-tracestack-topo.webp",
-  },
-  {
-    style: {
-      version: 8,
-      sources: {
-        esri: {
-          type: "raster",
-          tiles: [
-            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png",
-          ],
-          tileSize: 256,
-          attribution:
-            "Esri, HERE, Garmin, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), &copy; <a href='https://openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> Contributors, and the GIS User Community",
-        },
-      },
-      layers: [
-        {
-          id: "esri",
-          type: "raster",
-          source: "esri",
-        },
-      ],
-      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    },
-    label: "Satellite",
-    img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXhvrlM50ZXAuvt7S8uXh9My90_uTQf9cyYg&s",
-  },
-  {
-    style: {
-      version: 8,
-      sources: {
-        ocean: {
-          type: "raster",
-          tiles: [
-            "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}.png",
-          ],
-          maxzoom: 10,
-          tileSize: 256,
-          attribution:
-            "Esri, GEBCO, NOAA, National Geographic, Garmin, HERE, Geonames.org, and other contributors",
-        },
-        oceanRef: {
-          type: "raster",
-          tiles: [
-            "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}.png",
-          ],
-          maxzoom: 10,
-          tileSize: 256,
-        },
-      },
-      layers: [
-        {
-          id: "ocean",
-          type: "raster",
-          source: "ocean",
-        },
-        {
-          id: "oceanRef",
-          type: "raster",
-          source: "oceanRef",
-        },
-      ],
-      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    },
-    label: "Ocean",
-    img: "https://learn.arcgis.com/en/projects/find-ocean-bathymetry-data/GUID-FE9C4F4D-E9AA-46CD-9C3F-D7DB28FBCBCC-web.png",
-  },
-];
+import {
+  dataVisibilityAtom,
+  fltDataAtom,
+  gnssDataAtom,
+  layersAtom,
+  mapStyleAtom,
+  seisDataAtom,
+  smtDataAtom,
+  vlcDataAtom,
+} from "./atoms";
+import Controls from "./controls";
 
 export default function DatabaseMap({
-  vlc,
-  smt,
-  gnss,
+  filters,
 }: {
-  vlc: FeatureCollection;
-  smt: FeatureCollection;
-  gnss: FeatureCollection;
+  filters: {
+    smt: SmtFilters;
+    vlc: VlcFilters;
+    gnss: GnssFilters;
+    flt: FltFilters;
+    seis: SeisFilters;
+  };
 }) {
   const { map } = useMap();
-  const [showVolcanoes, setShowVolcanoes] = useState(true);
-  const [showSeamounts, setShowSeamounts] = useState(true);
-  const [showGNSS, setShowGNSS] = useState(true);
-  const [showHillshade, setShowHillshade] = useState(false);
-  const [showSeafloor, setShowSeafloor] = useState(false);
+  const mapStyle = useAtomValue(mapStyleAtom);
+  const smtData = useAtomValue(smtDataAtom);
+  const seisData = useAtomValue(seisDataAtom);
+  const gnssData = useAtomValue(gnssDataAtom);
+  const fltData = useAtomValue(fltDataAtom);
+  const vlcData = useAtomValue(vlcDataAtom);
+  const dataVisibility = useAtomValue(dataVisibilityAtom);
+
+  const layers = useAtomValue(layersAtom);
   const [hoverInfo, setHoverInfo] = useState<{
     feature: MapGeoJSONFeature;
     lng: number;
@@ -181,8 +69,6 @@ export default function DatabaseMap({
     lng: number;
     lat: number;
   }>();
-
-  const [mapIndex, setMapIndex] = useState(0);
 
   const onHover = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -227,8 +113,6 @@ export default function DatabaseMap({
     [hoverInfo, map, selectedFeature],
   );
 
-  console.log(hoverInfo);
-
   const onClick = useCallback(
     (event: MapLayerMouseEvent) => {
       const {
@@ -261,161 +145,24 @@ export default function DatabaseMap({
       }
     };
     addImages();
-  }, [map, mapIndex]);
+  }, [map, mapStyle]);
 
   return (
     <>
-      <div className="absolute left-2.5 top-2.5 z-10 flex max-h-[calc(100vh-20px)] w-40 flex-col gap-2">
-        <Collapsible
-          defaultOpen={false}
-          className="flex flex-col overflow-hidden rounded-xl bg-white p-1 shadow-md"
-        >
-          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-            Basemap
-            <ChevronsUpDown />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="flex shrink flex-col gap-2 overflow-auto data-[state=open]:p-1">
-            {MAP_STYLE.map((style, index) => {
-              return (
-                <label className="min-w-fit grow" key={style.label}>
-                  <input
-                    type="radio"
-                    name="map"
-                    value={style.label}
-                    defaultChecked={index === 0}
-                    className="peer sr-only"
-                    onClick={() => setMapIndex(index)}
-                  />
-                  <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 p-2 font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={style.img}
-                      className="h-20 w-full rounded-md"
-                      alt={style.label}
-                    />
-                    {style.label}
-                  </div>
-                </label>
-              );
-            })}
-          </CollapsibleContent>
-        </Collapsible>
-        <Collapsible className="flex flex-col rounded-xl bg-white p-1 shadow-md">
-          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-            Map Options
-            <ChevronsUpDown />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="flex shrink flex-col gap-2 overflow-auto data-[state=open]:p-1">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="switch"
-                className="text-xs font-medium text-zinc-700"
-              >
-                Seafloor Age
-              </label>
-              <Switch
-                id="switch"
-                checked={showSeafloor}
-                onCheckedChange={(e: boolean) => setShowSeafloor(e)}
-              />
-            </div>
-            {showSeafloor && (
-              <div>
-                <div className="mb-1 h-10 w-full bg-gradient-to-r from-black to-white"></div>
-                <div className="flex w-full justify-between text-xs">
-                  <p>0</p>
-                  <p>194</p>
-                </div>
-              </div>
-            )}
-            <Separator className="my-2" />
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="switch"
-                className="text-xs font-medium text-zinc-700"
-              >
-                Hillshading
-              </label>
-              <Switch
-                id="switch"
-                checked={showHillshade}
-                onCheckedChange={(e: boolean) => setShowHillshade(e)}
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-        <Collapsible className="flex flex-col rounded-xl bg-white p-1 shadow-md">
-          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-            Data Visibility
-            <ChevronsUpDown />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="flex shrink flex-col gap-2 overflow-auto data-[state=open]:p-1">
-            {vlc && (
-              <>
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="switch"
-                    className="text-xs font-medium text-zinc-700"
-                  >
-                    Volcanoes
-                  </label>
-                  <Switch
-                    id="switch"
-                    checked={showVolcanoes}
-                    onCheckedChange={(e: boolean) => setShowVolcanoes(e)}
-                  />
-                </div>
-                <Separator className="my-2" />
-              </>
-            )}
-            {smt && (
-              <>
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="switch"
-                    className="text-xs font-medium text-zinc-700"
-                  >
-                    Seamounts
-                  </label>
-                  <Switch
-                    id="switch"
-                    checked={showSeamounts}
-                    onCheckedChange={(e: boolean) => setShowSeamounts(e)}
-                  />
-                </div>
-                <Separator className="my-2" />
-              </>
-            )}
-            {gnss && (
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="switch"
-                  className="text-xs font-medium text-zinc-700"
-                >
-                  GNSS Stations
-                </label>
-                <Switch
-                  id="switch"
-                  checked={showGNSS}
-                  onCheckedChange={(e: boolean) => setShowGNSS(e)}
-                />
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
+      <Controls filters={filters} />
       <Map
         id="map"
         initialViewState={{
           longitude: 110,
           latitude: 5,
           zoom: 4.6,
+          padding: { left: 320 },
         }}
         maxZoom={15}
-        mapStyle={MAP_STYLE[mapIndex].style}
+        mapStyle={mapStyle}
         onMouseMove={onHover}
         onClick={onClick}
-        interactiveLayerIds={["volcanoes", "seamounts", "gnss"]}
+        interactiveLayerIds={["vlc", "smt", "gnss", "seis", "flt"]}
         reuseMaps
       >
         <ScaleControl />
@@ -433,7 +180,7 @@ export default function DatabaseMap({
           <Layer
             type="raster"
             id="seafloor"
-            layout={{ visibility: showSeafloor ? "visible" : "none" }}
+            layout={{ visibility: layers.seafloor ? "visible" : "none" }}
           />
         </Source>
         <Source
@@ -459,14 +206,14 @@ export default function DatabaseMap({
               "hillshade-exaggeration": 0.4,
             }}
             layout={{
-              visibility: showHillshade ? "visible" : "none",
+              visibility: layers.hillshade ? "visible" : "none",
             }}
           />
         </Source>
-        {vlc && (
-          <Source id="volcanoSource" type="geojson" data={vlc}>
+        {vlcData && (
+          <Source id="vlcSource" type="geojson" data={vlcData}>
             <Layer
-              id="volcanoes"
+              id="vlc"
               type="symbol"
               layout={{
                 "icon-image": "volcano_icon",
@@ -486,7 +233,7 @@ export default function DatabaseMap({
                 "text-size": 12,
                 "text-optional": true,
                 "icon-overlap": "always",
-                visibility: showVolcanoes ? "visible" : "none",
+                visibility: dataVisibility.vlc ? "visible" : "none",
               }}
               paint={{
                 "text-halo-color": "#F8FAFCCC",
@@ -501,10 +248,10 @@ export default function DatabaseMap({
             />
           </Source>
         )}
-        {smt && (
-          <Source id="seamountSource" type="geojson" data={smt}>
+        {smtData && (
+          <Source id="smtSource" type="geojson" data={smtData}>
             <Layer
-              id="seamounts"
+              id="smt"
               type="symbol"
               layout={{
                 "icon-image": "smt_icon",
@@ -524,7 +271,7 @@ export default function DatabaseMap({
                 "text-size": 12,
                 "text-optional": true,
                 "icon-overlap": "always",
-                visibility: showSeamounts ? "visible" : "none",
+                visibility: dataVisibility.smt ? "visible" : "none",
               }}
               paint={{
                 "text-halo-color": "#F8FAFCCC",
@@ -539,8 +286,8 @@ export default function DatabaseMap({
             />
           </Source>
         )}
-        {smt && (
-          <Source id="gnssSource" type="geojson" data={gnss}>
+        {gnssData && (
+          <Source id="gnssSource" type="geojson" data={gnssData}>
             <Layer
               id="gnss"
               type="symbol"
@@ -562,7 +309,7 @@ export default function DatabaseMap({
                 "text-size": 12,
                 "text-optional": true,
                 "icon-overlap": "always",
-                visibility: showGNSS ? "visible" : "none",
+                visibility: dataVisibility.gnss ? "visible" : "none",
               }}
               paint={{
                 "text-halo-color": "#F8FAFCCC",
@@ -573,6 +320,118 @@ export default function DatabaseMap({
                     [8, 1],
                   ],
                 },
+              }}
+            />
+          </Source>
+        )}
+        {fltData && (
+          <Source id="fltSource" type="geojson" data={fltData}>
+            <Layer
+              id="flt"
+              type="line"
+              layout={{
+                "line-cap": "round",
+                visibility: dataVisibility.flt ? "visible" : "none",
+              }}
+              paint={{
+                "line-color": "#f43f5e",
+                "line-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  [
+                    "case",
+                    ["boolean", ["feature-state", "hover"], false],
+                    6,
+                    1,
+                  ],
+                  15,
+                  [
+                    "case",
+                    ["boolean", ["feature-state", "hover"], false],
+                    16,
+                    6,
+                  ],
+                ],
+                "line-opacity": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  1,
+                  15,
+                  0.6,
+                ],
+              }}
+            />
+          </Source>
+        )}
+        {seisData && (
+          <Source id="seisSource" type="geojson" data={seisData}>
+            <Layer
+              id="seis"
+              type="circle"
+              layout={{ visibility: dataVisibility.seis ? "visible" : "none" }}
+              paint={{
+                "circle-radius": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  [
+                    "interpolate",
+                    ["exponential", 2],
+                    ["get", "mw"],
+                    2,
+                    2,
+                    9,
+                    16,
+                  ],
+                  15,
+                  [
+                    "interpolate",
+                    ["exponential", 2],
+                    ["get", "mw"],
+                    2,
+                    12,
+                    9,
+                    48,
+                  ],
+                ],
+                "circle-stroke-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  0,
+                  13,
+                  2,
+                ],
+                "circle-opacity": 0.7,
+                "circle-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "depth"],
+                  4,
+                  "#fff7ec",
+                  8,
+                  "#fee8c8",
+                  16,
+                  "#fdd49e",
+                  32,
+                  "#fdbb84",
+                  64,
+                  "#eb7c49",
+                  128,
+                  "#db5235",
+                  256,
+                  "#b52112",
+                  512,
+                  "#750606",
+                  640,
+                  "#120504",
+                ],
               }}
             />
           </Source>

@@ -1,4 +1,3 @@
-import { relations } from "drizzle-orm";
 import {
   doublePrecision,
   foreignKey,
@@ -10,6 +9,7 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm/relations";
 
 export const invest = pgSchema("invest");
 
@@ -78,8 +78,6 @@ export const seisInInvest = invest.table(
       .defaultNow()
       .notNull(),
     seisCatId: integer("seis_cat_id"),
-    countryId1: integer("country_id1"),
-    countryId2: integer("country_id2"),
     ccIdLoad: smallint("cc_id_load").default(1),
   },
   (table) => [
@@ -87,16 +85,6 @@ export const seisInInvest = invest.table(
       columns: [table.ccIdLoad],
       foreignColumns: [countryInInvest.countryId],
       name: "seis_cc_id_load_fkey",
-    }),
-    foreignKey({
-      columns: [table.countryId1],
-      foreignColumns: [countryInInvest.countryId],
-      name: "seis_country_id1_fkey",
-    }),
-    foreignKey({
-      columns: [table.countryId2],
-      foreignColumns: [countryInInvest.countryId],
-      name: "seis_country_id2_fkey",
     }),
     foreignKey({
       columns: [table.seisCatId],
@@ -217,8 +205,6 @@ export const fltInInvest = invest.table(
     fltGeom: geometry("flt_geom").notNull(),
     fltSrcId: integer("flt_src_id"),
     fltLoaddate: time("flt_loaddate").defaultNow().notNull(),
-    fltCountryId1: integer("flt_country_id1"),
-    fltCountryId2: integer("flt_country_id2"),
     ccLoadId: smallint("cc_load_id").default(1),
   },
   (table) => [
@@ -226,16 +212,6 @@ export const fltInInvest = invest.table(
       columns: [table.ccLoadId],
       foreignColumns: [ccInInvest.ccId],
       name: "flt_cc_load_id_fkey",
-    }),
-    foreignKey({
-      columns: [table.fltCountryId1],
-      foreignColumns: [countryInInvest.countryId],
-      name: "flt_flt_country_id1_fkey",
-    }),
-    foreignKey({
-      columns: [table.fltCountryId2],
-      foreignColumns: [countryInInvest.countryId],
-      name: "flt_flt_country_id2_fkey",
     }),
     foreignKey({
       columns: [table.fltSrcId],
@@ -351,20 +327,9 @@ export const smtInInvest = invest.table(
 );
 
 export const seisInInvestRelations = relations(seisInInvest, ({ one }) => ({
-  countryInInvest_ccIdLoad: one(countryInInvest, {
+  countryInInvest: one(countryInInvest, {
     fields: [seisInInvest.ccIdLoad],
     references: [countryInInvest.countryId],
-    relationName: "seisInInvest_ccIdLoad_countryInInvest_countryId",
-  }),
-  countryInInvest_countryId1: one(countryInInvest, {
-    fields: [seisInInvest.countryId1],
-    references: [countryInInvest.countryId],
-    relationName: "seisInInvest_countryId1_countryInInvest_countryId",
-  }),
-  countryInInvest_countryId2: one(countryInInvest, {
-    fields: [seisInInvest.countryId2],
-    references: [countryInInvest.countryId],
-    relationName: "seisInInvest_countryId2_countryInInvest_countryId",
   }),
   seisCatInInvest: one(seisCatInInvest, {
     fields: [seisInInvest.seisCatId],
@@ -375,26 +340,12 @@ export const seisInInvestRelations = relations(seisInInvest, ({ one }) => ({
 export const countryInInvestRelations = relations(
   countryInInvest,
   ({ many }) => ({
-    seisInInvests_ccIdLoad: many(seisInInvest, {
-      relationName: "seisInInvest_ccIdLoad_countryInInvest_countryId",
-    }),
-    seisInInvests_countryId1: many(seisInInvest, {
-      relationName: "seisInInvest_countryId1_countryInInvest_countryId",
-    }),
-    seisInInvests_countryId2: many(seisInInvest, {
-      relationName: "seisInInvest_countryId2_countryInInvest_countryId",
-    }),
+    seisInInvests: many(seisInInvest),
     vlcInInvests_countryId1: many(vlcInInvest, {
       relationName: "vlcInInvest_countryId1_countryInInvest_countryId",
     }),
     vlcInInvests_countryId2: many(vlcInInvest, {
       relationName: "vlcInInvest_countryId2_countryInInvest_countryId",
-    }),
-    fltInInvests_fltCountryId1: many(fltInInvest, {
-      relationName: "fltInInvest_fltCountryId1_countryInInvest_countryId",
-    }),
-    fltInInvests_fltCountryId2: many(fltInInvest, {
-      relationName: "fltInInvest_fltCountryId2_countryInInvest_countryId",
     }),
     gnssStnInInvests: many(gnssStnInInvest),
     smtInInvests: many(smtInInvest),
@@ -447,16 +398,6 @@ export const fltInInvestRelations = relations(fltInInvest, ({ one }) => ({
   ccInInvest: one(ccInInvest, {
     fields: [fltInInvest.ccLoadId],
     references: [ccInInvest.ccId],
-  }),
-  countryInInvest_fltCountryId1: one(countryInInvest, {
-    fields: [fltInInvest.fltCountryId1],
-    references: [countryInInvest.countryId],
-    relationName: "fltInInvest_fltCountryId1_countryInInvest_countryId",
-  }),
-  countryInInvest_fltCountryId2: one(countryInInvest, {
-    fields: [fltInInvest.fltCountryId2],
-    references: [countryInInvest.countryId],
-    relationName: "fltInInvest_fltCountryId2_countryInInvest_countryId",
   }),
   fltSrcInInvest: one(fltSrcInInvest, {
     fields: [fltInInvest.fltSrcId],
