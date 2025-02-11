@@ -34,3 +34,14 @@ export const gnssFormSchema = z.object({
   stations: z.string(),
   countries: z.string(),
 });
+
+export const fltFormSchema = z.object({
+  length: z.number().array().length(2),
+  lengthAllowNull: z.boolean(),
+  sliprate: z.number().array().length(2),
+  sliprateAllowNull: z.boolean(),
+  depth: z.number().array().length(2),
+  depthAllowNull: z.boolean(),
+  types: z.string(),
+  catalogs: z.string(),
+});

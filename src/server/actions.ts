@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  fltFormSchema,
   gnssFormSchema,
   smtFormSchema,
   vlcFormSchema,
@@ -20,6 +21,8 @@ import { z } from "zod";
 import { db } from "./db";
 import {
   countryInInvest,
+  fltInInvest,
+  fltSrcInInvest,
   gnssStnInInvest,
   smtInInvest,
   smtSrcInInvest,
@@ -54,24 +57,36 @@ const sqlToGeojson = (
   };
 };
 
-export const LoadSmt = async (values: z.infer<typeof smtFormSchema>) => {
+type ReturnType =
+  | { success: false; error: string }
+  | { success: true; data: FeatureCollection };
+
+export const LoadSmt = async (
+  values: z.infer<typeof smtFormSchema>,
+): Promise<ReturnType> => {
   const { success } = smtFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
   const filters: (SQL | undefined)[] = [];
   if (values.class !== "All") {
     if (values.class === "NULL") {
       filters.push(isNull(smtInInvest.smtClass));
-    } else filters.push(eq(smtInInvest.smtClass, values.class));
+    } else {
+      filters.push(eq(smtInInvest.smtClass, values.class));
+    }
   }
   if (values.catalogs !== "All") {
     if (values.catalogs === "NULL") {
       filters.push(isNull(smtInInvest.smtSrcId));
-    } else filters.push(eq(smtSrcInInvest.smtSrcName, values.catalogs));
+    } else {
+      filters.push(eq(smtSrcInInvest.smtSrcName, values.catalogs));
+    }
   }
   if (values.countries !== "All") {
     if (values.countries === "NULL") {
       filters.push(isNull(smtInInvest.countryId));
-    } else filters.push(eq(countryInInvest.countryName, values.countries));
+    } else {
+      filters.push(eq(countryInInvest.countryName, values.countries));
+    }
   }
 
   if (values.elevAllowNull) {
@@ -165,7 +180,9 @@ export const LoadSmt = async (values: z.infer<typeof smtFormSchema>) => {
   return { success: true, data: dataReturn };
 };
 
-export const LoadVlc = async (values: z.infer<typeof vlcFormSchema>) => {
+export const LoadVlc = async (
+  values: z.infer<typeof vlcFormSchema>,
+): Promise<ReturnType> => {
   const { success } = vlcFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
   const filters: (SQL | undefined)[] = [];
@@ -226,7 +243,9 @@ export const LoadVlc = async (values: z.infer<typeof vlcFormSchema>) => {
   return { success: true, data: dataReturn };
 };
 
-export const LoadGNSS = async (values: z.infer<typeof gnssFormSchema>) => {
+export const LoadGNSS = async (
+  values: z.infer<typeof gnssFormSchema>,
+): Promise<ReturnType> => {
   const { success } = gnssFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
   const filters: (SQL | undefined)[] = [];
@@ -300,6 +319,83 @@ export const LoadGNSS = async (values: z.infer<typeof gnssFormSchema>) => {
       stnTypeInInvest,
       eq(stnTypeInInvest.stnTypeId, gnssStnInInvest.stnTypeId),
     )
+    .where(and(...filters));
+  const dataReturn = sqlToGeojson(data);
+
+  return { success: true, data: dataReturn };
+};
+
+export const LoadFlt = async (
+  values: z.infer<typeof fltFormSchema>,
+): Promise<ReturnType> => {
+  const { success } = fltFormSchema.safeParse(values);
+  if (!success) return { success: false, error: "Values do not follow schema" };
+  const filters: (SQL | undefined)[] = [];
+  if (values.types !== "All") {
+    if (values.types === "NULL") {
+      filters.push(isNull(fltInInvest.fltType));
+    } else filters.push(eq(fltInInvest.fltType, values.types));
+  }
+  if (values.catalogs !== "All") {
+    if (values.catalogs === "NULL") {
+      filters.push(isNull(fltInInvest.fltSrcId));
+    } else filters.push(eq(fltSrcInInvest.fltSrc, values.catalogs));
+  }
+
+  if (values.lengthAllowNull) {
+    filters.push(
+      or(
+        between(fltInInvest.fltLen, values.length[0], values.length[1]),
+        isNull(fltInInvest.fltLen),
+      ),
+    );
+  } else {
+    filters.push(
+      between(fltInInvest.fltLen, values.length[0], values.length[1]),
+    );
+  }
+  if (values.sliprateAllowNull) {
+    filters.push(
+      or(
+        between(
+          fltInInvest.fltSliprate,
+          values.sliprate[0],
+          values.sliprate[1],
+        ),
+        isNull(fltInInvest.fltSliprate),
+      ),
+    );
+  } else {
+    filters.push(
+      between(fltInInvest.fltSliprate, values.sliprate[0], values.sliprate[1]),
+    );
+  }
+  if (values.depthAllowNull) {
+    filters.push(
+      or(
+        between(fltInInvest.fltLockDepth, values.depth[0], values.depth[1]),
+        isNull(fltInInvest.fltLockDepth),
+      ),
+    );
+  } else {
+    filters.push(
+      between(fltInInvest.fltLockDepth, values.depth[0], values.depth[1]),
+    );
+  }
+
+  const data = await db
+    .select({
+      id: fltInInvest.fltId,
+      name: fltInInvest.fltName,
+      type: fltInInvest.fltType,
+      length: fltInInvest.fltLen,
+      sliprate: fltInInvest.fltSliprate,
+      lockdepth: fltInInvest.fltLockDepth,
+      catalog: fltSrcInInvest.fltSrc,
+      geojson: sql<string>`ST_ASGEOJSON(${fltInInvest.fltGeom})`,
+    })
+    .from(fltInInvest)
+    .leftJoin(fltSrcInInvest, eq(fltInInvest.fltSrcId, fltSrcInInvest.fltSrcId))
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 

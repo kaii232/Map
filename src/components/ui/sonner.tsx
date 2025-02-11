@@ -1,3 +1,6 @@
+"use client";
+
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 import { Toaster as Sonner } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
@@ -5,17 +8,32 @@ type ToasterProps = React.ComponentProps<typeof Sonner>;
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
-      className="toaster group"
+      theme={"light"}
+      gap={8}
+      duration={5000}
+      expand
       toastOptions={{
         classNames: {
+          title: "font-sans text-sm leading-none",
+          description:
+            "font-sans text-sm text-slate-500 group-data-[type='success']:text-green-600 group-data-[type='error']:text-red-600 group-data-[type='warning']:text-orange-600 group-data-[type='info']:text-blue-600",
           toast:
-            "group toast group-[.toaster]:bg-white group-[.toaster]:text-slate-950 group-[.toaster]:border-slate-200 group-[.toaster]:shadow-lg ",
-          description: "group-[.toast]:text-slate-500 ",
+            "border-slate-200 text-slate-700 bg-white shadow-lg rounded-lg p-4 group border-2",
           actionButton:
-            "group-[.toast]:bg-slate-900 group-[.toast]:text-slate-50 ",
-          cancelButton:
-            "group-[.toast]:bg-slate-100 group-[.toast]:text-slate-500",
+            "bg-slate-700 text-zinc-50 hover:bg-slate-700/90 font-sans text-xs",
+          cancelButton: "hover:bg-slate-100 text-slate-700 font-sans text-xs",
+          error: "!bg-rose-50 !border-rose-200 !text-red-700",
+          success: "!bg-emerald-50 !border-emerald-200 !text-green-700",
+          warning: "!bg-amber-50 !border-amber-200 !text-orange-700",
+          info: "!bg-sky-50 !border-sky-200 !text-blue-700",
+          icon: "size-5 [&_svg]:size-5 mr-0",
         },
+      }}
+      icons={{
+        error: <CircleAlert />,
+        success: <CircleCheck />,
+        warning: <TriangleAlert />,
+        info: <Info />,
       }}
       {...props}
     />

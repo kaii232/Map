@@ -29,64 +29,6 @@ export default async function DatabasePage() {
 
   const [vlcFilters, seisFilters, smtFilters, gnssFilters, fltFilters] =
     await Promise.all([
-      // db
-      //   .select({
-      //     id: vlcInInvest.vlcId,
-      //     name: vlcInInvest.vlcName,
-      //     elevation: vlcInInvest.vlcElev,
-      //     class: vlcInInvest.vlcClass,
-      //     categorySource: vlcInInvest.vlcCatSrc,
-      //     country: countryInInvest.countryName,
-      //     geojson: sql<string>`ST_ASGEOJSON(${vlcInInvest.vlcGeom})`,
-      //   })
-      //   .from(vlcInInvest)
-      //   .leftJoin(
-      //     countryInInvest,
-      //     or(
-      //       eq(vlcInInvest.countryId1, countryInInvest.countryId),
-      //       eq(vlcInInvest.countryId2, countryInInvest.countryId),
-      //     ),
-      //   ),
-      // db
-      //   .select({
-      //     id: smtInInvest.smtId,
-      //     name: smtInInvest.smtName,
-      //     class: smtInInvest.smtClass,
-      //     elevation: smtInInvest.smtElev,
-      //     base: smtInInvest.smtBase,
-      //     summit: smtInInvest.smtSummit,
-      //     bw: smtInInvest.smtBw,
-      //     ba: smtInInvest.smtBa,
-      //     bl: smtInInvest.smtBl,
-      //     country: countryInInvest.countryName,
-      //     geojson: sql<string>`ST_ASGEOJSON(${smtInInvest.smtGeom})`,
-      //   })
-      //   .from(smtInInvest)
-      //   .leftJoin(
-      //     countryInInvest,
-      //     eq(smtInInvest.countryId, countryInInvest.countryId),
-      //   ),
-      // db
-      //   .select({
-      //     id: gnssStnInInvest.gnssId,
-      //     name: gnssStnInInvest.gnssName,
-      //     project: gnssStnInInvest.gnssProj,
-      //     type: stnTypeInInvest.stnTypeName,
-      //     elevation: gnssStnInInvest.gnssElev,
-      //     country: countryInInvest.countryName,
-      //     installDate: gnssStnInInvest.gnssInstDate,
-      //     decomDate: gnssStnInInvest.gnssDecomDate,
-      //     geojson: sql<string>`ST_ASGEOJSON(${gnssStnInInvest.gnssGeom})`,
-      //   })
-      //   .from(gnssStnInInvest)
-      //   .leftJoin(
-      //     countryInInvest,
-      //     eq(gnssStnInInvest.countryId, countryInInvest.countryId),
-      //   )
-      //   .leftJoin(
-      //     stnTypeInInvest,
-      //     eq(stnTypeInInvest.stnTypeId, gnssStnInInvest.stnTypeId),
-      //   ),
       db
         .with(sources)
         .select({

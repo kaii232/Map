@@ -1,43 +1,46 @@
+type Range = [number, number];
+type Categories = string[] | null;
+
 export type VlcFilters = {
-  classes: string[];
-  countries: string[];
-  categorySources: string[];
-  sources: string[];
+  classes: Categories;
+  countries: Categories;
+  categorySources: Categories;
+  sources: Categories;
 };
 
 export type SeisFilters = {
-  depthRange: [number, number];
-  mwRange: [number, number];
-  msRange: [number, number];
-  mbRange: [number, number];
+  depthRange: Range;
+  mwRange: Range;
+  msRange: Range;
+  mbRange: Range;
   dateRange: [string, string];
-  catalogs: string[];
+  catalogs: Categories;
 };
 
 export type SmtFilters = {
-  elevRange: [number, number];
-  baseRange: [number, number];
-  summitRange: [number, number];
-  blRange: [number, number];
-  bwRange: [number, number];
-  baRange: [number, number];
-  classes: string[];
-  catalogs: string[];
-  countries: string[];
+  elevRange: Range;
+  baseRange: Range;
+  summitRange: Range;
+  blRange: Range;
+  bwRange: Range;
+  baRange: Range;
+  classes: Categories;
+  catalogs: Categories;
+  countries: Categories;
 };
 
 export type GnssFilters = {
-  elevRange: [number, number];
-  dateRange: [string, string];
-  projects: string[];
-  stations: string[];
-  countries: string[];
+  elevRange: Range;
+  dateRange: Categories;
+  projects: Categories;
+  stations: Categories;
+  countries: Categories;
 };
 
 export type FltFilters = {
-  lengthRange: [number, number];
-  sliprateRange: [number, number];
-  depthRange: [number, number];
-  types: string[];
-  catalogs: string[];
+  lengthRange: Range;
+  sliprateRange: Range;
+  depthRange: Range;
+  types: Categories;
+  catalogs: Categories;
 };

@@ -42,14 +42,18 @@ import { gnssFormSchema } from "./form-schema";
 export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
   const setGnssData = useSetAtom(gnssDataAtom);
 
+  const earliest = new Date(filters.dateRange ? filters.dateRange[0] : 0);
+  const latest = new Date(filters.dateRange ? filters.dateRange[1] : 0);
+  const elevRange = [filters.elevRange[0] || 0, filters.elevRange[1] || 0];
+
   const form = useForm<z.infer<typeof gnssFormSchema>>({
     resolver: zodResolver(gnssFormSchema),
     defaultValues: {
-      elevation: [filters.elevRange[0], filters.elevRange[1]],
+      elevation: elevRange,
       elevAllowNull: true,
       date: {
-        from: new Date(filters.dateRange[0]),
-        to: new Date(filters.dateRange[1]),
+        from: earliest,
+        to: latest,
       },
       dateAllowNull: true,
       projects: "All",
@@ -63,8 +67,12 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
   const submitAction = async (values: z.infer<typeof gnssFormSchema>) => {
     startTransition(async () => {
       const data = await LoadGNSS(values);
-      if (data.success) setGnssData(data.data);
-      else toast.error(data.error);
+      if (data.success) {
+        toast.success(
+          `Successfully loaded ${data.data.features.length} GNSS Stations`,
+        );
+        setGnssData(data.data);
+      } else toast.error(data.error);
     });
   };
 
@@ -87,8 +95,8 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
                     ref={field.ref}
                     disabled={field.disabled}
                     value={field.value}
-                    min={filters.elevRange[0]}
-                    max={filters.elevRange[1]}
+                    min={elevRange[0]}
+                    max={elevRange[1]}
                   />
                 </FormControl>
                 <FormDescription className="flex w-full justify-between">
@@ -159,11 +167,11 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
                       <Calendar
                         captionLayout="dropdown"
                         disabled={{
-                          before: new Date(filters.dateRange[0]),
-                          after: new Date(filters.dateRange[1]),
+                          before: earliest,
+                          after: latest,
                         }}
-                        startMonth={new Date(filters.dateRange[0])}
-                        endMonth={new Date(filters.dateRange[1])}
+                        startMonth={earliest}
+                        endMonth={latest}
                         mode="range"
                         required
                         selected={field.value}
@@ -238,7 +246,7 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.projects.map((type) => (
+                  {filters.projects?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
@@ -263,7 +271,7 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.stations.map((type) => (
+                  {filters.stations?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
@@ -288,7 +296,7 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.countries.map((type) => (
+                  {filters.countries?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>

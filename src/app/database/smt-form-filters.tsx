@@ -34,20 +34,30 @@ import { smtFormSchema } from "./form-schema";
 export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
   const setSmtData = useSetAtom(smtDataAtom);
 
+  const elevRange = [filters.elevRange[0] || 0, filters.elevRange[1] || 0];
+  const baseRange = [filters.baseRange[0] || 0, filters.baseRange[1] || 0];
+  const summitRange = [
+    filters.summitRange[0] || 0,
+    filters.summitRange[1] || 0,
+  ];
+  const blRange = [filters.blRange[0] || 0, filters.blRange[1] || 0];
+  const bwRange = [filters.bwRange[0] || 0, filters.bwRange[1] || 0];
+  const baRange = [filters.baRange[0] || 0, filters.baRange[1] || 0];
+
   const form = useForm<z.infer<typeof smtFormSchema>>({
     resolver: zodResolver(smtFormSchema),
     defaultValues: {
-      elevation: [filters.elevRange[0], filters.elevRange[1]],
+      elevation: elevRange,
       elevAllowNull: true,
-      base: [filters.baseRange[0], filters.baseRange[1]],
+      base: baseRange,
       baseAllowNull: true,
-      summit: [filters.summitRange[0], filters.summitRange[1]],
+      summit: summitRange,
       summitAllowNull: true,
-      bl: [filters.blRange[0], filters.blRange[1]],
+      bl: blRange,
       blAllowNull: true,
-      bw: [filters.bwRange[0], filters.bwRange[1]],
+      bw: bwRange,
       bwAllowNull: true,
-      ba: [filters.baRange[0], filters.baRange[1]],
+      ba: baRange,
       baAllowNull: true,
       class: "All",
       catalogs: "All",
@@ -60,8 +70,12 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
   const submitAction = async (values: z.infer<typeof smtFormSchema>) => {
     startTransition(async () => {
       const data = await LoadSmt(values);
-      if (data.success) setSmtData(data.data);
-      else toast.error(data.error);
+      if (data.success) {
+        toast.success(
+          `Successfully loaded ${data.data.features.length} seamounts`,
+        );
+        setSmtData(data.data);
+      } else toast.error(data.error);
     });
   };
 
@@ -84,8 +98,8 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                     ref={field.ref}
                     disabled={field.disabled}
                     value={field.value}
-                    min={filters.elevRange[0]}
-                    max={filters.elevRange[1]}
+                    min={elevRange[0]}
+                    max={elevRange[1]}
                   />
                 </FormControl>
                 <FormDescription className="flex w-full justify-between">
@@ -135,8 +149,8 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                     ref={field.ref}
                     disabled={field.disabled}
                     value={field.value}
-                    min={filters.baseRange[0]}
-                    max={filters.baseRange[1]}
+                    min={baseRange[0]}
+                    max={baseRange[1]}
                   />
                 </FormControl>
                 <FormDescription className="flex w-full justify-between">
@@ -186,8 +200,8 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                     ref={field.ref}
                     disabled={field.disabled}
                     value={field.value}
-                    min={filters.summitRange[0]}
-                    max={filters.summitRange[1]}
+                    min={summitRange[0]}
+                    max={summitRange[1]}
                   />
                 </FormControl>
                 <FormDescription className="flex w-full justify-between">
@@ -237,8 +251,8 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                     disabled={field.disabled}
                     value={field.value}
                     step={0.1}
-                    min={filters.blRange[0]}
-                    max={filters.blRange[1]}
+                    min={blRange[0]}
+                    max={blRange[1]}
                   />
                 </FormControl>
                 <FormDescription className="flex w-full justify-between">
@@ -288,8 +302,8 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                     disabled={field.disabled}
                     value={field.value}
                     step={0.1}
-                    min={filters.bwRange[0]}
-                    max={filters.bwRange[1]}
+                    min={bwRange[0]}
+                    max={bwRange[1]}
                   />
                 </FormControl>
                 <FormDescription className="flex w-full justify-between">
@@ -339,8 +353,8 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                     disabled={field.disabled}
                     value={field.value}
                     step={0.1}
-                    min={filters.baRange[0]}
-                    max={filters.baRange[1]}
+                    min={baRange[0]}
+                    max={baRange[1]}
                   />
                 </FormControl>
                 <FormDescription className="flex w-full justify-between">
@@ -388,7 +402,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.classes.map((type) => (
+                  {filters.classes?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
@@ -413,7 +427,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.catalogs.map((type) => (
+                  {filters.catalogs?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
@@ -438,7 +452,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.countries.map((type) => (
+                  {filters.countries?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>

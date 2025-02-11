@@ -46,8 +46,12 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
   const submitAction = async (values: z.infer<typeof vlcFormSchema>) => {
     startTransition(async () => {
       const data = await LoadVlc(values);
-      if (data.success) setVlcData(data.data);
-      else toast.error(data.error);
+      if (data.success) {
+        toast.success(
+          `Successfully loaded ${data.data.features.length} volcanoes`,
+        );
+        setVlcData(data.data);
+      } else toast.error(data.error);
     });
   };
 
@@ -68,7 +72,7 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.classes.map((type) => (
+                  {filters.classes?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
@@ -93,7 +97,7 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.categorySources.map((type) => (
+                  {filters.categorySources?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
@@ -118,7 +122,7 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.sources.map((type) => (
+                  {filters.sources?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
@@ -143,7 +147,7 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
-                  {filters.countries.map((type) => (
+                  {filters.countries?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
