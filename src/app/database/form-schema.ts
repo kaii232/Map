@@ -24,3 +24,13 @@ export const smtFormSchema = z.object({
   catalogs: z.string(),
   countries: z.string(),
 });
+
+export const gnssFormSchema = z.object({
+  elevation: z.number().array().length(2),
+  elevAllowNull: z.boolean(),
+  date: z.object({ from: z.date(), to: z.date() }).required(),
+  dateAllowNull: z.boolean(),
+  projects: z.string(),
+  stations: z.string(),
+  countries: z.string(),
+});

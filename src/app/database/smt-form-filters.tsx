@@ -57,9 +57,9 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
 
   const [isPending, startTransition] = useTransition();
 
-  const submitAction = async () => {
+  const submitAction = async (values: z.infer<typeof smtFormSchema>) => {
     startTransition(async () => {
-      const data = await LoadSmt(form.getValues());
+      const data = await LoadSmt(values);
       if (data.success) setSmtData(data.data);
       else toast.error(data.error);
     });
@@ -67,7 +67,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
 
   return (
     <Form {...form}>
-      <form className="space-y-4" action={submitAction}>
+      <form className="space-y-4" onSubmit={form.handleSubmit(submitAction)}>
         <div className="space-y-1">
           <FormField
             control={form.control}

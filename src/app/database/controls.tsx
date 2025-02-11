@@ -21,6 +21,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { ChevronLeft, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { dataVisibilityAtom, layersAtom, mapStyleAtom } from "./atoms";
+import GnssFormFilters from "./gnss-form-filters";
 import SmtFormFilters from "./smt-form-filters";
 import VlcFormFilters from "./vlc-form-filters";
 
@@ -172,14 +173,14 @@ export default function Controls({
   return (
     <div
       className={cn(
-        "fixed inset-y-0 left-0 z-10 max-h-screen w-[320px] transition-transform duration-700 ease-map",
+        "fixed inset-y-0 left-0 z-10 max-h-screen w-full max-w-[320px] transition-transform duration-700 ease-map",
         !open && "-translate-x-full",
       )}
     >
       <Button
         size="icon"
         variant="outline"
-        className="absolute left-full top-2.5 ml-2.5"
+        className="absolute left-[min(calc(100vw-20px-32px),320px)] top-0 ml-2.5 mt-2.5 size-8"
         onClick={() => {
           setOpen((prev) => !prev);
           if (map) {
@@ -320,11 +321,35 @@ export default function Controls({
                   id="switch"
                   checked={dataVisibility.vlc}
                   onCheckedChange={(e: boolean) =>
-                    setDataVisibility((prev) => ({ ...prev, smt: e }))
+                    setDataVisibility((prev) => ({ ...prev, vlc: e }))
                   }
                 />
               </div>
               <VlcFormFilters filters={filters.vlc} />
+            </CollapsibleContent>
+          </Collapsible>
+          <Collapsible className="flex flex-col">
+            <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+              GNSS Stations
+              <ChevronsUpDown />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-2 pr-1">
+              <div className="mb-2 flex items-center justify-between">
+                <label
+                  htmlFor="switch"
+                  className="text-xs font-medium text-zinc-700"
+                >
+                  Visibility
+                </label>
+                <Switch
+                  id="switch"
+                  checked={dataVisibility.gnss}
+                  onCheckedChange={(e: boolean) =>
+                    setDataVisibility((prev) => ({ ...prev, gnss: e }))
+                  }
+                />
+              </div>
+              <GnssFormFilters filters={filters.gnss} />
             </CollapsibleContent>
           </Collapsible>
         </div>

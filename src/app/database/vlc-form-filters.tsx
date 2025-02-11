@@ -43,9 +43,9 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
 
   const [isPending, startTransition] = useTransition();
 
-  const submitAction = async () => {
+  const submitAction = async (values: z.infer<typeof vlcFormSchema>) => {
     startTransition(async () => {
-      const data = await LoadVlc(form.getValues());
+      const data = await LoadVlc(values);
       if (data.success) setVlcData(data.data);
       else toast.error(data.error);
     });
@@ -53,7 +53,7 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
 
   return (
     <Form {...form}>
-      <form className="space-y-4" action={submitAction}>
+      <form className="space-y-4" onSubmit={form.handleSubmit(submitAction)}>
         <FormField
           control={form.control}
           name="class"

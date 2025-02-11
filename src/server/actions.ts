@@ -1,6 +1,10 @@
 "use server";
 
-import { smtFormSchema, vlcFormSchema } from "@/app/database/form-schema";
+import {
+  gnssFormSchema,
+  smtFormSchema,
+  vlcFormSchema,
+} from "@/app/database/form-schema";
 import {
   and,
   between,
@@ -16,8 +20,10 @@ import { z } from "zod";
 import { db } from "./db";
 import {
   countryInInvest,
+  gnssStnInInvest,
   smtInInvest,
   smtSrcInInvest,
+  stnTypeInInvest,
   vlcInInvest,
   vlcSrcInInvest,
 } from "./db/schema";
@@ -58,7 +64,7 @@ export const LoadSmt = async (values: z.infer<typeof smtFormSchema>) => {
     } else filters.push(eq(smtInInvest.smtClass, values.class));
   }
   if (values.catalogs !== "All") {
-    if (values.class === "NULL") {
+    if (values.catalogs === "NULL") {
       filters.push(isNull(smtInInvest.smtSrcId));
     } else filters.push(eq(smtSrcInInvest.smtSrcName, values.catalogs));
   }
@@ -214,6 +220,86 @@ export const LoadVlc = async (values: z.infer<typeof vlcFormSchema>) => {
       ),
     )
     .leftJoin(vlcSrcInInvest, eq(vlcInInvest.vlcSrcId, vlcSrcInInvest.vlcSrcId))
+    .where(and(...filters));
+  const dataReturn = sqlToGeojson(data);
+
+  return { success: true, data: dataReturn };
+};
+
+export const LoadGNSS = async (values: z.infer<typeof gnssFormSchema>) => {
+  const { success } = gnssFormSchema.safeParse(values);
+  if (!success) return { success: false, error: "Values do not follow schema" };
+  const filters: (SQL | undefined)[] = [];
+  if (values.projects !== "All") {
+    if (values.projects === "NULL") {
+      filters.push(isNull(gnssStnInInvest.gnssProj));
+    } else filters.push(eq(gnssStnInInvest.gnssProj, values.projects));
+  }
+  if (values.stations !== "All") {
+    if (values.stations === "NULL") {
+      filters.push(isNull(gnssStnInInvest.stnTypeId));
+    } else filters.push(eq(stnTypeInInvest.stnTypeName, values.stations));
+  }
+  if (values.countries !== "All") {
+    if (values.countries === "NULL") {
+      filters.push(isNull(gnssStnInInvest.countryId));
+    } else filters.push(eq(countryInInvest.countryName, values.countries));
+  }
+
+  if (values.elevAllowNull) {
+    filters.push(
+      or(
+        between(
+          gnssStnInInvest.gnssElev,
+          values.elevation[0],
+          values.elevation[1],
+        ),
+        isNull(gnssStnInInvest.gnssElev),
+      ),
+    );
+  } else {
+    filters.push(
+      between(
+        gnssStnInInvest.gnssElev,
+        values.elevation[0],
+        values.elevation[1],
+      ),
+    );
+  }
+  if (values.dateAllowNull) {
+    filters.push(
+      or(
+        between(gnssStnInInvest.gnssInstDate, values.date.from, values.date.to),
+        isNull(gnssStnInInvest.gnssInstDate),
+      ),
+    );
+  } else {
+    filters.push(
+      between(gnssStnInInvest.gnssInstDate, values.date.from, values.date.to),
+    );
+  }
+
+  const data = await db
+    .select({
+      id: gnssStnInInvest.gnssId,
+      name: gnssStnInInvest.gnssName,
+      project: gnssStnInInvest.gnssProj,
+      type: stnTypeInInvest.stnTypeName,
+      elevation: gnssStnInInvest.gnssElev,
+      country: countryInInvest.countryName,
+      installDate: gnssStnInInvest.gnssInstDate,
+      decomDate: gnssStnInInvest.gnssDecomDate,
+      geojson: sql<string>`ST_ASGEOJSON(${gnssStnInInvest.gnssGeom})`,
+    })
+    .from(gnssStnInInvest)
+    .leftJoin(
+      countryInInvest,
+      eq(gnssStnInInvest.countryId, countryInInvest.countryId),
+    )
+    .leftJoin(
+      stnTypeInInvest,
+      eq(stnTypeInInvest.stnTypeId, gnssStnInInvest.stnTypeId),
+    )
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
