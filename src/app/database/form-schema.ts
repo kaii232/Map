@@ -45,3 +45,17 @@ export const fltFormSchema = z.object({
   types: z.string(),
   catalogs: z.string(),
 });
+
+export const seisFormSchema = z.object({
+  depth: z.number().array().length(2),
+  depthAllowNull: z.boolean(),
+  mw: z.number().array().length(2),
+  mwAllowNull: z.boolean(),
+  ms: z.number().array().length(2),
+  msAllowNull: z.boolean(),
+  mb: z.number().array().length(2),
+  mbAllowNull: z.boolean(),
+  date: z.object({ from: z.date(), to: z.date() }).required(),
+  dateAllowNull: z.boolean(),
+  catalogs: z.string(),
+});

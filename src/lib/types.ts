@@ -31,7 +31,7 @@ export type SmtFilters = {
 
 export type GnssFilters = {
   elevRange: Range;
-  dateRange: Categories;
+  dateRange: [string, string];
   projects: Categories;
   stations: Categories;
   countries: Categories;

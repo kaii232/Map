@@ -386,7 +386,7 @@ export default function DatabaseMap({
                     2,
                     2,
                     9,
-                    16,
+                    8,
                   ],
                   15,
                   [
@@ -394,9 +394,9 @@ export default function DatabaseMap({
                     ["exponential", 2],
                     ["get", "mw"],
                     2,
-                    12,
+                    8,
                     9,
-                    48,
+                    24,
                   ],
                 ],
                 "circle-stroke-width": [
@@ -456,9 +456,11 @@ export default function DatabaseMap({
               "[&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
           >
-            <div className="mb-2 text-lg font-semibold">
-              {hoverInfo.feature.properties.name}
-            </div>
+            {hoverInfo.feature.properties.name && (
+              <div className="mb-2 text-lg font-semibold">
+                {hoverInfo.feature.properties.name}
+              </div>
+            )}
             {Object.entries(hoverInfo.feature.properties).map(
               ([key, value]) => {
                 if (key === "name") return;
@@ -493,9 +495,11 @@ export default function DatabaseMap({
               "[&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
           >
-            <div className="mb-2 text-lg font-semibold">
-              {selectedFeature.feature.properties.name}
-            </div>
+            {selectedFeature.feature.properties.name && (
+              <div className="mb-2 text-lg font-semibold">
+                {selectedFeature.feature.properties.name}
+              </div>
+            )}
             {Object.entries(selectedFeature.feature.properties).map(
               ([key, value]) => {
                 if (key === "name") return;

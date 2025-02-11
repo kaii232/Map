@@ -3,6 +3,7 @@
 import {
   fltFormSchema,
   gnssFormSchema,
+  seisFormSchema,
   smtFormSchema,
   vlcFormSchema,
 } from "@/app/database/form-schema";
@@ -24,6 +25,8 @@ import {
   fltInInvest,
   fltSrcInInvest,
   gnssStnInInvest,
+  seisCatInInvest,
+  seisInInvest,
   smtInInvest,
   smtSrcInInvest,
   stnTypeInInvest,
@@ -396,6 +399,99 @@ export const LoadFlt = async (
     })
     .from(fltInInvest)
     .leftJoin(fltSrcInInvest, eq(fltInInvest.fltSrcId, fltSrcInInvest.fltSrcId))
+    .where(and(...filters));
+  const dataReturn = sqlToGeojson(data);
+
+  return { success: true, data: dataReturn };
+};
+
+export const LoadSeis = async (
+  values: z.infer<typeof seisFormSchema>,
+): Promise<ReturnType> => {
+  const { success } = seisFormSchema.safeParse(values);
+  if (!success) return { success: false, error: "Values do not follow schema" };
+  const filters: (SQL | undefined)[] = [];
+  if (values.catalogs !== "All") {
+    if (values.catalogs === "NULL") {
+      filters.push(isNull(seisInInvest.seisCatId));
+    } else filters.push(eq(seisCatInInvest.seisCatName, values.catalogs));
+  }
+
+  if (values.depthAllowNull) {
+    filters.push(
+      or(
+        between(seisInInvest.seisDepth, values.depth[0], values.depth[1]),
+        isNull(seisInInvest.seisDepth),
+      ),
+    );
+  } else {
+    filters.push(
+      between(seisInInvest.seisDepth, values.depth[0], values.depth[1]),
+    );
+  }
+
+  if (values.mwAllowNull) {
+    filters.push(
+      or(
+        between(seisInInvest.seisMw, values.mw[0], values.mw[1]),
+        isNull(seisInInvest.seisMw),
+      ),
+    );
+  } else {
+    filters.push(between(seisInInvest.seisMw, values.mw[0], values.mw[1]));
+  }
+
+  if (values.msAllowNull) {
+    filters.push(
+      or(
+        between(seisInInvest.seisMs, values.ms[0], values.ms[1]),
+        isNull(seisInInvest.seisMs),
+      ),
+    );
+  } else {
+    filters.push(between(seisInInvest.seisMs, values.ms[0], values.ms[1]));
+  }
+
+  if (values.mbAllowNull) {
+    filters.push(
+      or(
+        between(seisInInvest.seisMb, values.mb[0], values.mb[1]),
+        isNull(seisInInvest.seisMb),
+      ),
+    );
+  } else {
+    filters.push(between(seisInInvest.seisMb, values.mb[0], values.mb[1]));
+  }
+
+  if (values.dateAllowNull) {
+    filters.push(
+      or(
+        between(seisInInvest.seisDate, values.date.from, values.date.to),
+        isNull(seisInInvest.seisDate),
+      ),
+    );
+  } else {
+    filters.push(
+      between(seisInInvest.seisDate, values.date.from, values.date.to),
+    );
+  }
+
+  const data = await db
+    .select({
+      id: seisInInvest.seisId,
+      depth: seisInInvest.seisDepth,
+      mw: seisInInvest.seisMw,
+      ms: seisInInvest.seisMs,
+      mb: seisInInvest.seisMb,
+      catalog: seisCatInInvest.seisCatName,
+      date: seisInInvest.seisDate,
+      geojson: sql<string>`ST_ASGEOJSON(${seisInInvest.seisGeom})`,
+    })
+    .from(seisInInvest)
+    .leftJoin(
+      seisCatInInvest,
+      eq(seisCatInInvest.seisCatId, seisInInvest.seisCatId),
+    )
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 

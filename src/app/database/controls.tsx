@@ -23,6 +23,7 @@ import { useState } from "react";
 import { dataVisibilityAtom, layersAtom, mapStyleAtom } from "./atoms";
 import FltFormFilters from "./flt-form-filters";
 import GnssFormFilters from "./gnss-form-filters";
+import SeisFormFilters from "./seis-form-filters";
 import SmtFormFilters from "./smt-form-filters";
 import VlcFormFilters from "./vlc-form-filters";
 
@@ -375,6 +376,30 @@ export default function Controls({
                 />
               </div>
               <FltFormFilters filters={filters.flt} />
+            </CollapsibleContent>
+          </Collapsible>
+          <Collapsible className="flex flex-col">
+            <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+              Seismic
+              <ChevronsUpDown />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-2 pr-1">
+              <div className="mb-2 flex items-center justify-between">
+                <label
+                  htmlFor="switch"
+                  className="text-xs font-medium text-zinc-700"
+                >
+                  Visibility
+                </label>
+                <Switch
+                  id="switch"
+                  checked={dataVisibility.seis}
+                  onCheckedChange={(e: boolean) =>
+                    setDataVisibility((prev) => ({ ...prev, seis: e }))
+                  }
+                />
+              </div>
+              <SeisFormFilters filters={filters.seis} />
             </CollapsibleContent>
           </Collapsible>
         </div>
