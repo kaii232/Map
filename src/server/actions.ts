@@ -1,11 +1,26 @@
 "use server";
 
-import { smtFormSchema } from "@/app/database/smt-filters";
-import { and, between, eq, isNull, or, type SQL, sql } from "drizzle-orm";
+import { smtFormSchema, vlcFormSchema } from "@/app/database/form-schema";
+import {
+  and,
+  between,
+  eq,
+  ilike,
+  isNull,
+  or,
+  type SQL,
+  sql,
+} from "drizzle-orm";
 import { Feature, FeatureCollection } from "geojson";
 import { z } from "zod";
 import { db } from "./db";
-import { countryInInvest, smtInInvest, smtSrcInInvest } from "./db/schema";
+import {
+  countryInInvest,
+  smtInInvest,
+  smtSrcInInvest,
+  vlcInInvest,
+  vlcSrcInInvest,
+} from "./db/schema";
 
 const sqlToGeojson = (
   input: {
@@ -34,24 +49,23 @@ const sqlToGeojson = (
 };
 
 export const LoadSmt = async (values: z.infer<typeof smtFormSchema>) => {
+  const { success } = smtFormSchema.safeParse(values);
+  if (!success) return { success: false, error: "Values do not follow schema" };
   const filters: (SQL | undefined)[] = [];
   if (values.class !== "All") {
     if (values.class === "NULL") {
       filters.push(isNull(smtInInvest.smtClass));
-    }
-    filters.push(eq(smtInInvest.smtClass, values.class));
+    } else filters.push(eq(smtInInvest.smtClass, values.class));
   }
   if (values.catalogs !== "All") {
     if (values.class === "NULL") {
       filters.push(isNull(smtInInvest.smtSrcId));
-    }
-    filters.push(eq(smtSrcInInvest.smtSrcName, values.catalogs));
+    } else filters.push(eq(smtSrcInInvest.smtSrcName, values.catalogs));
   }
   if (values.countries !== "All") {
     if (values.countries === "NULL") {
       filters.push(isNull(smtInInvest.countryId));
-    }
-    filters.push(eq(countryInInvest.countryName, values.countries));
+    } else filters.push(eq(countryInInvest.countryName, values.countries));
   }
 
   if (values.elevAllowNull) {
@@ -140,8 +154,68 @@ export const LoadSmt = async (values: z.infer<typeof smtFormSchema>) => {
     )
     .leftJoin(smtSrcInInvest, eq(smtInInvest.smtSrcId, smtSrcInInvest.smtSrcId))
     .where(and(...filters));
-  console.log(data.length);
   const dataReturn = sqlToGeojson(data);
 
-  return dataReturn;
+  return { success: true, data: dataReturn };
+};
+
+export const LoadVlc = async (values: z.infer<typeof vlcFormSchema>) => {
+  const { success } = vlcFormSchema.safeParse(values);
+  if (!success) return { success: false, error: "Values do not follow schema" };
+  const filters: (SQL | undefined)[] = [];
+  if (values.class !== "All") {
+    if (values.class === "NULL") {
+      filters.push(isNull(vlcInInvest.vlcClass));
+    } else {
+      filters.push(eq(vlcInInvest.vlcClass, values.class));
+    }
+  }
+
+  if (values.categorySources !== "All") {
+    if (values.categorySources === "NULL") {
+      filters.push(isNull(vlcInInvest.vlcCatSrc));
+    } else {
+      filters.push(ilike(vlcInInvest.vlcCatSrc, `%${values.categorySources}%`));
+    }
+  }
+  if (values.sources !== "All") {
+    if (values.sources === "NULL") {
+      filters.push(isNull(vlcInInvest.vlcSrcId));
+    } else {
+      filters.push(eq(vlcSrcInInvest.vlcSrcName, values.sources));
+    }
+  }
+  if (values.countries !== "All") {
+    if (values.countries === "NULL") {
+      filters.push(
+        or(isNull(vlcInInvest.countryId1), isNull(vlcInInvest.countryId2)),
+      );
+    } else {
+      filters.push(eq(countryInInvest.countryName, values.countries));
+    }
+  }
+
+  const data = await db
+    .select({
+      id: vlcInInvest.vlcId,
+      name: vlcInInvest.vlcName,
+      elevation: vlcInInvest.vlcElev,
+      class: vlcInInvest.vlcClass,
+      categorySource: vlcInInvest.vlcCatSrc,
+      country: countryInInvest.countryName,
+      geojson: sql<string>`ST_ASGEOJSON(${vlcInInvest.vlcGeom})`,
+    })
+    .from(vlcInInvest)
+    .leftJoin(
+      countryInInvest,
+      or(
+        eq(vlcInInvest.countryId1, countryInInvest.countryId),
+        eq(vlcInInvest.countryId2, countryInInvest.countryId),
+      ),
+    )
+    .leftJoin(vlcSrcInInvest, eq(vlcInInvest.vlcSrcId, vlcSrcInInvest.vlcSrcId))
+    .where(and(...filters));
+  const dataReturn = sqlToGeojson(data);
+
+  return { success: true, data: dataReturn };
 };

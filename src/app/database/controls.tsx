@@ -21,7 +21,8 @@ import { useAtom, useSetAtom } from "jotai";
 import { ChevronLeft, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { dataVisibilityAtom, layersAtom, mapStyleAtom } from "./atoms";
-import SmtFormFilters from "./smt-filters";
+import SmtFormFilters from "./smt-form-filters";
+import VlcFormFilters from "./vlc-form-filters";
 
 const MAP_STYLE: {
   style: MapStyle | string;
@@ -171,7 +172,7 @@ export default function Controls({
   return (
     <div
       className={cn(
-        "ease-map fixed inset-y-0 left-0 z-10 max-h-screen w-[320px] transition-transform duration-700",
+        "fixed inset-y-0 left-0 z-10 max-h-screen w-[320px] transition-transform duration-700 ease-map",
         !open && "-translate-x-full",
       )}
     >
@@ -191,7 +192,7 @@ export default function Controls({
       >
         <ChevronLeft
           className={cn(
-            "ease-map transition-transform duration-300",
+            "transition-transform duration-300 ease-map",
             !open && "rotate-180",
           )}
         />
@@ -300,6 +301,30 @@ export default function Controls({
                 />
               </div>
               <SmtFormFilters filters={filters.smt} />
+            </CollapsibleContent>
+          </Collapsible>
+          <Collapsible className="flex flex-col">
+            <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+              Volcanoes
+              <ChevronsUpDown />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-2 pr-1">
+              <div className="mb-2 flex items-center justify-between">
+                <label
+                  htmlFor="switch"
+                  className="text-xs font-medium text-zinc-700"
+                >
+                  Visibility
+                </label>
+                <Switch
+                  id="switch"
+                  checked={dataVisibility.vlc}
+                  onCheckedChange={(e: boolean) =>
+                    setDataVisibility((prev) => ({ ...prev, smt: e }))
+                  }
+                />
+              </div>
+              <VlcFormFilters filters={filters.vlc} />
             </CollapsibleContent>
           </Collapsible>
         </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -24,25 +26,10 @@ import { Slider } from "@/components/ui/slider";
 import { SmtFilters } from "@/lib/types";
 import { LoadSmt } from "@/server/actions";
 import { useSetAtom } from "jotai";
+import { useTransition } from "react";
+import { toast } from "sonner";
 import { smtDataAtom } from "./atoms";
-
-export const smtFormSchema = z.object({
-  elevation: z.number().array().length(2),
-  elevAllowNull: z.boolean(),
-  base: z.number().array().length(2),
-  baseAllowNull: z.boolean(),
-  summit: z.number().array().length(2),
-  summitAllowNull: z.boolean(),
-  bl: z.number().array().length(2),
-  blAllowNull: z.boolean(),
-  bw: z.number().array().length(2),
-  bwAllowNull: z.boolean(),
-  ba: z.number().array().length(2),
-  baAllowNull: z.boolean(),
-  class: z.string(),
-  catalogs: z.string(),
-  countries: z.string(),
-});
+import { smtFormSchema } from "./form-schema";
 
 export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
   const setSmtData = useSetAtom(smtDataAtom);
@@ -68,15 +55,19 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
     },
   });
 
+  const [isPending, startTransition] = useTransition();
+
+  const submitAction = async () => {
+    startTransition(async () => {
+      const data = await LoadSmt(form.getValues());
+      if (data.success) setSmtData(data.data);
+      else toast.error(data.error);
+    });
+  };
+
   return (
     <Form {...form}>
-      <form
-        className="space-y-4"
-        action={async () => {
-          const smtData = await LoadSmt(form.getValues());
-          setSmtData(smtData);
-        }}
-      >
+      <form className="space-y-4" action={submitAction}>
         <div className="space-y-1">
           <FormField
             control={form.control}
@@ -458,7 +449,9 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
             </FormItem>
           )}
         />
-        <Button type="submit">Load</Button>
+        <Button type="submit" disabled={isPending}>
+          Load
+        </Button>
       </form>
     </Form>
   );
