@@ -1,5 +1,6 @@
 "use client";
 
+import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Feature, FeatureCollection } from "geojson";
 import { ChevronsUpDown } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -444,7 +445,6 @@ function Home() {
         onMouseMove={onHover}
         onClick={onClick}
         interactiveLayerIds={["faultLines", "volcanoes", "earthquakes"]}
-        terrain={{ source: "terrain", exaggeration: 1.5 }}
         reuseMaps
       >
         <ScaleControl />

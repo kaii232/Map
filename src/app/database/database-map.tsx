@@ -7,10 +7,10 @@ import {
   SmtFilters,
   VlcFilters,
 } from "@/lib/types";
-import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { useAtomValue } from "jotai";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Layer,
   Map,
@@ -23,6 +23,7 @@ import {
   TerrainControl,
   useMap,
 } from "react-map-gl/maplibre";
+import { GeoJSONStoreFeatures } from "terra-draw";
 import gnssIcon from "../../assets/GNSS_icon.png";
 import seamountIcon from "../../assets/seamount_icon.png";
 import volanoIcon from "../../assets/volcano_icon.png";
@@ -37,6 +38,7 @@ import {
   vlcDataAtom,
 } from "./atoms";
 import Controls from "./controls";
+import DrawControl from "./draw-control";
 
 export default function DatabaseMap({
   filters,
@@ -70,6 +72,8 @@ export default function DatabaseMap({
     lng: number;
     lat: number;
   }>();
+
+  const [features, setFeatures] = useState<GeoJSONStoreFeatures[]>([]);
 
   const onHover = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -128,6 +132,23 @@ export default function DatabaseMap({
     [map],
   );
 
+  const drawOptionsModes: (
+    | "polygon"
+    | "rectangle"
+    | "select"
+    | "delete"
+    | "circle"
+    | "render"
+    | "point"
+    | "linestring"
+    | "freehand"
+    | "angled-rectangle"
+    | "sensor"
+    | "sector"
+    | "delete-selection"
+    | "download"
+  )[] = useMemo(() => ["polygon", "rectangle", "select", "delete"], []);
+
   useEffect(() => {
     const addImages = async () => {
       if (map) {
@@ -164,11 +185,11 @@ export default function DatabaseMap({
         onMouseMove={onHover}
         onClick={onClick}
         interactiveLayerIds={["vlc", "smt", "gnss", "seis", "flt"]}
-        terrain={{ source: "terrain", exaggeration: 1.5 }}
         reuseMaps
       >
         <ScaleControl />
         <NavigationControl />
+        <DrawControl modes={drawOptionsModes} open onUpdate={setFeatures} />
         <TerrainControl source={"terrain"} exaggeration={1.5} />
         <Source
           id="seafloorSource"

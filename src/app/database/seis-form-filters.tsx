@@ -44,10 +44,16 @@ export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
 
   const depthRange = [filters.depthRange[0] || 0, filters.depthRange[1] || 0];
   const mwRange = [filters.mwRange[0] || 0, filters.mwRange[1] || 0];
-  const msRange = [filters.msRange[0] || 0, filters.msRange[1] || 0];
-  const mbRange = [filters.mbRange[0] || 0, filters.mbRange[1] || 0];
-  const earliest = new Date(filters.dateRange ? filters.dateRange[0] : 0);
-  const latest = new Date(filters.dateRange ? filters.dateRange[1] : 0);
+  const earliest = new Date(
+    filters.dateRange && filters.dateRange[0] !== "NULL"
+      ? filters.dateRange[0]
+      : 0,
+  );
+  const latest = new Date(
+    filters.dateRange && filters.dateRange[1] !== "NULL"
+      ? filters.dateRange[1]
+      : 0,
+  );
 
   const form = useForm<z.infer<typeof seisFormSchema>>({
     resolver: zodResolver(seisFormSchema),
@@ -56,10 +62,6 @@ export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
       depthAllowNull: true,
       mw: mwRange,
       mwAllowNull: true,
-      ms: msRange,
-      msAllowNull: true,
-      mb: mbRange,
-      mbAllowNull: true,
       date: {
         from: earliest,
         to: latest,
@@ -173,110 +175,6 @@ export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
                 <FormControl>
                   <Checkbox
                     key="mwCheck"
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal text-slate-700">
-                  Allow null values
-                </FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="space-y-1">
-          <FormField
-            control={form.control}
-            name="ms"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>MS</FormLabel>
-                <FormControl>
-                  <Slider
-                    onValueChange={field.onChange}
-                    onBlur={field.onBlur}
-                    defaultValue={field.value}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    value={field.value}
-                    min={msRange[0]}
-                    max={msRange[1]}
-                    step={0.1}
-                  />
-                </FormControl>
-                <FormDescription className="flex w-full justify-between">
-                  <span>{field.value[0]}m</span> <span>{field.value[1]}m</span>
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="msAllowNull"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-1 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    key="msCheck"
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal text-slate-700">
-                  Allow null values
-                </FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="space-y-1">
-          <FormField
-            control={form.control}
-            name="mb"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>MB</FormLabel>
-                <FormControl>
-                  <Slider
-                    onValueChange={field.onChange}
-                    onBlur={field.onBlur}
-                    defaultValue={field.value}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    value={field.value}
-                    min={mbRange[0]}
-                    max={mbRange[1]}
-                    step={0.1}
-                  />
-                </FormControl>
-                <FormDescription className="flex w-full justify-between">
-                  <span>{field.value[0]}m</span> <span>{field.value[1]}m</span>
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="mbAllowNull"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-1 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    key="mbCheck"
                     onBlur={field.onBlur}
                     name={field.name}
                     ref={field.ref}

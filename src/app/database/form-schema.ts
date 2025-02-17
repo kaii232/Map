@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const vlcFormSchema = z.object({
   class: z.string(),
-  categorySources: z.string(),
   sources: z.string(),
   countries: z.string(),
 });
@@ -14,15 +13,8 @@ export const smtFormSchema = z.object({
   baseAllowNull: z.boolean(),
   summit: z.number().array().length(2),
   summitAllowNull: z.boolean(),
-  bl: z.number().array().length(2),
-  blAllowNull: z.boolean(),
-  bw: z.number().array().length(2),
-  bwAllowNull: z.boolean(),
-  ba: z.number().array().length(2),
-  baAllowNull: z.boolean(),
   class: z.string(),
   catalogs: z.string(),
-  countries: z.string(),
 });
 
 export const gnssFormSchema = z.object({
@@ -51,10 +43,6 @@ export const seisFormSchema = z.object({
   depthAllowNull: z.boolean(),
   mw: z.number().array().length(2),
   mwAllowNull: z.boolean(),
-  ms: z.number().array().length(2),
-  msAllowNull: z.boolean(),
-  mb: z.number().array().length(2),
-  mbAllowNull: z.boolean(),
   date: z.object({ from: z.date(), to: z.date() }).required(),
   dateAllowNull: z.boolean(),
   catalogs: z.string(),

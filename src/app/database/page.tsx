@@ -1,59 +1,48 @@
 import { db } from "@/server/db";
 import {
+  biblInInvest,
   countryInInvest,
   fltInInvest,
-  fltSrcInInvest,
   gnssStnInInvest,
-  seisCatInInvest,
   seisInInvest,
   smtInInvest,
-  smtSrcInInvest,
   stnTypeInInvest,
   vlcInInvest,
-  vlcSrcInInvest,
 } from "@/server/db/schema";
-import { eq, or, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import DatabaseMap from "./database-map";
 
 export default async function DatabasePage() {
-  const sources = db.$with("sources").as(
-    db
-      .select({
-        vlcId: vlcInInvest.vlcId,
-        sources: sql`string_to_table(${vlcInInvest.vlcCatSrc}, ', ')`.as(
-          "sources",
-        ),
-      })
-      .from(vlcInInvest),
-  );
+  // const sources = db.$with("sources").as(
+  //   db
+  //     .select({
+  //       vlcId: vlcInInvest.vlcId,
+  //       sources: sql`string_to_table(${vlcInInvest.vlcCatSrc}, ', ')`.as(
+  //         "sources",
+  //       ),
+  //     })
+  //     .from(vlcInInvest),
+  // );
 
   const [vlcFilters, seisFilters, smtFilters, gnssFilters, fltFilters] =
     await Promise.all([
       db
-        .with(sources)
+        // .with(sources)
         .select({
           classes: sql<string[]>`ARRAY_AGG(DISTINCT ${vlcInInvest.vlcClass})`,
+          // categorySources: sql<string[]>`ARRAY_AGG(DISTINCT sources)`,
           countries: sql<
             string[]
           >`ARRAY_AGG(DISTINCT ${countryInInvest.countryName})`,
-          categorySources: sql<string[]>`ARRAY_AGG(DISTINCT sources)`,
-          sources: sql<
-            string[]
-          >`ARRAY_AGG(DISTINCT ${vlcSrcInInvest.vlcSrcName})`,
+          sources: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
         })
         .from(vlcInInvest)
         .leftJoin(
           countryInInvest,
-          or(
-            eq(vlcInInvest.countryId1, countryInInvest.countryId),
-            eq(vlcInInvest.countryId2, countryInInvest.countryId),
-          ),
+          eq(vlcInInvest.countryId, countryInInvest.countryId),
         )
-        .leftJoin(
-          vlcSrcInInvest,
-          eq(vlcInInvest.vlcSrcId, vlcSrcInInvest.vlcSrcId),
-        )
-        .leftJoin(sources, eq(sources.vlcId, vlcInInvest.vlcId)),
+        .leftJoin(biblInInvest, eq(vlcInInvest.vlcSrcId, biblInInvest.biblId)),
+      // .leftJoin(sources, eq(sources.vlcId, vlcInInvest.vlcId)),
       db
         .select({
           depthRange: sql<
@@ -62,23 +51,17 @@ export default async function DatabasePage() {
           mwRange: sql<
             [number, number]
           >`ARRAY[MIN(${seisInInvest.seisMw}), MAX(${seisInInvest.seisMw})]`,
-          msRange: sql<
-            [number, number]
-          >`ARRAY[MIN(${seisInInvest.seisMs}), MAX(${seisInInvest.seisMs})]`,
-          mbRange: sql<
-            [number, number]
-          >`ARRAY[MIN(${seisInInvest.seisMb}), MAX(${seisInInvest.seisMb})]`,
           dateRange: sql<
             [string, string]
           >`ARRAY[MIN(${seisInInvest.seisDate}), MAX(${seisInInvest.seisDate})]`,
           catalogs: sql<
             string[]
-          >`ARRAY_AGG(DISTINCT ${seisCatInInvest.seisCatName})`,
+          >`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
         })
         .from(seisInInvest)
         .leftJoin(
-          seisCatInInvest,
-          eq(seisInInvest.seisCatId, seisCatInInvest.seisCatId),
+          biblInInvest,
+          eq(seisInInvest.seisCatId, biblInInvest.biblId),
         ),
       db
         .select({
@@ -91,32 +74,13 @@ export default async function DatabasePage() {
           summitRange: sql<
             [number, number]
           >`ARRAY[MIN(${smtInInvest.smtSummit}), MAX(${smtInInvest.smtSummit})]`,
-          blRange: sql<
-            [number, number]
-          >`ARRAY[MIN(${smtInInvest.smtBl}), MAX(${smtInInvest.smtBl})]`,
-          bwRange: sql<
-            [number, number]
-          >`ARRAY[MIN(${smtInInvest.smtBw}), MAX(${smtInInvest.smtBw})]`,
-          baRange: sql<
-            [number, number]
-          >`ARRAY[MIN(${smtInInvest.smtBa}), MAX(${smtInInvest.smtBa})]`,
           classes: sql<string[]>`ARRAY_AGG(DISTINCT ${smtInInvest.smtClass})`,
           catalogs: sql<
             string[]
-          >`ARRAY_AGG(DISTINCT ${smtSrcInInvest.smtSrcName})`,
-          countries: sql<
-            string[]
-          >`ARRAY_AGG(DISTINCT ${countryInInvest.countryName})`,
+          >`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
         })
         .from(smtInInvest)
-        .leftJoin(
-          countryInInvest,
-          eq(smtInInvest.countryId, countryInInvest.countryId),
-        )
-        .leftJoin(
-          smtSrcInInvest,
-          eq(smtInInvest.smtSrcId, smtSrcInInvest.smtSrcId),
-        ),
+        .leftJoin(biblInInvest, eq(smtInInvest.smtSrcId, biblInInvest.biblId)),
       db
         .select({
           elevRange: sql<
@@ -157,14 +121,15 @@ export default async function DatabasePage() {
             [number, number]
           >`ARRAY[MIN(${fltInInvest.fltLockDepth}), MAX(${fltInInvest.fltLockDepth})]`,
           types: sql<string[]>`ARRAY_AGG(DISTINCT ${fltInInvest.fltType})`,
-          catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${fltSrcInInvest.fltSrc})`,
+          catalogs: sql<
+            string[]
+          >`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
         })
         .from(fltInInvest)
-        .leftJoin(
-          fltSrcInInvest,
-          eq(fltInInvest.fltSrcId, fltSrcInInvest.fltSrcId),
-        ),
+        .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId)),
     ]);
+
+  console.log(seisFilters);
 
   return (
     <main className="h-screen w-full">

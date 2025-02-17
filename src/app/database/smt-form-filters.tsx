@@ -40,9 +40,6 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
     filters.summitRange[0] || 0,
     filters.summitRange[1] || 0,
   ];
-  const blRange = [filters.blRange[0] || 0, filters.blRange[1] || 0];
-  const bwRange = [filters.bwRange[0] || 0, filters.bwRange[1] || 0];
-  const baRange = [filters.baRange[0] || 0, filters.baRange[1] || 0];
 
   const form = useForm<z.infer<typeof smtFormSchema>>({
     resolver: zodResolver(smtFormSchema),
@@ -53,15 +50,8 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
       baseAllowNull: true,
       summit: summitRange,
       summitAllowNull: true,
-      bl: blRange,
-      blAllowNull: true,
-      bw: bwRange,
-      bwAllowNull: true,
-      ba: baRange,
-      baAllowNull: true,
       class: "All",
       catalogs: "All",
-      countries: "All",
     },
   });
 
@@ -235,159 +225,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
             )}
           />
         </div>
-        <div className="space-y-1">
-          <FormField
-            control={form.control}
-            name="bl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>BL</FormLabel>
-                <FormControl>
-                  <Slider
-                    onValueChange={field.onChange}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    value={field.value}
-                    step={0.1}
-                    min={blRange[0]}
-                    max={blRange[1]}
-                  />
-                </FormControl>
-                <FormDescription className="flex w-full justify-between">
-                  <span>{field.value[0]}</span> <span>{field.value[1]}</span>
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="blAllowNull"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-1 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    key="blCheck"
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal text-slate-700">
-                  Allow null values
-                </FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="space-y-1">
-          <FormField
-            control={form.control}
-            name="bw"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>BW</FormLabel>
-                <FormControl>
-                  <Slider
-                    onValueChange={field.onChange}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    value={field.value}
-                    step={0.1}
-                    min={bwRange[0]}
-                    max={bwRange[1]}
-                  />
-                </FormControl>
-                <FormDescription className="flex w-full justify-between">
-                  <span>{field.value[0]}</span> <span>{field.value[1]}</span>
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="bwAllowNull"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-1 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    key="bwCheck"
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal text-slate-700">
-                  Allow null values
-                </FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="space-y-1">
-          <FormField
-            control={form.control}
-            name="ba"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>BA</FormLabel>
-                <FormControl>
-                  <Slider
-                    onValueChange={field.onChange}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    value={field.value}
-                    step={0.1}
-                    min={baRange[0]}
-                    max={baRange[1]}
-                  />
-                </FormControl>
-                <FormDescription className="flex w-full justify-between">
-                  <span>{field.value[0]}</span> <span>{field.value[1]}</span>
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="baAllowNull"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-1 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    key="baCheck"
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal text-slate-700">
-                  Allow null values
-                </FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+
         <FormField
           control={form.control}
           name="class"
@@ -438,31 +276,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="countries"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seamount Country" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  {filters.countries?.map((type) => (
-                    <SelectItem value={type} key={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
         <Button type="submit" disabled={isPending}>
           Load
         </Button>

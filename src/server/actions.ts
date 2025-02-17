@@ -7,31 +7,19 @@ import {
   smtFormSchema,
   vlcFormSchema,
 } from "@/app/database/form-schema";
-import {
-  and,
-  between,
-  eq,
-  ilike,
-  isNull,
-  or,
-  type SQL,
-  sql,
-} from "drizzle-orm";
+import { and, between, eq, isNull, or, type SQL, sql } from "drizzle-orm";
 import { Feature, FeatureCollection } from "geojson";
 import { z } from "zod";
 import { db } from "./db";
 import {
+  biblInInvest,
   countryInInvest,
   fltInInvest,
-  fltSrcInInvest,
   gnssStnInInvest,
-  seisCatInInvest,
   seisInInvest,
   smtInInvest,
-  smtSrcInInvest,
   stnTypeInInvest,
   vlcInInvest,
-  vlcSrcInInvest,
 } from "./db/schema";
 
 const sqlToGeojson = (
@@ -81,14 +69,7 @@ export const LoadSmt = async (
     if (values.catalogs === "NULL") {
       filters.push(isNull(smtInInvest.smtSrcId));
     } else {
-      filters.push(eq(smtSrcInInvest.smtSrcName, values.catalogs));
-    }
-  }
-  if (values.countries !== "All") {
-    if (values.countries === "NULL") {
-      filters.push(isNull(smtInInvest.countryId));
-    } else {
-      filters.push(eq(countryInInvest.countryName, values.countries));
+      filters.push(eq(biblInInvest.biblTitle, values.catalogs));
     }
   }
 
@@ -126,36 +107,6 @@ export const LoadSmt = async (
       between(smtInInvest.smtSummit, values.summit[0], values.summit[1]),
     );
   }
-  if (values.blAllowNull) {
-    filters.push(
-      or(
-        between(smtInInvest.smtBl, values.bl[0], values.bl[1]),
-        isNull(smtInInvest.smtBl),
-      ),
-    );
-  } else {
-    filters.push(between(smtInInvest.smtBl, values.bl[0], values.elevation[1]));
-  }
-  if (values.bwAllowNull) {
-    filters.push(
-      or(
-        between(smtInInvest.smtBw, values.bw[0], values.bw[1]),
-        isNull(smtInInvest.smtBw),
-      ),
-    );
-  } else {
-    filters.push(between(smtInInvest.smtBw, values.bw[0], values.bw[1]));
-  }
-  if (values.baAllowNull) {
-    filters.push(
-      or(
-        between(smtInInvest.smtBa, values.ba[0], values.ba[1]),
-        isNull(smtInInvest.smtBa),
-      ),
-    );
-  } else {
-    filters.push(between(smtInInvest.smtBa, values.ba[0], values.ba[1]));
-  }
 
   const data = await db
     .select({
@@ -172,11 +123,7 @@ export const LoadSmt = async (
       geojson: sql<string>`ST_ASGEOJSON(${smtInInvest.smtGeom})`,
     })
     .from(smtInInvest)
-    .leftJoin(
-      countryInInvest,
-      eq(smtInInvest.countryId, countryInInvest.countryId),
-    )
-    .leftJoin(smtSrcInInvest, eq(smtInInvest.smtSrcId, smtSrcInInvest.smtSrcId))
+    .leftJoin(biblInInvest, eq(smtInInvest.smtSrcId, biblInInvest.biblId))
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
@@ -197,25 +144,16 @@ export const LoadVlc = async (
     }
   }
 
-  if (values.categorySources !== "All") {
-    if (values.categorySources === "NULL") {
-      filters.push(isNull(vlcInInvest.vlcCatSrc));
-    } else {
-      filters.push(ilike(vlcInInvest.vlcCatSrc, `%${values.categorySources}%`));
-    }
-  }
   if (values.sources !== "All") {
     if (values.sources === "NULL") {
       filters.push(isNull(vlcInInvest.vlcSrcId));
     } else {
-      filters.push(eq(vlcSrcInInvest.vlcSrcName, values.sources));
+      filters.push(eq(biblInInvest.biblTitle, values.sources));
     }
   }
   if (values.countries !== "All") {
     if (values.countries === "NULL") {
-      filters.push(
-        or(isNull(vlcInInvest.countryId1), isNull(vlcInInvest.countryId2)),
-      );
+      filters.push(isNull(vlcInInvest.countryId));
     } else {
       filters.push(eq(countryInInvest.countryName, values.countries));
     }
@@ -234,12 +172,9 @@ export const LoadVlc = async (
     .from(vlcInInvest)
     .leftJoin(
       countryInInvest,
-      or(
-        eq(vlcInInvest.countryId1, countryInInvest.countryId),
-        eq(vlcInInvest.countryId2, countryInInvest.countryId),
-      ),
+      eq(vlcInInvest.countryId, countryInInvest.countryId),
     )
-    .leftJoin(vlcSrcInInvest, eq(vlcInInvest.vlcSrcId, vlcSrcInInvest.vlcSrcId))
+    .leftJoin(biblInInvest, eq(vlcInInvest.vlcSrcId, biblInInvest.biblId))
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
@@ -332,6 +267,7 @@ export const LoadFlt = async (
   values: z.infer<typeof fltFormSchema>,
 ): Promise<ReturnType> => {
   const { success } = fltFormSchema.safeParse(values);
+  console.log(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
   const filters: (SQL | undefined)[] = [];
   if (values.types !== "All") {
@@ -342,7 +278,7 @@ export const LoadFlt = async (
   if (values.catalogs !== "All") {
     if (values.catalogs === "NULL") {
       filters.push(isNull(fltInInvest.fltSrcId));
-    } else filters.push(eq(fltSrcInInvest.fltSrc, values.catalogs));
+    } else filters.push(eq(biblInInvest.biblTitle, values.catalogs));
   }
 
   if (values.lengthAllowNull) {
@@ -394,11 +330,11 @@ export const LoadFlt = async (
       length: fltInInvest.fltLen,
       sliprate: fltInInvest.fltSliprate,
       lockdepth: fltInInvest.fltLockDepth,
-      catalog: fltSrcInInvest.fltSrc,
+      catalog: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${fltInInvest.fltGeom})`,
     })
     .from(fltInInvest)
-    .leftJoin(fltSrcInInvest, eq(fltInInvest.fltSrcId, fltSrcInInvest.fltSrcId))
+    .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId))
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
@@ -414,7 +350,7 @@ export const LoadSeis = async (
   if (values.catalogs !== "All") {
     if (values.catalogs === "NULL") {
       filters.push(isNull(seisInInvest.seisCatId));
-    } else filters.push(eq(seisCatInInvest.seisCatName, values.catalogs));
+    } else filters.push(eq(biblInInvest.biblTitle, values.catalogs));
   }
 
   if (values.depthAllowNull) {
@@ -441,28 +377,6 @@ export const LoadSeis = async (
     filters.push(between(seisInInvest.seisMw, values.mw[0], values.mw[1]));
   }
 
-  if (values.msAllowNull) {
-    filters.push(
-      or(
-        between(seisInInvest.seisMs, values.ms[0], values.ms[1]),
-        isNull(seisInInvest.seisMs),
-      ),
-    );
-  } else {
-    filters.push(between(seisInInvest.seisMs, values.ms[0], values.ms[1]));
-  }
-
-  if (values.mbAllowNull) {
-    filters.push(
-      or(
-        between(seisInInvest.seisMb, values.mb[0], values.mb[1]),
-        isNull(seisInInvest.seisMb),
-      ),
-    );
-  } else {
-    filters.push(between(seisInInvest.seisMb, values.mb[0], values.mb[1]));
-  }
-
   if (values.dateAllowNull) {
     filters.push(
       or(
@@ -483,15 +397,12 @@ export const LoadSeis = async (
       mw: seisInInvest.seisMw,
       ms: seisInInvest.seisMs,
       mb: seisInInvest.seisMb,
-      catalog: seisCatInInvest.seisCatName,
+      catalog: biblInInvest.biblTitle,
       date: seisInInvest.seisDate,
       geojson: sql<string>`ST_ASGEOJSON(${seisInInvest.seisGeom})`,
     })
     .from(seisInInvest)
-    .leftJoin(
-      seisCatInInvest,
-      eq(seisCatInInvest.seisCatId, seisInInvest.seisCatId),
-    )
+    .leftJoin(biblInInvest, eq(biblInInvest.biblId, seisInInvest.seisCatId))
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 

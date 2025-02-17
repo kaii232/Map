@@ -36,7 +36,6 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
     defaultValues: {
       class: "All",
       sources: "All",
-      categorySources: "All",
       countries: "All",
     },
   });
@@ -73,31 +72,6 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
                   {filters.classes?.map((type) => (
-                    <SelectItem value={type} key={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="categorySources"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Source</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Volcano Source" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  {filters.categorySources?.map((type) => (
                     <SelectItem value={type} key={type}>
                       {type}
                     </SelectItem>
