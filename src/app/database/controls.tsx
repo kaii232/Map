@@ -16,10 +16,10 @@ import {
   VlcFilters,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { MapStyle, useMap } from "@vis.gl/react-maplibre";
 import { useAtom, useSetAtom } from "jotai";
 import { ChevronLeft, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
+import { StyleSpecification, useMap } from "react-map-gl/maplibre";
 import { dataVisibilityAtom, layersAtom, mapStyleAtom } from "./atoms";
 import FltFormFilters from "./flt-form-filters";
 import GnssFormFilters from "./gnss-form-filters";
@@ -28,7 +28,7 @@ import SmtFormFilters from "./smt-form-filters";
 import VlcFormFilters from "./vlc-form-filters";
 
 const MAP_STYLE: {
-  style: MapStyle | string;
+  style: StyleSpecification | string;
   label: string;
   img: string;
 }[] = [

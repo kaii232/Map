@@ -7,6 +7,10 @@ import {
   SmtFilters,
   VlcFilters,
 } from "@/lib/types";
+import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+import { useAtomValue } from "jotai";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { useCallback, useEffect, useState } from "react";
 import {
   Layer,
   Map,
@@ -18,10 +22,7 @@ import {
   Source,
   TerrainControl,
   useMap,
-} from "@vis.gl/react-maplibre";
-import { useAtomValue } from "jotai";
-import "maplibre-gl/dist/maplibre-gl.css";
-import { useCallback, useEffect, useState } from "react";
+} from "react-map-gl/maplibre";
 import gnssIcon from "../../assets/GNSS_icon.png";
 import seamountIcon from "../../assets/seamount_icon.png";
 import volanoIcon from "../../assets/volcano_icon.png";
@@ -163,6 +164,7 @@ export default function DatabaseMap({
         onMouseMove={onHover}
         onClick={onClick}
         interactiveLayerIds={["vlc", "smt", "gnss", "seis", "flt"]}
+        terrain={{ source: "terrain", exaggeration: 1.5 }}
         reuseMaps
       >
         <ScaleControl />
@@ -192,7 +194,6 @@ export default function DatabaseMap({
           maxzoom={13}
           tileSize={256}
           encoding="terrarium"
-          terrain={{ source: "terrain", exaggeration: 1.5 }}
           attribution={
             "* ArcticDEM terrain data DEM(s) were created from DigitalGlobe, Inc., imagery and funded under National Science Foundation awards 1043681, 1559691, and 1542736;\n* Australia terrain data © Commonwealth of Australia (Geoscience Australia) 2017;\n* Austria terrain data © offene Daten Österreichs – Digitales Geländemodell (DGM) Österreich;\n* Canada terrain data contains information licensed under the Open Government Licence – Canada;\n* Europe terrain data produced using Copernicus data and information funded by the European Union - EU-DEM layers;\n* Global ETOPO1 terrain data U.S. National Oceanic and Atmospheric Administration\n* Mexico terrain data source: INEGI, Continental relief, 2016;\n* New Zealand terrain data Copyright 2011 Crown copyright (c) Land Information New Zealand and the New Zealand Government (All rights reserved);\n* Norway terrain data © Kartverket;\n* United Kingdom terrain data © Environment Agency copyright and/or database right 2015. All rights reserved;\n* United States 3DEP (formerly NED) and global GMTED2010 and SRTM terrain data courtesy of the U.S. Geological Survey."
           }
@@ -239,6 +240,7 @@ export default function DatabaseMap({
                 "text-halo-color": "#F8FAFCCC",
                 "text-halo-width": 2,
                 "text-opacity": {
+                  type: "interval",
                   stops: [
                     [7, 0],
                     [8, 1],
@@ -277,6 +279,7 @@ export default function DatabaseMap({
                 "text-halo-color": "#F8FAFCCC",
                 "text-halo-width": 2,
                 "text-opacity": {
+                  type: "interval",
                   stops: [
                     [7, 0],
                     [8, 1],
@@ -315,6 +318,7 @@ export default function DatabaseMap({
                 "text-halo-color": "#F8FAFCCC",
                 "text-halo-width": 2,
                 "text-opacity": {
+                  type: "interval",
                   stops: [
                     [7, 0],
                     [8, 1],
@@ -449,6 +453,7 @@ export default function DatabaseMap({
               "bottom-right": [0, -12],
               left: [12, 0],
               right: [-12, 0],
+              center: [0, 0],
             }}
             closeButton={false}
             closeOnClick={true}
@@ -487,6 +492,7 @@ export default function DatabaseMap({
               "bottom-right": [0, -12],
               left: [12, 0],
               right: [-12, 0],
+              center: [0, 0],
             }}
             closeButton={true}
             onClose={() => setselectedFeature(undefined)}

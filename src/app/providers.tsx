@@ -1,7 +1,7 @@
 "use client";
 
-import { MapProvider } from "@vis.gl/react-maplibre";
 import { Provider } from "jotai";
+import { MapProvider } from "react-map-gl/maplibre";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (

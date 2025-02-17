@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { MapStyle } from "@vis.gl/react-maplibre";
 import { FeatureCollection } from "geojson";
 import { atom } from "jotai";
+import { StyleSpecification } from "react-map-gl/maplibre";
 
 export const layersAtom = atom({
   seafloor: false,
   hillshade: false,
 });
 
-export const mapStyleAtom = atom<string | MapStyle>(
+export const mapStyleAtom = atom<string | StyleSpecification>(
   "https://tiles.openfreemap.org/styles/liberty",
 );
 

@@ -1,22 +1,22 @@
 "use client";
 
+import { Feature, FeatureCollection } from "geojson";
+import { ChevronsUpDown } from "lucide-react";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { useCallback, useEffect, useState } from "react";
 import {
   Layer,
   Map,
   MapGeoJSONFeature,
   MapLayerMouseEvent,
-  MapStyle,
   NavigationControl,
   Popup,
   ScaleControl,
   Source,
+  StyleSpecification,
   TerrainControl,
   useMap,
-} from "@vis.gl/react-maplibre";
-import { Feature, FeatureCollection } from "geojson";
-import { ChevronsUpDown } from "lucide-react";
-import "maplibre-gl/dist/maplibre-gl.css";
-import { useCallback, useEffect, useState } from "react";
+} from "react-map-gl/maplibre";
 import volcanoes from "../assets/EOS_volcanoes.xlsx";
 import earthquakes from "../assets/isc-ehb.csv";
 import faultData from "../assets/philippines_faults_2020.geojson";
@@ -30,7 +30,7 @@ import { Separator } from "../components/ui/separator";
 import { Switch } from "../components/ui/switch";
 
 const MAP_STYLE: {
-  style: MapStyle | string;
+  style: StyleSpecification | string;
   label: string;
   img: string;
 }[] = [
@@ -444,6 +444,7 @@ function Home() {
         onMouseMove={onHover}
         onClick={onClick}
         interactiveLayerIds={["faultLines", "volcanoes", "earthquakes"]}
+        terrain={{ source: "terrain", exaggeration: 1.5 }}
         reuseMaps
       >
         <ScaleControl />
@@ -473,7 +474,6 @@ function Home() {
           maxzoom={13}
           tileSize={256}
           encoding="terrarium"
-          terrain={{ source: "terrain", exaggeration: 1.5 }}
           attribution={
             "* ArcticDEM terrain data DEM(s) were created from DigitalGlobe, Inc., imagery and funded under National Science Foundation awards 1043681, 1559691, and 1542736;\n* Australia terrain data © Commonwealth of Australia (Geoscience Australia) 2017;\n* Austria terrain data © offene Daten Österreichs – Digitales Geländemodell (DGM) Österreich;\n* Canada terrain data contains information licensed under the Open Government Licence – Canada;\n* Europe terrain data produced using Copernicus data and information funded by the European Union - EU-DEM layers;\n* Global ETOPO1 terrain data U.S. National Oceanic and Atmospheric Administration\n* Mexico terrain data source: INEGI, Continental relief, 2016;\n* New Zealand terrain data Copyright 2011 Crown copyright (c) Land Information New Zealand and the New Zealand Government (All rights reserved);\n* Norway terrain data © Kartverket;\n* United Kingdom terrain data © Environment Agency copyright and/or database right 2015. All rights reserved;\n* United States 3DEP (formerly NED) and global GMTED2010 and SRTM terrain data courtesy of the U.S. Geological Survey."
           }
@@ -516,6 +516,7 @@ function Home() {
               "text-halo-color": "#F8FAFCCC",
               "text-halo-width": 2,
               "text-opacity": {
+                type: "interval",
                 stops: [
                   [7, 0],
                   [8, 1],
@@ -624,6 +625,7 @@ function Home() {
             longitude={hoverInfo.lng}
             latitude={hoverInfo.lat}
             offset={{
+              center: [0, 0],
               top: [0, 12],
               "top-left": [0, 12],
               "top-right": [0, 12],
@@ -666,6 +668,7 @@ function Home() {
             longitude={selectedFeature.lng}
             latitude={selectedFeature.lat}
             offset={{
+              center: [0, 0],
               top: [0, 12],
               "top-left": [0, 12],
               "top-right": [0, 12],
