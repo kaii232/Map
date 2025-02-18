@@ -125,7 +125,6 @@ export const LoadSmt = async (
       bw: smtInInvest.smtBw,
       ba: smtInInvest.smtBa,
       bl: smtInInvest.smtBl,
-      country: countryInInvest.countryName,
       geojson: sql<string>`ST_ASGEOJSON(${smtInInvest.smtGeom})`,
     })
     .from(smtInInvest)
@@ -342,7 +341,7 @@ export const LoadFlt = async (
 
   if (drawing) {
     filters.push(
-      sql`ST_WITHIN(${fltInInvest.fltGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+      sql`ST_INTERSECTS(${fltInInvest.fltGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
 
@@ -350,9 +349,17 @@ export const LoadFlt = async (
     .select({
       id: fltInInvest.fltId,
       name: fltInInvest.fltName,
+      segmentName: fltInInvest.fltSegName,
       type: fltInInvest.fltType,
       length: fltInInvest.fltLen,
       sliprate: fltInInvest.fltSliprate,
+      ss: fltInInvest.fltSs,
+      verticalSeparation: fltInInvest.fltVertSep,
+      horizontalSeparation: fltInInvest.fltHorzSep,
+      dip: fltInInvest.fltDip,
+      rake: fltInInvest.fltRake,
+      maxm: fltInInvest.fltMaxm,
+      cmt: fltInInvest.fltCmt,
       lockdepth: fltInInvest.fltLockDepth,
       catalog: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${fltInInvest.fltGeom})`,
