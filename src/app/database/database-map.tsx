@@ -170,7 +170,10 @@ export default function DatabaseMap({
     | "sector"
     | "delete-selection"
     | "download"
-  )[] = useMemo(() => ["polygon", "rectangle", "select", "delete"], []);
+  )[] = useMemo(
+    () => ["polygon", "rectangle", "select", "delete-selection", "delete"],
+    [],
+  );
 
   useEffect(() => {
     const addImages = async () => {

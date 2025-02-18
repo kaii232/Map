@@ -26,8 +26,15 @@ export const DrawControl = memo((props: DrawControlProps) => {
 
     const drawInstance = draw.getTerraDrawInstance();
 
-    const onFeatureDelete = () => {
-      props.onUpdate([]);
+    const onFeatureDelete = (
+      event:
+        | {
+            feature?: GeoJSONStoreFeatures[];
+            mode?: string;
+          }
+        | undefined,
+    ) => {
+      if (event && event.mode === "default") props.onUpdate([]);
     };
 
     const onChange = (ids: (string | number)[], type: string) => {
