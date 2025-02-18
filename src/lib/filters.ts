@@ -1,33 +1,45 @@
+import { biblInInvest, countryInInvest, vlcInInvest } from "@/server/db/schema";
+import { AnyPgColumn } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 export type FiltersType = {
   name: string;
   type: "select" | "range" | "date";
   key: string;
-}[];
+  dbCol: AnyPgColumn;
+};
 
 type Range = [number, number];
 type Categories = string[] | null;
 
-export const vlcFilters: FiltersType = [
-  {
+type VlcFilters = {
+  classes: Categories;
+  countries: Categories;
+  sources: Categories;
+};
+
+export const vlcFilters: Record<keyof VlcFilters, FiltersType> = {
+  classes: {
     name: "Class",
     type: "select",
     key: "classes",
+    dbCol: vlcInInvest.vlcClass,
   },
-  {
+  countries: {
     name: "Country",
     type: "select",
     key: "countries",
+    dbCol: countryInInvest.countryName,
   },
-  {
+  sources: {
     name: "Source",
     type: "select",
     key: "sources",
+    dbCol: biblInInvest.biblTitle,
   },
-];
+};
 
-const createZodSchema = (input: FiltersType) => {
+const createZodSchema = (input: FiltersType[]) => {
   const schema: Record<
     string,
     | z.ZodArray<z.ZodNumber, "many">
@@ -68,7 +80,7 @@ const createZodSchema = (input: FiltersType) => {
 
 export const createDefaultValues = (
   filters: Record<string, Range | Categories | [string, string]>,
-  input: FiltersType,
+  input: FiltersType[],
 ) => {
   const values: {
     [key: string]:

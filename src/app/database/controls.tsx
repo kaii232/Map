@@ -9,6 +9,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
+  BasemapNames,
   FltFilters,
   GnssFilters,
   SeisFilters,
@@ -19,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { useAtom, useSetAtom } from "jotai";
 import { ChevronLeft, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
-import { StyleSpecification, useMap } from "react-map-gl/maplibre";
+import { useMap } from "react-map-gl/maplibre";
 import { dataVisibilityAtom, layersAtom, mapStyleAtom } from "./atoms";
 import FltFormFilters from "./flt-form-filters";
 import GnssFormFilters from "./gnss-form-filters";
@@ -28,127 +29,26 @@ import SmtFormFilters from "./smt-form-filters";
 import VlcFormFilters from "./vlc-form-filters";
 
 const MAP_STYLE: {
-  style: StyleSpecification | string;
-  label: string;
+  label: BasemapNames;
   img: string;
 }[] = [
   {
-    style: "https://tiles.openfreemap.org/styles/liberty",
     label: "Openfreemap",
     img: "https://d4.alternativeto.net/JtcJ1s6H8N100N4sgtNEm2YThMGoMBeD53KKBPzGn3w/rs:fill:309:197:1/g:no:0:0/YWJzOi8vZGlzdC9zL29wZW5mcmVlbWFwXzk3MDE0OV9mdWxsLnBuZw.jpg",
   },
   {
-    style: {
-      version: 8,
-      sources: {
-        osm: {
-          type: "raster",
-          tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-          tileSize: 256,
-          attribution:
-            "&copy; <a href='https://openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> Contributors",
-          maxzoom: 19,
-        },
-      },
-      layers: [
-        {
-          id: "osm",
-          type: "raster",
-          source: "osm",
-        },
-      ],
-      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    },
     label: "Openstreetmap",
     img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Soho_-_map_1.png/220px-Soho_-_map_1.png",
   },
   {
-    style: {
-      version: 8,
-      sources: {
-        otm: {
-          type: "raster",
-          tiles: ["https://tile.opentopomap.org/{z}/{x}/{y}.png "],
-          maxzoom: 15,
-          attribution:
-            "map data: &copy; <a href='https://openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> Contributors, <a href='http://viewfinderpanoramas.org/' target='_blank'>SRTM</a> | map style: &copy; <a href='https://opentopomap.org/' target='_blank'>OpenTopoMap</a>",
-        },
-      },
-      layers: [
-        {
-          id: "otm",
-          type: "raster",
-          source: "otm",
-        },
-      ],
-      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    },
     label: "Opentopomap",
     img: "https://latlong.blog/img/blog/2023-10-02-tracestack-topo.webp",
   },
   {
-    style: {
-      version: 8,
-      sources: {
-        esri: {
-          type: "raster",
-          tiles: [
-            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png",
-          ],
-          tileSize: 256,
-          attribution:
-            "Esri, HERE, Garmin, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), &copy; <a href='https://openstreetmap.org/copyright' target='_blank'>OpenStreetMap</a> Contributors, and the GIS User Community",
-        },
-      },
-      layers: [
-        {
-          id: "esri",
-          type: "raster",
-          source: "esri",
-        },
-      ],
-      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    },
     label: "Satellite",
     img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXhvrlM50ZXAuvt7S8uXh9My90_uTQf9cyYg&s",
   },
   {
-    style: {
-      version: 8,
-      sources: {
-        ocean: {
-          type: "raster",
-          tiles: [
-            "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}.png",
-          ],
-          maxzoom: 10,
-          tileSize: 256,
-          attribution:
-            "Esri, GEBCO, NOAA, National Geographic, Garmin, HERE, Geonames.org, and other contributors",
-        },
-        oceanRef: {
-          type: "raster",
-          tiles: [
-            "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}.png",
-          ],
-          maxzoom: 10,
-          tileSize: 256,
-        },
-      },
-      layers: [
-        {
-          id: "ocean",
-          type: "raster",
-          source: "ocean",
-        },
-        {
-          id: "oceanRef",
-          type: "raster",
-          source: "oceanRef",
-        },
-      ],
-      glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-    },
     label: "Ocean",
     img: "https://learn.arcgis.com/en/projects/find-ocean-bathymetry-data/GUID-FE9C4F4D-E9AA-46CD-9C3F-D7DB28FBCBCC-web.png",
   },
@@ -216,7 +116,7 @@ export default function Controls({
                     value={style.label}
                     defaultChecked={index === 0}
                     className="peer sr-only"
-                    onClick={() => setMapStyle(MAP_STYLE[index].style)}
+                    onClick={() => setMapStyle(MAP_STYLE[index].label)}
                   />
                   <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 p-2 text-xs font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

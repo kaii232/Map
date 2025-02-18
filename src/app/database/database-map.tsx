@@ -39,6 +39,7 @@ import {
   smtDataAtom,
   vlcDataAtom,
 } from "./atoms";
+import Basemaps from "./basemaps";
 import Controls from "./controls";
 import DrawControl from "./draw-control";
 
@@ -169,10 +170,7 @@ export default function DatabaseMap({
     | "sector"
     | "delete-selection"
     | "download"
-  )[] = useMemo(
-    () => ["polygon", "rectangle", "select", "delete-selection"],
-    [],
-  );
+  )[] = useMemo(() => ["polygon", "rectangle", "select", "delete"], []);
 
   useEffect(() => {
     const addImages = async () => {
@@ -203,7 +201,7 @@ export default function DatabaseMap({
           padding: { left: 320 },
         }}
         maxZoom={15}
-        mapStyle={mapStyle}
+        mapStyle={"https://tiles.openfreemap.org/styles/liberty"}
         onMouseMove={onHover}
         onClick={onClick}
         interactiveLayerIds={["vlc", "smt", "gnss", "seis", "flt"]}
@@ -213,6 +211,7 @@ export default function DatabaseMap({
         <NavigationControl />
         <DrawControl modes={drawOptionsModes} open onUpdate={onUpdate} />
         <TerrainControl source={"terrain"} exaggeration={1.5} />
+        <Basemaps />
         <Source
           id="seafloorSource"
           type="raster"

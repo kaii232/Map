@@ -37,3 +37,10 @@ export type FltFilters = {
   types: Categories;
   catalogs: Categories;
 };
+
+export type BasemapNames =
+  | "Openstreetmap"
+  | "Opentopomap"
+  | "Satellite"
+  | "Ocean"
+  | "Openfreemap";

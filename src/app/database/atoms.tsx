@@ -1,15 +1,13 @@
+import { BasemapNames } from "@/lib/types";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
-import { StyleSpecification } from "react-map-gl/maplibre";
 
 export const layersAtom = atom({
   seafloor: false,
   hillshade: false,
 });
 
-export const mapStyleAtom = atom<string | StyleSpecification>(
-  "https://tiles.openfreemap.org/styles/liberty",
-);
+export const mapStyleAtom = atom<BasemapNames>("Openfreemap");
 
 export const drawingAtom = atom<Polygon | MultiPolygon>();
 

@@ -110,7 +110,7 @@ export const LoadSmt = async (
   }
   if (drawing) {
     filters.push(
-      sql`ST_WITHIN(${smtInInvest.smtGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+      sql`ST_INTERSECTS(${smtInInvest.smtGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
 
@@ -165,7 +165,7 @@ export const LoadVlc = async (
   }
   if (drawing) {
     filters.push(
-      sql`ST_WITHIN(${vlcInInvest.vlcGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+      sql`ST_INTERSECTS(${vlcInInvest.vlcGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
 
@@ -248,7 +248,7 @@ export const LoadGNSS = async (
   }
   if (drawing) {
     filters.push(
-      sql`ST_WITHIN(${gnssStnInInvest.gnssGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+      sql`ST_INTERSECTS(${gnssStnInInvest.gnssGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
 
@@ -424,7 +424,7 @@ export const LoadSeis = async (
 
   if (drawing) {
     filters.push(
-      sql`ST_WITHIN(${seisInInvest.seisGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+      sql`ST_INTERSECTS(${seisInInvest.seisGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
 

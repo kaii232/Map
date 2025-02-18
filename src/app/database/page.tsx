@@ -12,6 +12,8 @@ import {
 import { eq, sql } from "drizzle-orm";
 import DatabaseMap from "./database-map";
 
+export const dynamic = "force-dynamic";
+
 export default async function DatabasePage() {
   // const sources = db.$with("sources").as(
   //   db
