@@ -26,10 +26,15 @@ export const DrawControl = memo((props: DrawControlProps) => {
           props.onUpdate(snapshot);
         }
       });
-      drawInstance.on("finish", () => {
-        const snapshot = drawInstance.getSnapshot();
-        props.onUpdate(snapshot);
-      });
+      drawInstance.on(
+        "finish",
+        (id: string | number, context: { action: string; mode: string }) => {
+          if (context.action === "draw") {
+            const snapshot = drawInstance.getSnapshot();
+            props.onUpdate(snapshot);
+          }
+        },
+      );
     },
     () => {},
     {

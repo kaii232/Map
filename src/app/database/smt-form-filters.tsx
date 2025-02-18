@@ -25,14 +25,15 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { SmtFilters } from "@/lib/types";
 import { LoadSmt } from "@/server/actions";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { smtDataAtom } from "./atoms";
+import { drawingAtom, smtDataAtom } from "./atoms";
 import { smtFormSchema } from "./form-schema";
 
 export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
   const setSmtData = useSetAtom(smtDataAtom);
+  const drawing = useAtomValue(drawingAtom);
 
   const elevRange = [filters.elevRange[0] || 0, filters.elevRange[1] || 0];
   const baseRange = [filters.baseRange[0] || 0, filters.baseRange[1] || 0];
@@ -59,7 +60,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
 
   const submitAction = async (values: z.infer<typeof smtFormSchema>) => {
     startTransition(async () => {
-      const data = await LoadSmt(values);
+      const data = await LoadSmt(values, drawing);
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} seamounts`,
@@ -278,7 +279,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
         />
 
         <Button type="submit" disabled={isPending}>
-          Load
+          {drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

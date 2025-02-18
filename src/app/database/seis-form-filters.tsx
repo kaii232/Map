@@ -32,15 +32,16 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { SeisFilters } from "@/lib/types";
 import { LoadSeis } from "@/server/actions";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { CalendarDays } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { seisDataAtom } from "./atoms";
+import { drawingAtom, seisDataAtom } from "./atoms";
 import { seisFormSchema } from "./form-schema";
 
 export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
   const setSeisData = useSetAtom(seisDataAtom);
+  const drawing = useAtomValue(drawingAtom);
 
   const depthRange = [filters.depthRange[0] || 0, filters.depthRange[1] || 0];
   const mwRange = [filters.mwRange[0] || 0, filters.mwRange[1] || 0];
@@ -75,7 +76,7 @@ export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
 
   const submitAction = async (values: z.infer<typeof seisFormSchema>) => {
     startTransition(async () => {
-      const data = await LoadSeis(values);
+      const data = await LoadSeis(values, drawing);
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} seismic data`,
@@ -319,7 +320,7 @@ export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
           )}
         />
         <Button type="submit" disabled={isPending}>
-          Load
+          {drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

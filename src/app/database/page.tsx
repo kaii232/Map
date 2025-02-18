@@ -129,8 +129,6 @@ export default async function DatabasePage() {
         .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId)),
     ]);
 
-  console.log(seisFilters);
-
   return (
     <main className="h-screen w-full">
       <DatabaseMap

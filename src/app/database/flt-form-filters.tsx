@@ -25,14 +25,15 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { FltFilters } from "@/lib/types";
 import { LoadFlt } from "@/server/actions";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { fltDataAtom } from "./atoms";
+import { drawingAtom, fltDataAtom } from "./atoms";
 import { fltFormSchema } from "./form-schema";
 
 export default function FltFormFilters({ filters }: { filters: FltFilters }) {
   const setFltData = useSetAtom(fltDataAtom);
+  const drawing = useAtomValue(drawingAtom);
 
   const lengthRange = [
     filters.lengthRange[0] || 0,
@@ -62,7 +63,7 @@ export default function FltFormFilters({ filters }: { filters: FltFilters }) {
 
   const submitAction = async (values: z.infer<typeof fltFormSchema>) => {
     startTransition(async () => {
-      const data = await LoadFlt(values);
+      const data = await LoadFlt(values, drawing);
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} faults`,
@@ -279,7 +280,7 @@ export default function FltFormFilters({ filters }: { filters: FltFilters }) {
           )}
         />
         <Button type="submit" disabled={isPending}>
-          Load
+          {drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

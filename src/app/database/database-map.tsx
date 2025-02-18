@@ -8,7 +8,8 @@ import {
   VlcFilters,
 } from "@/lib/types";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
-import { useAtomValue } from "jotai";
+import { Position } from "geojson";
+import { useAtomValue, useSetAtom } from "jotai";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -29,6 +30,7 @@ import seamountIcon from "../../assets/seamount_icon.png";
 import volanoIcon from "../../assets/volcano_icon.png";
 import {
   dataVisibilityAtom,
+  drawingAtom,
   fltDataAtom,
   gnssDataAtom,
   layersAtom,
@@ -73,7 +75,27 @@ export default function DatabaseMap({
     lat: number;
   }>();
 
-  const [features, setFeatures] = useState<GeoJSONStoreFeatures[]>([]);
+  const setDrawing = useSetAtom(drawingAtom);
+
+  const onUpdate = useCallback(
+    (features: GeoJSONStoreFeatures[] | undefined) => {
+      if (!features || features.length === 0) return setDrawing(undefined);
+      if (features.length > 1) {
+        return setDrawing({
+          type: "MultiPolygon",
+          coordinates: features.map(
+            (feature) => feature.geometry.coordinates as Position[][],
+          ),
+        });
+      } else {
+        return setDrawing({
+          type: "Polygon",
+          coordinates: features[0].geometry.coordinates as Position[][],
+        });
+      }
+    },
+    [setDrawing],
+  );
 
   const onHover = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -147,23 +169,23 @@ export default function DatabaseMap({
     | "sector"
     | "delete-selection"
     | "download"
-  )[] = useMemo(() => ["polygon", "rectangle", "select", "delete"], []);
+  )[] = useMemo(
+    () => ["polygon", "rectangle", "select", "delete-selection"],
+    [],
+  );
 
   useEffect(() => {
     const addImages = async () => {
       if (map) {
-        try {
-          const [volcanoImg, smtImg, gnssImg] = await Promise.all([
-            map.loadImage(volanoIcon.src),
-            map.loadImage(seamountIcon.src),
-            map.loadImage(gnssIcon.src),
-          ]);
+        const [volcanoImg, smtImg, gnssImg] = await Promise.all([
+          map.loadImage(volanoIcon.src),
+          map.loadImage(seamountIcon.src),
+          map.loadImage(gnssIcon.src),
+        ]);
+        if (!map.hasImage("volcano_icon"))
           map.addImage("volcano_icon", volcanoImg.data);
-          map.addImage("smt_icon", smtImg.data);
-          map.addImage("gnss_icon", gnssImg.data);
-        } catch {
-          console.log("Images already exists");
-        }
+        if (!map.hasImage("smt_icon")) map.addImage("smt_icon", smtImg.data);
+        if (!map.hasImage("gnss_icon")) map.addImage("gnss_icon", gnssImg.data);
       }
     };
     addImages();
@@ -189,7 +211,7 @@ export default function DatabaseMap({
       >
         <ScaleControl />
         <NavigationControl />
-        <DrawControl modes={drawOptionsModes} open onUpdate={setFeatures} />
+        <DrawControl modes={drawOptionsModes} open onUpdate={onUpdate} />
         <TerrainControl source={"terrain"} exaggeration={1.5} />
         <Source
           id="seafloorSource"

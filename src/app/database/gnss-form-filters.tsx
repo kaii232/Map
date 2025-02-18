@@ -32,18 +32,27 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { GnssFilters } from "@/lib/types";
 import { LoadGNSS } from "@/server/actions";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { CalendarDays } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { gnssDataAtom } from "./atoms";
+import { drawingAtom, gnssDataAtom } from "./atoms";
 import { gnssFormSchema } from "./form-schema";
 
 export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
   const setGnssData = useSetAtom(gnssDataAtom);
+  const drawing = useAtomValue(drawingAtom);
 
-  const earliest = new Date(filters.dateRange ? filters.dateRange[0] : 0);
-  const latest = new Date(filters.dateRange ? filters.dateRange[1] : 0);
+  const earliest = new Date(
+    filters.dateRange && filters.dateRange[0] !== "NULL"
+      ? filters.dateRange[0]
+      : 0,
+  );
+  const latest = new Date(
+    filters.dateRange && filters.dateRange[1] !== "NULL"
+      ? filters.dateRange[1]
+      : 0,
+  );
   const elevRange = [filters.elevRange[0] || 0, filters.elevRange[1] || 0];
 
   const form = useForm<z.infer<typeof gnssFormSchema>>({
@@ -66,7 +75,7 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
 
   const submitAction = async (values: z.infer<typeof gnssFormSchema>) => {
     startTransition(async () => {
-      const data = await LoadGNSS(values);
+      const data = await LoadGNSS(values, drawing);
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} GNSS Stations`,
@@ -308,7 +317,7 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
           )}
         />
         <Button type="submit" disabled={isPending}>
-          Load
+          {drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

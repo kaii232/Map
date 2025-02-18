@@ -1,4 +1,4 @@
-import { FeatureCollection } from "geojson";
+import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
 import { StyleSpecification } from "react-map-gl/maplibre";
 
@@ -10,6 +10,8 @@ export const layersAtom = atom({
 export const mapStyleAtom = atom<string | StyleSpecification>(
   "https://tiles.openfreemap.org/styles/liberty",
 );
+
+export const drawingAtom = atom<Polygon | MultiPolygon>();
 
 export const gnssDataAtom = atom<FeatureCollection>();
 export const seisDataAtom = atom<FeatureCollection>();

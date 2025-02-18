@@ -22,14 +22,15 @@ import {
 } from "@/components/ui/select";
 import { VlcFilters } from "@/lib/types";
 import { LoadVlc } from "@/server/actions";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { vlcDataAtom } from "./atoms";
+import { drawingAtom, vlcDataAtom } from "./atoms";
 import { vlcFormSchema } from "./form-schema";
 
 export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
   const setVlcData = useSetAtom(vlcDataAtom);
+  const drawing = useAtomValue(drawingAtom);
 
   const form = useForm<z.infer<typeof vlcFormSchema>>({
     resolver: zodResolver(vlcFormSchema),
@@ -44,7 +45,7 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
 
   const submitAction = async (values: z.infer<typeof vlcFormSchema>) => {
     startTransition(async () => {
-      const data = await LoadVlc(values);
+      const data = await LoadVlc(values, drawing);
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} volcanoes`,
@@ -133,7 +134,7 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
           )}
         />
         <Button type="submit" disabled={isPending}>
-          Load
+          {drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

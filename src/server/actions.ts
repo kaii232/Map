@@ -8,7 +8,7 @@ import {
   vlcFormSchema,
 } from "@/app/database/form-schema";
 import { and, between, eq, isNull, or, type SQL, sql } from "drizzle-orm";
-import { Feature, FeatureCollection } from "geojson";
+import { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { z } from "zod";
 import { db } from "./db";
 import {
@@ -54,6 +54,7 @@ type ReturnType =
 
 export const LoadSmt = async (
   values: z.infer<typeof smtFormSchema>,
+  drawing?: Polygon | MultiPolygon,
 ): Promise<ReturnType> => {
   const { success } = smtFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
@@ -107,6 +108,11 @@ export const LoadSmt = async (
       between(smtInInvest.smtSummit, values.summit[0], values.summit[1]),
     );
   }
+  if (drawing) {
+    filters.push(
+      sql`ST_WITHIN(${smtInInvest.smtGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+    );
+  }
 
   const data = await db
     .select({
@@ -132,6 +138,7 @@ export const LoadSmt = async (
 
 export const LoadVlc = async (
   values: z.infer<typeof vlcFormSchema>,
+  drawing?: Polygon | MultiPolygon,
 ): Promise<ReturnType> => {
   const { success } = vlcFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
@@ -143,7 +150,6 @@ export const LoadVlc = async (
       filters.push(eq(vlcInInvest.vlcClass, values.class));
     }
   }
-
   if (values.sources !== "All") {
     if (values.sources === "NULL") {
       filters.push(isNull(vlcInInvest.vlcSrcId));
@@ -157,6 +163,11 @@ export const LoadVlc = async (
     } else {
       filters.push(eq(countryInInvest.countryName, values.countries));
     }
+  }
+  if (drawing) {
+    filters.push(
+      sql`ST_WITHIN(${vlcInInvest.vlcGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+    );
   }
 
   const data = await db
@@ -183,6 +194,7 @@ export const LoadVlc = async (
 
 export const LoadGNSS = async (
   values: z.infer<typeof gnssFormSchema>,
+  drawing?: Polygon | MultiPolygon,
 ): Promise<ReturnType> => {
   const { success } = gnssFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
@@ -235,6 +247,11 @@ export const LoadGNSS = async (
       between(gnssStnInInvest.gnssInstDate, values.date.from, values.date.to),
     );
   }
+  if (drawing) {
+    filters.push(
+      sql`ST_WITHIN(${gnssStnInInvest.gnssGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+    );
+  }
 
   const data = await db
     .select({
@@ -265,6 +282,7 @@ export const LoadGNSS = async (
 
 export const LoadFlt = async (
   values: z.infer<typeof fltFormSchema>,
+  drawing?: MultiPolygon | Polygon,
 ): Promise<ReturnType> => {
   const { success } = fltFormSchema.safeParse(values);
   console.log(values);
@@ -322,6 +340,12 @@ export const LoadFlt = async (
     );
   }
 
+  if (drawing) {
+    filters.push(
+      sql`ST_WITHIN(${fltInInvest.fltGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+    );
+  }
+
   const data = await db
     .select({
       id: fltInInvest.fltId,
@@ -343,6 +367,7 @@ export const LoadFlt = async (
 
 export const LoadSeis = async (
   values: z.infer<typeof seisFormSchema>,
+  drawing?: MultiPolygon | Polygon,
 ): Promise<ReturnType> => {
   const { success } = seisFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
@@ -387,6 +412,12 @@ export const LoadSeis = async (
   } else {
     filters.push(
       between(seisInInvest.seisDate, values.date.from, values.date.to),
+    );
+  }
+
+  if (drawing) {
+    filters.push(
+      sql`ST_WITHIN(${seisInInvest.seisGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
 
