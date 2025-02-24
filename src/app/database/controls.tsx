@@ -54,6 +54,11 @@ const MAP_STYLE: {
   },
 ];
 
+function camelCaseToWords(s: string) {
+  const result = s.replace(/([A-Z])/g, " $1");
+  return result.charAt(0).toUpperCase() + result.slice(1);
+}
+
 export default function Controls({
   filters,
 }: {
@@ -139,22 +144,24 @@ export default function Controls({
             <ChevronsUpDown />
           </CollapsibleTrigger>
           <CollapsibleContent className="flex flex-col gap-2 overflow-auto pl-2 pr-1">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="switch"
-                className="text-xs font-medium text-zinc-700"
-              >
-                Seafloor Age
-              </label>
-              <Switch
-                id="switch"
-                checked={layers.seafloor}
-                onCheckedChange={(e: boolean) =>
-                  setLayers((prev) => ({ ...prev, seafloor: e }))
-                }
-              />
-            </div>
-            {layers.seafloor && (
+            {Object.keys(layers).map((layer) => (
+              <div key={layer} className="flex items-center justify-between">
+                <label
+                  htmlFor="switch"
+                  className="text-xs font-medium text-zinc-700"
+                >
+                  {camelCaseToWords(layer)}
+                </label>
+                <Switch
+                  id="switch"
+                  checked={layers[layer as keyof typeof layers]}
+                  onCheckedChange={(e: boolean) =>
+                    setLayers((prev) => ({ ...prev, [layer]: e }))
+                  }
+                />
+              </div>
+            ))}
+            {layers.seafloorAge && (
               <div>
                 <div className="mb-1 h-10 w-full bg-gradient-to-r from-black to-white"></div>
                 <div className="flex w-full justify-between text-xs">
@@ -163,21 +170,6 @@ export default function Controls({
                 </div>
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="switch"
-                className="text-xs font-medium text-zinc-700"
-              >
-                Hillshading
-              </label>
-              <Switch
-                id="switch"
-                checked={layers.hillshade}
-                onCheckedChange={(e: boolean) =>
-                  setLayers((prev) => ({ ...prev, hillshade: e }))
-                }
-              />
-            </div>
           </CollapsibleContent>
         </Collapsible>
         <Separator />
@@ -206,6 +198,7 @@ export default function Controls({
               <SmtFormFilters filters={filters.smt} />
             </CollapsibleContent>
           </Collapsible>
+          <Separator />
           <Collapsible className="flex flex-col">
             <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
               Volcanoes
@@ -230,6 +223,7 @@ export default function Controls({
               <VlcFormFilters filters={filters.vlc} />
             </CollapsibleContent>
           </Collapsible>
+          <Separator />
           <Collapsible className="flex flex-col">
             <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
               GNSS Stations
@@ -254,6 +248,7 @@ export default function Controls({
               <GnssFormFilters filters={filters.gnss} />
             </CollapsibleContent>
           </Collapsible>
+          <Separator />
           <Collapsible className="flex flex-col">
             <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
               Faults
@@ -278,6 +273,7 @@ export default function Controls({
               <FltFormFilters filters={filters.flt} />
             </CollapsibleContent>
           </Collapsible>
+          <Separator />
           <Collapsible className="flex flex-col">
             <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
               Seismic

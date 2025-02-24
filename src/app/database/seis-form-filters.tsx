@@ -162,7 +162,7 @@ export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
                   />
                 </FormControl>
                 <FormDescription className="flex w-full justify-between">
-                  <span>{field.value[0]}m</span> <span>{field.value[1]}m</span>
+                  <span>{field.value[0]}</span> <span>{field.value[1]}</span>
                 </FormDescription>
                 <FormMessage />
               </FormItem>

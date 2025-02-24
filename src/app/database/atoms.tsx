@@ -3,8 +3,10 @@ import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
 
 export const layersAtom = atom({
-  seafloor: false,
   hillshade: false,
+  faultMovement: false,
+  // Put as the last one always
+  seafloorAge: false,
 });
 
 export const mapStyleAtom = atom<BasemapNames>("Openfreemap");

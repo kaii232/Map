@@ -1,5 +1,7 @@
 "use client";
 
+import { style } from "@/assets/map_style";
+import plateVelocities from "@/assets/morvel_velocity.xlsx";
 import {
   FltFilters,
   GnssFilters,
@@ -8,10 +10,10 @@ import {
   VlcFilters,
 } from "@/lib/types";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
-import { Position } from "geojson";
+import { Feature, FeatureCollection, Position } from "geojson";
 import { useAtomValue, useSetAtom } from "jotai";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Layer,
   Map,
@@ -25,16 +27,12 @@ import {
   useMap,
 } from "react-map-gl/maplibre";
 import { GeoJSONStoreFeatures } from "terra-draw";
-import gnssIcon from "../../assets/GNSS_icon.png";
-import seamountIcon from "../../assets/seamount_icon.png";
-import volanoIcon from "../../assets/volcano_icon.png";
 import {
   dataVisibilityAtom,
   drawingAtom,
   fltDataAtom,
   gnssDataAtom,
   layersAtom,
-  mapStyleAtom,
   seisDataAtom,
   smtDataAtom,
   vlcDataAtom,
@@ -42,6 +40,30 @@ import {
 import Basemaps from "./basemaps";
 import Controls from "./controls";
 import DrawControl from "./draw-control";
+
+const xlsxToGeojson = (
+  input: Record<string, string | number>[],
+): FeatureCollection => {
+  const features: Feature[] = [];
+  for (let i = 0; i < input.length; i++) {
+    features.push({
+      type: "Feature",
+      properties: {
+        ...input[i],
+        lon: undefined,
+        lat: undefined,
+      },
+      geometry: {
+        type: "Point",
+        coordinates: [input[i].lon as number, input[i].lat as number],
+      },
+    });
+  }
+  return {
+    type: "FeatureCollection",
+    features: features,
+  };
+};
 
 export default function DatabaseMap({
   filters,
@@ -55,15 +77,14 @@ export default function DatabaseMap({
   };
 }) {
   const { map } = useMap();
-  const mapStyle = useAtomValue(mapStyleAtom);
   const smtData = useAtomValue(smtDataAtom);
   const seisData = useAtomValue(seisDataAtom);
   const gnssData = useAtomValue(gnssDataAtom);
   const fltData = useAtomValue(fltDataAtom);
   const vlcData = useAtomValue(vlcDataAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
-
   const layers = useAtomValue(layersAtom);
+
   const [hoverInfo, setHoverInfo] = useState<{
     feature: MapGeoJSONFeature;
     lng: number;
@@ -175,22 +196,11 @@ export default function DatabaseMap({
     [],
   );
 
-  useEffect(() => {
-    const addImages = async () => {
-      if (map) {
-        const [volcanoImg, smtImg, gnssImg] = await Promise.all([
-          map.loadImage(volanoIcon.src),
-          map.loadImage(seamountIcon.src),
-          map.loadImage(gnssIcon.src),
-        ]);
-        if (!map.hasImage("volcano_icon"))
-          map.addImage("volcano_icon", volcanoImg.data);
-        if (!map.hasImage("smt_icon")) map.addImage("smt_icon", smtImg.data);
-        if (!map.hasImage("gnss_icon")) map.addImage("gnss_icon", gnssImg.data);
-      }
-    };
-    addImages();
-  }, [map, mapStyle]);
+  const morvelVelocity = xlsxToGeojson(plateVelocities);
+  const velocityStops = useMemo(
+    () => [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+    [],
+  );
 
   return (
     <>
@@ -204,7 +214,7 @@ export default function DatabaseMap({
           padding: { left: 320 },
         }}
         maxZoom={15}
-        mapStyle={"https://tiles.openfreemap.org/styles/liberty"}
+        mapStyle={style}
         onMouseMove={onHover}
         onClick={onClick}
         interactiveLayerIds={["vlc", "smt", "gnss", "seis", "flt"]}
@@ -227,7 +237,7 @@ export default function DatabaseMap({
           <Layer
             type="raster"
             id="seafloor"
-            layout={{ visibility: layers.seafloor ? "visible" : "none" }}
+            layout={{ visibility: layers.seafloorAge ? "visible" : "none" }}
           />
         </Source>
         <Source
@@ -256,13 +266,50 @@ export default function DatabaseMap({
             }}
           />
         </Source>
+        <Source
+          id="velocitySource"
+          type="geojson"
+          data={morvelVelocity}
+          promoteId={"lon"}
+        >
+          {velocityStops.map((velocity, index) => {
+            return (
+              <Layer
+                key={velocity}
+                id={`velocity_${index}`}
+                source="velocitySource"
+                type="symbol"
+                layout={{
+                  "icon-image": `custom:arrow_${index}`,
+                  "icon-size": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    5,
+                    1,
+                    10,
+                    2,
+                  ],
+                  "icon-overlap": "always",
+                  "icon-rotate": ["get", "dir"],
+                  visibility: layers.faultMovement ? "visible" : "none",
+                }}
+                filter={[
+                  "all",
+                  [">=", ["get", "velo"], velocity],
+                  ["<", ["get", "velo"], velocity + 10],
+                ]}
+              />
+            );
+          })}
+        </Source>
         {vlcData && (
           <Source id="vlcSource" type="geojson" data={vlcData}>
             <Layer
               id="vlc"
               type="symbol"
               layout={{
-                "icon-image": "volcano_icon",
+                "icon-image": "custom:volcano",
                 "text-field": ["get", "name"],
                 "text-font": ["Noto Sans Regular"],
                 "icon-size": [
@@ -301,7 +348,7 @@ export default function DatabaseMap({
               id="smt"
               type="symbol"
               layout={{
-                "icon-image": "smt_icon",
+                "icon-image": "custom:seamount",
                 "text-field": ["get", "name"],
                 "text-font": ["Noto Sans Regular"],
                 "icon-size": [
@@ -340,7 +387,7 @@ export default function DatabaseMap({
               id="gnss"
               type="symbol"
               layout={{
-                "icon-image": "gnss_icon",
+                "icon-image": "custom:GNSS",
                 "text-field": ["get", "name"],
                 "text-font": ["Noto Sans Regular"],
                 "icon-size": [
