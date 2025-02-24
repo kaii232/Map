@@ -292,7 +292,7 @@ export default function DatabaseMap({
                   ],
                   "icon-overlap": "always",
                   "icon-rotate": ["get", "dir"],
-                  visibility: layers.faultMovement ? "visible" : "none",
+                  visibility: layers.plateMovementVectors ? "visible" : "none",
                 }}
                 filter={[
                   "all",

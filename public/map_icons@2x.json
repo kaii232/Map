@@ -1,0 +1,100 @@
+{
+  "GNSS": {
+    "height": 40,
+    "pixelRatio": 2,
+    "width": 40,
+    "x": 0,
+    "y": 0
+  },
+  "arow_6": {
+    "height": 38,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 24,
+    "y": 90
+  },
+  "arrow_0": {
+    "height": 14,
+    "pixelRatio": 2,
+    "width": 12,
+    "x": 72,
+    "y": 88
+  },
+  "arrow_1": {
+    "height": 18,
+    "pixelRatio": 2,
+    "width": 20,
+    "x": 72,
+    "y": 70
+  },
+  "arrow_10": {
+    "height": 54,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 0,
+    "y": 40
+  },
+  "arrow_2": {
+    "height": 22,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 96,
+    "y": 66
+  },
+  "arrow_3": {
+    "height": 26,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 96,
+    "y": 40
+  },
+  "arrow_4": {
+    "height": 30,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 72,
+    "y": 40
+  },
+  "arrow_5": {
+    "height": 34,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 0,
+    "y": 94
+  },
+  "arrow_7": {
+    "height": 42,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 48,
+    "y": 86
+  },
+  "arrow_8": {
+    "height": 46,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 48,
+    "y": 40
+  },
+  "arrow_9": {
+    "height": 50,
+    "pixelRatio": 2,
+    "width": 24,
+    "x": 24,
+    "y": 40
+  },
+  "seamount": {
+    "height": 40,
+    "pixelRatio": 2,
+    "width": 40,
+    "x": 40,
+    "y": 0
+  },
+  "triangle 1": {
+    "height": 40,
+    "pixelRatio": 2,
+    "width": 40,
+    "x": 80,
+    "y": 0
+  }
+}
