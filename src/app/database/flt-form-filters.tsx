@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import Spinner from "@/components/ui/spinner";
 import { FltFilters } from "@/lib/types";
 import { LoadFlt } from "@/server/actions";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -63,7 +64,13 @@ export default function FltFormFilters({ filters }: { filters: FltFilters }) {
 
   const submitAction = async (values: z.infer<typeof fltFormSchema>) => {
     startTransition(async () => {
+      toast("Loading data...", {
+        icon: <Spinner className="size-5" />,
+        duration: Infinity,
+        id: "Loadflt",
+      });
       const data = await LoadFlt(values, drawing);
+      toast.dismiss("Loadflt");
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} faults`,
@@ -280,7 +287,7 @@ export default function FltFormFilters({ filters }: { filters: FltFilters }) {
           )}
         />
         <Button type="submit" disabled={isPending}>
-          {drawing ? "Load data within area" : "Load"}
+          {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

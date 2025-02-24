@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import Spinner from "@/components/ui/spinner";
 import { GnssFilters } from "@/lib/types";
 import { LoadGNSS } from "@/server/actions";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -75,7 +76,13 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
 
   const submitAction = async (values: z.infer<typeof gnssFormSchema>) => {
     startTransition(async () => {
+      toast("Loading data...", {
+        icon: <Spinner className="size-5" />,
+        duration: Infinity,
+        id: "Loadgnss",
+      });
       const data = await LoadGNSS(values, drawing);
+      toast.dismiss("Loadgnss");
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} GNSS Stations`,
@@ -317,7 +324,7 @@ export default function GnssFormFilters({ filters }: { filters: GnssFilters }) {
           )}
         />
         <Button type="submit" disabled={isPending}>
-          {drawing ? "Load data within area" : "Load"}
+          {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

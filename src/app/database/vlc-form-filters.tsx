@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
 import { VlcFilters } from "@/lib/types";
 import { LoadVlc } from "@/server/actions";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -45,7 +46,13 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
 
   const submitAction = async (values: z.infer<typeof vlcFormSchema>) => {
     startTransition(async () => {
+      toast("Loading data...", {
+        icon: <Spinner className="size-5" />,
+        duration: Infinity,
+        id: "Loadvlc",
+      });
       const data = await LoadVlc(values, drawing);
+      toast.dismiss("Loadvlc");
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} volcanoes`,
@@ -134,7 +141,7 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
           )}
         />
         <Button type="submit" disabled={isPending}>
-          {drawing ? "Load data within area" : "Load"}
+          {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

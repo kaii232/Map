@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import Spinner from "@/components/ui/spinner";
 import { SeisFilters } from "@/lib/types";
 import { LoadSeis } from "@/server/actions";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -76,7 +77,13 @@ export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
 
   const submitAction = async (values: z.infer<typeof seisFormSchema>) => {
     startTransition(async () => {
+      toast("Loading data...", {
+        icon: <Spinner className="size-5" />,
+        duration: Infinity,
+        id: "Loadseis",
+      });
       const data = await LoadSeis(values, drawing);
+      toast.dismiss("Loadseis");
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} seismic data`,
@@ -320,7 +327,7 @@ export default function SeisFormFilters({ filters }: { filters: SeisFilters }) {
           )}
         />
         <Button type="submit" disabled={isPending}>
-          {drawing ? "Load data within area" : "Load"}
+          {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>

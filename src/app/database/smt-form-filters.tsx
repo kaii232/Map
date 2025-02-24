@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import Spinner from "@/components/ui/spinner";
 import { SmtFilters } from "@/lib/types";
 import { LoadSmt } from "@/server/actions";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -60,7 +61,13 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
 
   const submitAction = async (values: z.infer<typeof smtFormSchema>) => {
     startTransition(async () => {
+      toast("Loading data...", {
+        icon: <Spinner className="size-5" />,
+        duration: Infinity,
+        id: "Loadsmt",
+      });
       const data = await LoadSmt(values, drawing);
+      toast.dismiss("Loadsmt");
       if (data.success) {
         toast.success(
           `Successfully loaded ${data.data.features.length} seamounts`,
@@ -279,7 +286,7 @@ export default function SmtFormFilters({ filters }: { filters: SmtFilters }) {
         />
 
         <Button type="submit" disabled={isPending}>
-          {drawing ? "Load data within area" : "Load"}
+          {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
         </Button>
       </form>
     </Form>
