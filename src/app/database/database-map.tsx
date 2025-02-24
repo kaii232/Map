@@ -202,6 +202,8 @@ export default function DatabaseMap({
     [],
   );
 
+  console.log(selectedFeature);
+
   return (
     <>
       <Controls filters={filters} />
@@ -217,7 +219,16 @@ export default function DatabaseMap({
         mapStyle={style}
         onMouseMove={onHover}
         onClick={onClick}
-        interactiveLayerIds={["vlc", "smt", "gnss", "seis", "flt"]}
+        interactiveLayerIds={[
+          "vlc",
+          "smt",
+          "gnss",
+          "seisMb",
+          "seisMw",
+          "seisMs",
+          "seisNone",
+          "flt",
+        ]}
         reuseMaps
       >
         <ScaleControl />
@@ -466,7 +477,7 @@ export default function DatabaseMap({
         {seisData && (
           <Source id="seisSource" type="geojson" data={seisData}>
             <Layer
-              id="seis"
+              id="seisMw"
               type="circle"
               layout={{ visibility: dataVisibility.seis ? "visible" : "none" }}
               paint={{
@@ -482,7 +493,7 @@ export default function DatabaseMap({
                     2,
                     2,
                     9,
-                    8,
+                    6,
                   ],
                   15,
                   [
@@ -492,7 +503,7 @@ export default function DatabaseMap({
                     2,
                     8,
                     9,
-                    24,
+                    16,
                   ],
                 ],
                 "circle-stroke-width": [
@@ -529,6 +540,194 @@ export default function DatabaseMap({
                   "#120504",
                 ],
               }}
+              filter={["to-boolean", ["get", "mw"]]}
+            />
+            <Layer
+              id="seisMb"
+              type="circle"
+              layout={{ visibility: dataVisibility.seis ? "visible" : "none" }}
+              paint={{
+                "circle-radius": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  [
+                    "interpolate",
+                    ["exponential", 2],
+                    ["get", "mb"],
+                    2,
+                    2,
+                    9,
+                    6,
+                  ],
+                  15,
+                  [
+                    "interpolate",
+                    ["exponential", 2],
+                    ["get", "mb"],
+                    2,
+                    8,
+                    9,
+                    16,
+                  ],
+                ],
+                "circle-stroke-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  0,
+                  13,
+                  2,
+                ],
+                "circle-opacity": 0.7,
+                "circle-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "depth"],
+                  4,
+                  "#fff7ec",
+                  8,
+                  "#fee8c8",
+                  16,
+                  "#fdd49e",
+                  32,
+                  "#fdbb84",
+                  64,
+                  "#eb7c49",
+                  128,
+                  "#db5235",
+                  256,
+                  "#b52112",
+                  512,
+                  "#750606",
+                  640,
+                  "#120504",
+                ],
+              }}
+              filter={["to-boolean", ["get", "mb"]]}
+            />
+            <Layer
+              id="seisMs"
+              type="circle"
+              layout={{ visibility: dataVisibility.seis ? "visible" : "none" }}
+              paint={{
+                "circle-radius": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  [
+                    "interpolate",
+                    ["exponential", 2],
+                    ["get", "ms"],
+                    2,
+                    2,
+                    9,
+                    6,
+                  ],
+                  15,
+                  [
+                    "interpolate",
+                    ["exponential", 2],
+                    ["get", "ms"],
+                    2,
+                    8,
+                    9,
+                    16,
+                  ],
+                ],
+                "circle-stroke-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  0,
+                  13,
+                  2,
+                ],
+                "circle-opacity": 0.7,
+                "circle-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "depth"],
+                  4,
+                  "#fff7ec",
+                  8,
+                  "#fee8c8",
+                  16,
+                  "#fdd49e",
+                  32,
+                  "#fdbb84",
+                  64,
+                  "#eb7c49",
+                  128,
+                  "#db5235",
+                  256,
+                  "#b52112",
+                  512,
+                  "#750606",
+                  640,
+                  "#120504",
+                ],
+              }}
+              filter={["to-boolean", ["get", "ms"]]}
+            />
+            <Layer
+              id="seisNone"
+              type="circle"
+              layout={{ visibility: dataVisibility.seis ? "visible" : "none" }}
+              paint={{
+                "circle-radius": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  2,
+                  15,
+                  12,
+                ],
+                "circle-stroke-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  0,
+                  13,
+                  2,
+                ],
+                "circle-opacity": 0.7,
+                "circle-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "depth"],
+                  4,
+                  "#fff7ec",
+                  8,
+                  "#fee8c8",
+                  16,
+                  "#fdd49e",
+                  32,
+                  "#fdbb84",
+                  64,
+                  "#eb7c49",
+                  128,
+                  "#db5235",
+                  256,
+                  "#b52112",
+                  512,
+                  "#750606",
+                  640,
+                  "#120504",
+                ],
+              }}
+              filter={[
+                "all",
+                ["!", ["to-boolean", ["get", "mb"]]],
+                ["!", ["to-boolean", ["get", "mw"]]],
+                ["!", ["to-boolean", ["get", "ms"]]],
+              ]}
             />
           </Source>
         )}
