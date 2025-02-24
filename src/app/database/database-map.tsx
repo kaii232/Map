@@ -2,6 +2,8 @@
 
 import { style } from "@/assets/map_style";
 import plateVelocities from "@/assets/morvel_velocity.xlsx";
+import tectonicBoundaries from "@/assets/PB2002_boundaries.json";
+import tectonicPlates from "@/assets/PB2002_plates.json";
 import {
   FltFilters,
   GnssFilters,
@@ -201,9 +203,6 @@ export default function DatabaseMap({
     () => [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
     [],
   );
-
-  console.log(selectedFeature);
-
   return (
     <>
       <Controls filters={filters} />
@@ -249,6 +248,49 @@ export default function DatabaseMap({
             type="raster"
             id="seafloor"
             layout={{ visibility: layers.seafloorAge ? "visible" : "none" }}
+          />
+        </Source>
+        <Source
+          id="platesSource"
+          type="geojson"
+          data={tectonicPlates as FeatureCollection}
+        >
+          <Layer
+            type="fill"
+            id="plates"
+            paint={{
+              "fill-color": "#00000000",
+              "fill-outline-color": "#065f46",
+            }}
+            layout={{
+              visibility: layers.tectonicPlates ? "visible" : "none",
+            }}
+          />
+        </Source>
+        <Source
+          id="plateBoundariesSource"
+          type="geojson"
+          data={tectonicBoundaries as FeatureCollection}
+        >
+          <Layer
+            type="line"
+            id="plateBoundaries"
+            paint={{
+              "line-color": "#065f46",
+              "line-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 15, 6],
+              "line-opacity": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                5,
+                1,
+                15,
+                0.6,
+              ],
+            }}
+            layout={{
+              visibility: layers.tectonicPlates ? "visible" : "none",
+            }}
           />
         </Source>
         <Source
