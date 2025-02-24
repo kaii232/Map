@@ -1,5 +1,9 @@
 import { StyleSpecification } from "maplibre-gl";
 
+const domain =
+  process.env.NEXT_PUBLIC_URL ||
+  `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
+
 export const style: StyleSpecification = {
   version: 8,
   metadata: {},
@@ -22,7 +26,7 @@ export const style: StyleSpecification = {
       id: "default",
       url: "https://tiles.openfreemap.org/sprites/ofm_f384/ofm",
     },
-    { id: "custom", url: `${process.env.NEXT_PUBLIC_URL}/map_icons` },
+    { id: "custom", url: `${domain}/map_icons` },
   ],
   glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   layers: [
