@@ -139,10 +139,29 @@ export default function DatabaseMap({
           );
         }
         if (
+          hoveredFeature.source === "platesSource" ||
+          hoveredFeature.source === "plateBoundariesSource"
+        ) {
+          setHoverInfo(undefined);
+          return;
+        }
+        if (
           !selectedFeature ||
           (selectedFeature && selectedFeature.feature.id !== hoveredFeature.id)
         ) {
-          setHoverInfo({ feature: hoveredFeature, lng, lat });
+          const popupLon =
+            hoveredFeature.geometry.type === "Point"
+              ? hoveredFeature.geometry.coordinates[0]
+              : lng;
+          const popupLat =
+            hoveredFeature.geometry.type === "Point"
+              ? hoveredFeature.geometry.coordinates[1]
+              : lat;
+          setHoverInfo({
+            feature: hoveredFeature,
+            lng: popupLon,
+            lat: popupLat,
+          });
           map.setFeatureState(
             { source: hoveredFeature.layer.source, id: hoveredFeature.id },
             { hover: true },
@@ -157,8 +176,8 @@ export default function DatabaseMap({
             },
             { hover: false },
           );
+          setHoverInfo(undefined);
         }
-        setHoverInfo(undefined);
       }
     },
     [hoverInfo, map, selectedFeature],
@@ -172,7 +191,15 @@ export default function DatabaseMap({
       } = event;
       const clicked = features && features[0];
       if (clicked && map) {
-        setselectedFeature({ feature: clicked, lng, lat });
+        const popupLon =
+          clicked.geometry.type === "Point"
+            ? clicked.geometry.coordinates[0]
+            : lng;
+        const popupLat =
+          clicked.geometry.type === "Point"
+            ? clicked.geometry.coordinates[1]
+            : lat;
+        setselectedFeature({ feature: clicked, lng: popupLon, lat: popupLat });
       }
     },
     [map],
@@ -227,6 +254,9 @@ export default function DatabaseMap({
           "seisMs",
           "seisNone",
           "flt",
+          "plates",
+          "plateBoundaries",
+          ...velocityStops.map((_, index) => `velocity_${index}`),
         ]}
         reuseMaps
       >
@@ -259,8 +289,7 @@ export default function DatabaseMap({
             type="fill"
             id="plates"
             paint={{
-              "fill-color": "#00000000",
-              "fill-outline-color": "#065f46",
+              "fill-opacity": 0,
             }}
             layout={{
               visibility: layers.tectonicPlates ? "visible" : "none",
@@ -277,15 +306,15 @@ export default function DatabaseMap({
             id="plateBoundaries"
             paint={{
               "line-color": "#065f46",
-              "line-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 15, 6],
+              "line-width": ["interpolate", ["linear"], ["zoom"], 5, 3, 15, 8],
               "line-opacity": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
                 5,
-                1,
+                0.5,
                 15,
-                0.6,
+                0.3,
               ],
             }}
             layout={{
@@ -323,7 +352,7 @@ export default function DatabaseMap({
           id="velocitySource"
           type="geojson"
           data={morvelVelocity}
-          promoteId={"lon"}
+          promoteId={"ve"}
         >
           {velocityStops.map((velocity, index) => {
             return (

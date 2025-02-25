@@ -1,8 +1,8 @@
 import { StyleSpecification } from "maplibre-gl";
 
-const domain =
-  process.env.NEXT_PUBLIC_URL ||
-  `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
+const domain = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
+  : process.env.NEXT_PUBLIC_LOCAL_URL;
 
 export const style: StyleSpecification = {
   version: 8,
