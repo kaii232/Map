@@ -9,13 +9,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
-  BasemapNames,
   FltFilters,
   GnssFilters,
   SeisFilters,
   SmtFilters,
   VlcFilters,
-} from "@/lib/types";
+} from "@/lib/filters";
+import { BasemapNames } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAtom, useSetAtom } from "jotai";
 import { ChevronLeft, ChevronsUpDown } from "lucide-react";
@@ -59,10 +59,18 @@ function camelCaseToWords(s: string) {
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
+const DATA_LABELS = {
+  smt: "Seamounts",
+  vlc: "Volcanoes",
+  gnss: "GNSS Stations",
+  flt: "Faults",
+  seis: "Seismic",
+};
+
 export default function Controls({
-  filters,
+  initialData,
 }: {
-  filters: {
+  initialData: {
     smt: SmtFilters;
     vlc: VlcFilters;
     gnss: GnssFilters;
@@ -174,130 +182,60 @@ export default function Controls({
         </Collapsible>
         <Separator />
         <div className="space-y-2 px-4">
-          <Collapsible className="flex flex-col">
-            <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-              Seamounts
-              <ChevronsUpDown />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-2 pr-1">
-              <div className="mb-2 flex items-center justify-between">
-                <label
-                  htmlFor="switch"
-                  className="text-xs font-medium text-zinc-700"
-                >
-                  Visibility
-                </label>
-                <Switch
-                  id="switch"
-                  checked={dataVisibility.smt}
-                  onCheckedChange={(e: boolean) =>
-                    setDataVisibility((prev) => ({ ...prev, smt: e }))
-                  }
-                />
+          {Object.entries(initialData).map(([keyRaw, initialInfo], index) => {
+            const key = keyRaw as keyof typeof initialData;
+            return (
+              <div className="space-y-2" key={key}>
+                <Collapsible className="flex flex-col">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+                    {DATA_LABELS[key]}
+                    <ChevronsUpDown />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-2 pr-1">
+                    <div className="mb-2 flex items-center justify-between">
+                      <label
+                        htmlFor={key}
+                        className="text-xs font-medium text-zinc-700"
+                      >
+                        Visibility
+                      </label>
+                      <Switch
+                        id={key}
+                        checked={
+                          dataVisibility[key as keyof typeof initialData]
+                        }
+                        onCheckedChange={(e: boolean) =>
+                          setDataVisibility((prev) => ({ ...prev, [key]: e }))
+                        }
+                      />
+                    </div>
+                    {key === "flt" && (
+                      <FltFormFilters initialData={initialInfo as FltFilters} />
+                    )}
+                    {key === "gnss" && (
+                      <GnssFormFilters
+                        initialData={initialInfo as GnssFilters}
+                      />
+                    )}
+                    {key === "seis" && (
+                      <SeisFormFilters
+                        initialData={initialInfo as SeisFilters}
+                      />
+                    )}
+                    {key === "smt" && (
+                      <SmtFormFilters initialData={initialInfo as SmtFilters} />
+                    )}
+                    {key === "vlc" && (
+                      <VlcFormFilters initialData={initialInfo as VlcFilters} />
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
+                {index !== Object.values(initialData).length - 1 && (
+                  <Separator />
+                )}
               </div>
-              <SmtFormFilters filters={filters.smt} />
-            </CollapsibleContent>
-          </Collapsible>
-          <Separator />
-          <Collapsible className="flex flex-col">
-            <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-              Volcanoes
-              <ChevronsUpDown />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-2 pr-1">
-              <div className="mb-2 flex items-center justify-between">
-                <label
-                  htmlFor="switch"
-                  className="text-xs font-medium text-zinc-700"
-                >
-                  Visibility
-                </label>
-                <Switch
-                  id="switch"
-                  checked={dataVisibility.vlc}
-                  onCheckedChange={(e: boolean) =>
-                    setDataVisibility((prev) => ({ ...prev, vlc: e }))
-                  }
-                />
-              </div>
-              <VlcFormFilters filters={filters.vlc} />
-            </CollapsibleContent>
-          </Collapsible>
-          <Separator />
-          <Collapsible className="flex flex-col">
-            <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-              GNSS Stations
-              <ChevronsUpDown />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-2 pr-1">
-              <div className="mb-2 flex items-center justify-between">
-                <label
-                  htmlFor="switch"
-                  className="text-xs font-medium text-zinc-700"
-                >
-                  Visibility
-                </label>
-                <Switch
-                  id="switch"
-                  checked={dataVisibility.gnss}
-                  onCheckedChange={(e: boolean) =>
-                    setDataVisibility((prev) => ({ ...prev, gnss: e }))
-                  }
-                />
-              </div>
-              <GnssFormFilters filters={filters.gnss} />
-            </CollapsibleContent>
-          </Collapsible>
-          <Separator />
-          <Collapsible className="flex flex-col">
-            <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-              Faults
-              <ChevronsUpDown />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-2 pr-1">
-              <div className="mb-2 flex items-center justify-between">
-                <label
-                  htmlFor="switch"
-                  className="text-xs font-medium text-zinc-700"
-                >
-                  Visibility
-                </label>
-                <Switch
-                  id="switch"
-                  checked={dataVisibility.flt}
-                  onCheckedChange={(e: boolean) =>
-                    setDataVisibility((prev) => ({ ...prev, flt: e }))
-                  }
-                />
-              </div>
-              <FltFormFilters filters={filters.flt} />
-            </CollapsibleContent>
-          </Collapsible>
-          <Separator />
-          <Collapsible className="flex flex-col">
-            <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
-              Seismic
-              <ChevronsUpDown />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-2 pr-1">
-              <div className="mb-2 flex items-center justify-between">
-                <label
-                  htmlFor="switch"
-                  className="text-xs font-medium text-zinc-700"
-                >
-                  Visibility
-                </label>
-                <Switch
-                  id="switch"
-                  checked={dataVisibility.seis}
-                  onCheckedChange={(e: boolean) =>
-                    setDataVisibility((prev) => ({ ...prev, seis: e }))
-                  }
-                />
-              </div>
-              <SeisFormFilters filters={filters.seis} />
-            </CollapsibleContent>
-          </Collapsible>
+            );
+          })}
         </div>
       </div>
     </div>

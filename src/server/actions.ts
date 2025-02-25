@@ -1,12 +1,18 @@
 "use server";
 
 import {
+  fltFilters,
   fltFormSchema,
+  gnssFilters,
   gnssFormSchema,
+  seisFilters,
   seisFormSchema,
+  smtFilters,
   smtFormSchema,
+  vlcFilters,
   vlcFormSchema,
-} from "@/app/database/form-schema";
+} from "@/lib/filters";
+import { FilterDefine, GenericFiltersInfo } from "@/lib/types";
 import { and, between, eq, isNull, or, type SQL, sql } from "drizzle-orm";
 import { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { z } from "zod";
@@ -52,62 +58,69 @@ type ReturnType =
   | { success: false; error: string }
   | { success: true; data: FeatureCollection };
 
+const generateFilters = (
+  filters: FilterDefine<GenericFiltersInfo>,
+  values: {
+    [x: string]:
+      | string
+      | boolean
+      | number[]
+      | {
+          from: Date;
+          to: Date;
+        };
+  },
+) => {
+  const output: (SQL | undefined)[] = [];
+  Object.entries(filters).map(([key, filter]) => {
+    if (filter.type === "select") {
+      if (values[key] !== "All") {
+        if (values[key] === "NULL" && filter.nullCol) {
+          output.push(isNull(filter.nullCol));
+        } else {
+          output.push(eq(filter.dbCol, values[key]));
+        }
+      }
+    }
+    if (filter.type === "range" && Array.isArray(values[key])) {
+      if (values[`${key}AllowNull`]) {
+        output.push(
+          or(
+            between(filter.dbCol, values[key][0], values[key][1]),
+            isNull(filter.dbCol),
+          ),
+        );
+      } else {
+        output.push(between(filter.dbCol, values[key][0], values[key][1]));
+      }
+    }
+    if (
+      filter.type === "date" &&
+      typeof values[key] === "object" &&
+      !Array.isArray(values[key])
+    ) {
+      if (values[`${key}AllowNull`]) {
+        output.push(
+          or(
+            between(filter.dbCol, values[key].from, values[key].to),
+            isNull(filter.dbCol),
+          ),
+        );
+      } else {
+        output.push(between(filter.dbCol, values[key].from, values[key].to));
+      }
+    }
+  });
+  return output;
+};
+
 export const LoadSmt = async (
   values: z.infer<typeof smtFormSchema>,
   drawing?: Polygon | MultiPolygon,
 ): Promise<ReturnType> => {
   const { success } = smtFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters: (SQL | undefined)[] = [];
-  if (values.class !== "All") {
-    if (values.class === "NULL") {
-      filters.push(isNull(smtInInvest.smtClass));
-    } else {
-      filters.push(eq(smtInInvest.smtClass, values.class));
-    }
-  }
-  if (values.catalogs !== "All") {
-    if (values.catalogs === "NULL") {
-      filters.push(isNull(smtInInvest.smtSrcId));
-    } else {
-      filters.push(eq(biblInInvest.biblTitle, values.catalogs));
-    }
-  }
-
-  if (values.elevAllowNull) {
-    filters.push(
-      or(
-        between(smtInInvest.smtElev, values.elevation[0], values.elevation[1]),
-        isNull(smtInInvest.smtElev),
-      ),
-    );
-  } else {
-    filters.push(
-      between(smtInInvest.smtElev, values.elevation[0], values.elevation[1]),
-    );
-  }
-  if (values.baseAllowNull) {
-    filters.push(
-      or(
-        between(smtInInvest.smtBase, values.base[0], values.base[1]),
-        isNull(smtInInvest.smtBase),
-      ),
-    );
-  } else {
-    filters.push(between(smtInInvest.smtBase, values.base[0], values.base[1]));
-  }
-  if (values.summitAllowNull) {
-    filters.push(
-      or(
-        between(smtInInvest.smtSummit, values.summit[0], values.summit[1]),
-        isNull(smtInInvest.smtSummit),
-      ),
-    );
-  } else {
-    filters.push(
-      between(smtInInvest.smtSummit, values.summit[0], values.summit[1]),
-    );
-  }
+  const filters = generateFilters(smtFilters, values);
   if (drawing) {
     filters.push(
       sql`ST_INTERSECTS(${smtInInvest.smtGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
@@ -141,28 +154,7 @@ export const LoadVlc = async (
 ): Promise<ReturnType> => {
   const { success } = vlcFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters: (SQL | undefined)[] = [];
-  if (values.class !== "All") {
-    if (values.class === "NULL") {
-      filters.push(isNull(vlcInInvest.vlcClass));
-    } else {
-      filters.push(eq(vlcInInvest.vlcClass, values.class));
-    }
-  }
-  if (values.sources !== "All") {
-    if (values.sources === "NULL") {
-      filters.push(isNull(vlcInInvest.vlcSrcId));
-    } else {
-      filters.push(eq(biblInInvest.biblTitle, values.sources));
-    }
-  }
-  if (values.countries !== "All") {
-    if (values.countries === "NULL") {
-      filters.push(isNull(vlcInInvest.countryId));
-    } else {
-      filters.push(eq(countryInInvest.countryName, values.countries));
-    }
-  }
+  const filters = generateFilters(vlcFilters, values);
   if (drawing) {
     filters.push(
       sql`ST_INTERSECTS(${vlcInInvest.vlcGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
@@ -197,55 +189,7 @@ export const LoadGNSS = async (
 ): Promise<ReturnType> => {
   const { success } = gnssFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters: (SQL | undefined)[] = [];
-  if (values.projects !== "All") {
-    if (values.projects === "NULL") {
-      filters.push(isNull(gnssStnInInvest.gnssProj));
-    } else filters.push(eq(gnssStnInInvest.gnssProj, values.projects));
-  }
-  if (values.stations !== "All") {
-    if (values.stations === "NULL") {
-      filters.push(isNull(gnssStnInInvest.stnTypeId));
-    } else filters.push(eq(stnTypeInInvest.stnTypeName, values.stations));
-  }
-  if (values.countries !== "All") {
-    if (values.countries === "NULL") {
-      filters.push(isNull(gnssStnInInvest.countryId));
-    } else filters.push(eq(countryInInvest.countryName, values.countries));
-  }
-
-  if (values.elevAllowNull) {
-    filters.push(
-      or(
-        between(
-          gnssStnInInvest.gnssElev,
-          values.elevation[0],
-          values.elevation[1],
-        ),
-        isNull(gnssStnInInvest.gnssElev),
-      ),
-    );
-  } else {
-    filters.push(
-      between(
-        gnssStnInInvest.gnssElev,
-        values.elevation[0],
-        values.elevation[1],
-      ),
-    );
-  }
-  if (values.dateAllowNull) {
-    filters.push(
-      or(
-        between(gnssStnInInvest.gnssInstDate, values.date.from, values.date.to),
-        isNull(gnssStnInInvest.gnssInstDate),
-      ),
-    );
-  } else {
-    filters.push(
-      between(gnssStnInInvest.gnssInstDate, values.date.from, values.date.to),
-    );
-  }
+  const filters = generateFilters(gnssFilters, values);
   if (drawing) {
     filters.push(
       sql`ST_INTERSECTS(${gnssStnInInvest.gnssGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
@@ -286,58 +230,7 @@ export const LoadFlt = async (
   const { success } = fltFormSchema.safeParse(values);
   console.log(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters: (SQL | undefined)[] = [];
-  if (values.types !== "All") {
-    if (values.types === "NULL") {
-      filters.push(isNull(fltInInvest.fltType));
-    } else filters.push(eq(fltInInvest.fltType, values.types));
-  }
-  if (values.catalogs !== "All") {
-    if (values.catalogs === "NULL") {
-      filters.push(isNull(fltInInvest.fltSrcId));
-    } else filters.push(eq(biblInInvest.biblTitle, values.catalogs));
-  }
-
-  if (values.lengthAllowNull) {
-    filters.push(
-      or(
-        between(fltInInvest.fltLen, values.length[0], values.length[1]),
-        isNull(fltInInvest.fltLen),
-      ),
-    );
-  } else {
-    filters.push(
-      between(fltInInvest.fltLen, values.length[0], values.length[1]),
-    );
-  }
-  if (values.sliprateAllowNull) {
-    filters.push(
-      or(
-        between(
-          fltInInvest.fltSliprate,
-          values.sliprate[0],
-          values.sliprate[1],
-        ),
-        isNull(fltInInvest.fltSliprate),
-      ),
-    );
-  } else {
-    filters.push(
-      between(fltInInvest.fltSliprate, values.sliprate[0], values.sliprate[1]),
-    );
-  }
-  if (values.depthAllowNull) {
-    filters.push(
-      or(
-        between(fltInInvest.fltLockDepth, values.depth[0], values.depth[1]),
-        isNull(fltInInvest.fltLockDepth),
-      ),
-    );
-  } else {
-    filters.push(
-      between(fltInInvest.fltLockDepth, values.depth[0], values.depth[1]),
-    );
-  }
+  const filters = generateFilters(fltFilters, values);
 
   if (drawing) {
     filters.push(
@@ -378,49 +271,7 @@ export const LoadSeis = async (
 ): Promise<ReturnType> => {
   const { success } = seisFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters: (SQL | undefined)[] = [];
-  if (values.catalogs !== "All") {
-    if (values.catalogs === "NULL") {
-      filters.push(isNull(seisInInvest.seisCatId));
-    } else filters.push(eq(biblInInvest.biblTitle, values.catalogs));
-  }
-
-  if (values.depthAllowNull) {
-    filters.push(
-      or(
-        between(seisInInvest.seisDepth, values.depth[0], values.depth[1]),
-        isNull(seisInInvest.seisDepth),
-      ),
-    );
-  } else {
-    filters.push(
-      between(seisInInvest.seisDepth, values.depth[0], values.depth[1]),
-    );
-  }
-
-  if (values.mwAllowNull) {
-    filters.push(
-      or(
-        between(seisInInvest.seisMw, values.mw[0], values.mw[1]),
-        isNull(seisInInvest.seisMw),
-      ),
-    );
-  } else {
-    filters.push(between(seisInInvest.seisMw, values.mw[0], values.mw[1]));
-  }
-
-  if (values.dateAllowNull) {
-    filters.push(
-      or(
-        between(seisInInvest.seisDate, values.date.from, values.date.to),
-        isNull(seisInInvest.seisDate),
-      ),
-    );
-  } else {
-    filters.push(
-      between(seisInInvest.seisDate, values.date.from, values.date.to),
-    );
-  }
+  const filters = generateFilters(seisFilters, values);
 
   if (drawing) {
     filters.push(

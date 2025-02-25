@@ -134,7 +134,7 @@ export default async function DatabasePage() {
   return (
     <main className="h-screen w-full">
       <DatabaseMap
-        filters={{
+        initialData={{
           flt: fltFilters[0],
           gnss: gnssFilters[0],
           smt: smtFilters[0],

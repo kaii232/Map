@@ -10,7 +10,7 @@ import {
   SeisFilters,
   SmtFilters,
   VlcFilters,
-} from "@/lib/types";
+} from "@/lib/filters";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Feature, FeatureCollection, Position } from "geojson";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -68,9 +68,9 @@ const xlsxToGeojson = (
 };
 
 export default function DatabaseMap({
-  filters,
+  initialData,
 }: {
-  filters: {
+  initialData: {
     smt: SmtFilters;
     vlc: VlcFilters;
     gnss: GnssFilters;
@@ -232,7 +232,7 @@ export default function DatabaseMap({
   );
   return (
     <>
-      <Controls filters={filters} />
+      <Controls initialData={initialData} />
       <Map
         id="map"
         initialViewState={{

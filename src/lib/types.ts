@@ -1,42 +1,4 @@
-type Range = [number, number];
-type Categories = string[] | null;
-
-export type VlcFilters = {
-  classes: Categories;
-  countries: Categories;
-  sources: Categories;
-};
-
-export type SeisFilters = {
-  depthRange: Range;
-  mwRange: Range;
-  dateRange: [string, string];
-  catalogs: Categories;
-};
-
-export type SmtFilters = {
-  elevRange: Range;
-  baseRange: Range;
-  summitRange: Range;
-  classes: Categories;
-  catalogs: Categories;
-};
-
-export type GnssFilters = {
-  elevRange: Range;
-  dateRange: [string, string];
-  projects: Categories;
-  stations: Categories;
-  countries: Categories;
-};
-
-export type FltFilters = {
-  lengthRange: Range;
-  sliprateRange: Range;
-  depthRange: Range;
-  types: Categories;
-  catalogs: Categories;
-};
+import { AnyPgColumn } from "drizzle-orm/pg-core";
 
 export type BasemapNames =
   | "Openstreetmap"
@@ -44,3 +6,48 @@ export type BasemapNames =
   | "Satellite"
   | "Ocean"
   | "Openfreemap";
+
+export type Range = [number, number];
+export type Categories = string[] | null;
+export type DateFilter = readonly [string, string];
+// Generic type of the data that describes the filter values
+export type GenericFiltersInfo = Record<
+  string,
+  Range | Categories | DateFilter
+>;
+
+// Information needed to generate the form depending on the type of filter it is
+export type FiltersType =
+  | {
+      name: string;
+      type: "select";
+      dbCol: AnyPgColumn;
+      nullCol: AnyPgColumn;
+    }
+  | {
+      name: string;
+      type: "range";
+      dbCol: AnyPgColumn;
+      units?: string;
+    }
+  | {
+      name: string;
+      type: "date";
+      dbCol: AnyPgColumn;
+    };
+// Type for the filters definition
+export type FilterDefine<T extends GenericFiltersInfo> = {
+  [P in keyof T]: T[P] extends Range
+    ? Extract<FiltersType, { type: "range" }>
+    : T[P] extends Categories
+      ? Extract<FiltersType, { type: "select" }>
+      : T[P] extends DateFilter
+        ? Extract<FiltersType, { type: "date" }>
+        : {
+            name: string;
+            type: "select" | "range" | "date";
+            dbCol: AnyPgColumn;
+            nullCol?: AnyPgColumn;
+            units?: string;
+          };
+};

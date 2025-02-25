@@ -1,45 +1,37 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import Spinner from "@/components/ui/spinner";
-import { VlcFilters } from "@/lib/types";
+import {
+  createDefaultValues,
+  vlcFilters,
+  VlcFilters,
+  vlcFormSchema,
+} from "@/lib/filters";
 import { LoadVlc } from "@/server/actions";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useTransition } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { drawingAtom, vlcDataAtom } from "./atoms";
-import { vlcFormSchema } from "./form-schema";
+import FormGenerate from "./form-generate";
 
-export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
+export default function VlcFormFilters({
+  initialData,
+}: {
+  initialData: VlcFilters;
+}) {
   const setVlcData = useSetAtom(vlcDataAtom);
   const drawing = useAtomValue(drawingAtom);
 
+  const defaults = createDefaultValues(initialData, vlcFilters);
+
   const form = useForm<z.infer<typeof vlcFormSchema>>({
     resolver: zodResolver(vlcFormSchema),
-    defaultValues: {
-      class: "All",
-      sources: "All",
-      countries: "All",
-    },
+    defaultValues: defaults,
   });
 
   const [isPending, startTransition] = useTransition();
@@ -65,80 +57,11 @@ export default function VlcFormFilters({ filters }: { filters: VlcFilters }) {
   return (
     <Form {...form}>
       <form className="space-y-4" onSubmit={form.handleSubmit(submitAction)}>
-        <FormField
-          control={form.control}
-          name="class"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Class</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seamount Class" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  {filters.classes?.map((type) => (
-                    <SelectItem value={type} key={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="sources"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Catalogue</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Volcano Catalogue" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  {filters.sources?.map((type) => (
-                    <SelectItem value={type} key={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="countries"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seamount Country" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  {filters.countries?.map((type) => (
-                    <SelectItem value={type} key={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+        <FormGenerate
+          form={form}
+          defaults={defaults}
+          filters={vlcFilters}
+          initialData={initialData}
         />
         <Button type="submit" disabled={isPending}>
           {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
