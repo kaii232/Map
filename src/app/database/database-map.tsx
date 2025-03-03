@@ -269,7 +269,7 @@ export default function DatabaseMap({
           id="seafloorSource"
           type="raster"
           tiles={[
-            `https://api.mapbox.com/v4/lance-ntu.seafloor/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+            `https://api.mapbox.com/v4/lance-ntu.04btmmxj/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
           ]}
           maxzoom={5}
           tileSize={256}
@@ -278,6 +278,7 @@ export default function DatabaseMap({
             type="raster"
             id="seafloor"
             layout={{ visibility: layers.seafloorAge ? "visible" : "none" }}
+            paint={{ "raster-opacity": 0.8, "raster-resampling": "nearest" }}
           />
         </Source>
         <Source

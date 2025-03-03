@@ -171,10 +171,10 @@ export default function Controls({
             ))}
             {layers.seafloorAge && (
               <div>
-                <div className="mb-1 h-10 w-full bg-gradient-to-r from-black to-white"></div>
+                <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(0,0,4,1)0%,rgba(21,11,55,1)10%,rgba(64,10,103,1)20%,rgba(106,23,110,1)30%,rgba(146,37,104,1)40%,rgba(186,54,85,1)50%,rgba(219,80,59,1)60%,rgba(243,118,27,1)70%,rgba(252,163,9,1)80%,rgba(246,213,67,1)90%,rgba(255,255,164,1)100%)]"></div>
                 <div className="flex w-full justify-between text-xs">
                   <p>0</p>
-                  <p>194</p>
+                  <p>279Mya</p>
                 </div>
               </div>
             )}
