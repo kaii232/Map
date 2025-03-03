@@ -103,12 +103,22 @@ const generateFilters = (
       if (values[`${key}AllowNull`]) {
         output.push(
           or(
-            between(filter.dbCol, values[key].from, values[key].to),
+            between(
+              filter.dbCol,
+              values[key].from.toISOString(),
+              values[key].to.toISOString(),
+            ),
             isNull(filter.dbCol),
           ),
         );
       } else {
-        output.push(between(filter.dbCol, values[key].from, values[key].to));
+        output.push(
+          between(
+            filter.dbCol,
+            values[key].from.toISOString(),
+            values[key].to.toISOString(),
+          ),
+        );
       }
     }
   });
@@ -139,6 +149,8 @@ export const LoadSmt = async (
       bw: smtInInvest.smtBw,
       ba: smtInInvest.smtBa,
       bl: smtInInvest.smtBl,
+      longitude: smtInInvest.smtLon,
+      latitude: smtInInvest.smtLat,
       geojson: sql<string>`ST_ASGEOJSON(${smtInInvest.smtGeom})`,
     })
     .from(smtInInvest)
@@ -170,6 +182,11 @@ export const LoadVlc = async (
       class: vlcInInvest.vlcClass,
       categorySource: vlcInInvest.vlcCatSrc,
       country: countryInInvest.countryName,
+      gvpId: vlcInInvest.gvpId,
+      wovodat: vlcInInvest.vlcWovodatUrl,
+      gvp: vlcInInvest.vlcGvpUrl,
+      longitude: vlcInInvest.vlcLon,
+      latitude: vlcInInvest.vlcLat,
       geojson: sql<string>`ST_ASGEOJSON(${vlcInInvest.vlcGeom})`,
     })
     .from(vlcInInvest)
@@ -207,6 +224,8 @@ export const LoadGNSS = async (
       country: countryInInvest.countryName,
       installDate: gnssStnInInvest.gnssInstDate,
       decomDate: gnssStnInInvest.gnssDecomDate,
+      longitude: gnssStnInInvest.gnssLon,
+      latitude: gnssStnInInvest.gnssLat,
       geojson: sql<string>`ST_ASGEOJSON(${gnssStnInInvest.gnssGeom})`,
     })
     .from(gnssStnInInvest)
@@ -289,6 +308,8 @@ export const LoadSeis = async (
       mb: seisInInvest.seisMb,
       catalog: biblInInvest.biblTitle,
       date: seisInInvest.seisDate,
+      longitude: seisInInvest.seisLon,
+      latitude: seisInInvest.seisLat,
       geojson: sql<string>`ST_ASGEOJSON(${seisInInvest.seisGeom})`,
     })
     .from(seisInInvest)
@@ -314,6 +335,8 @@ export const LoadHf = async (
       elevation: heatflowInInvest.hfElev,
       qval: heatflowInInvest.hfQval,
       reference: heatflowInInvest.hfRef,
+      longitude: heatflowInInvest.hfLon,
+      latitude: heatflowInInvest.hfLat,
       geojson: sql<string>`ST_ASGEOJSON(${heatflowInInvest.hfGeom})`,
     })
     .from(heatflowInInvest)
