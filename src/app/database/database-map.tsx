@@ -52,12 +52,15 @@ const xlsxToGeojson = (
       type: "Feature",
       properties: {
         ...input[i],
-        lon: undefined,
-        lat: undefined,
+        Longitude: undefined,
+        Latitude: undefined,
       },
       geometry: {
         type: "Point",
-        coordinates: [input[i].lon as number, input[i].lat as number],
+        coordinates: [
+          input[i].Longitude as number,
+          input[i].Latitude as number,
+        ],
       },
     });
   }
@@ -269,7 +272,7 @@ export default function DatabaseMap({
           id="seafloorSource"
           type="raster"
           tiles={[
-            `https://api.mapbox.com/v4/lance-ntu.04btmmxj/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+            `https://api.mapbox.com/v4/lance-ntu.b559fikp/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
           ]}
           maxzoom={5}
           tileSize={256}
@@ -353,7 +356,7 @@ export default function DatabaseMap({
           id="velocitySource"
           type="geojson"
           data={morvelVelocity}
-          promoteId={"ve"}
+          promoteId={"Northward Velocity"}
         >
           {velocityStops.map((velocity, index) => {
             return (
@@ -374,13 +377,13 @@ export default function DatabaseMap({
                     2,
                   ],
                   "icon-overlap": "always",
-                  "icon-rotate": ["get", "dir"],
+                  "icon-rotate": ["get", "Direction"],
                   visibility: layers.plateMovementVectors ? "visible" : "none",
                 }}
                 filter={[
                   "all",
-                  [">=", ["get", "velo"], velocity],
-                  ["<", ["get", "velo"], velocity + 10],
+                  [">=", ["get", "Velocity (mm/yr)"], velocity],
+                  ["<", ["get", "Velocity (mm/yr)"], velocity + 10],
                 ]}
               />
             );
