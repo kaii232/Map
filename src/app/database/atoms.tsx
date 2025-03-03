@@ -5,7 +5,8 @@ import { atom } from "jotai";
 export const layersAtom = atom({
   hillshade: false,
   plateMovementVectors: false,
-  tectonicPlates: false,
+  "tectonicPlates(Bird, 2003)": false,
+  "tectonicPlaces(Hasterok, 2022)": false,
   // Put as the last one always
   seafloorAge: false,
 });

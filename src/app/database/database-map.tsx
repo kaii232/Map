@@ -4,6 +4,8 @@ import { style } from "@/assets/map_style";
 import plateVelocities from "@/assets/morvel_velocity.xlsx";
 import tectonicBoundaries from "@/assets/PB2002_boundaries.json";
 import tectonicPlates from "@/assets/PB2002_plates.json";
+import tectonicBoundariesNew from "@/assets/plate_boundaries_new.geojson";
+import tectonicPlatesNew from "@/assets/plate_new.geojson";
 import {
   FltFilters,
   GnssFilters,
@@ -143,7 +145,9 @@ export default function DatabaseMap({
         }
         if (
           hoveredFeature.source === "platesSource" ||
-          hoveredFeature.source === "plateBoundariesSource"
+          hoveredFeature.source === "plateBoundariesSource" ||
+          hoveredFeature.source === "platesSourceNew" ||
+          hoveredFeature.source === "plateBoundariesNewSource"
         ) {
           setHoverInfo(undefined);
           return;
@@ -259,6 +263,8 @@ export default function DatabaseMap({
           "flt",
           "plates",
           "plateBoundaries",
+          "platesNew",
+          "plateBoundariesNew",
           ...velocityStops.map((_, index) => `velocity_${index}`),
         ]}
         reuseMaps
@@ -288,6 +294,7 @@ export default function DatabaseMap({
           id="platesSource"
           type="geojson"
           data={tectonicPlates as FeatureCollection}
+          generateId
         >
           <Layer
             type="fill"
@@ -296,7 +303,9 @@ export default function DatabaseMap({
               "fill-opacity": 0,
             }}
             layout={{
-              visibility: layers.tectonicPlates ? "visible" : "none",
+              visibility: layers["tectonicPlates(Bird, 2003)"]
+                ? "visible"
+                : "none",
             }}
           />
         </Source>
@@ -304,6 +313,7 @@ export default function DatabaseMap({
           id="plateBoundariesSource"
           type="geojson"
           data={tectonicBoundaries as FeatureCollection}
+          generateId
         >
           <Layer
             type="line"
@@ -322,7 +332,60 @@ export default function DatabaseMap({
               ],
             }}
             layout={{
-              visibility: layers.tectonicPlates ? "visible" : "none",
+              visibility: layers["tectonicPlates(Bird, 2003)"]
+                ? "visible"
+                : "none",
+            }}
+          />
+        </Source>
+        <Source
+          id="platesSourceNew"
+          type="geojson"
+          data={tectonicPlatesNew as FeatureCollection}
+          promoteId={"id"}
+        >
+          <Layer
+            type="fill"
+            id="platesNew"
+            paint={{
+              "fill-opacity": 0,
+            }}
+            layout={{
+              visibility: layers["tectonicPlaces(Hasterok, 2022)"]
+                ? "visible"
+                : "none",
+            }}
+          />
+        </Source>
+        <Source
+          id="plateBoundariesNewSource"
+          type="geojson"
+          data={tectonicBoundariesNew as FeatureCollection}
+          promoteId={"feature_id"}
+          attribution={
+            "Hasterok, D., Halpin, J., Hand, M., Collins, A., Kreemer, C., Gard, M.G., Glorie, S., (revised) New maps of global geologic provinces and tectonic plates, Earth Science Reviews."
+          }
+        >
+          <Layer
+            type="line"
+            id="plateBoundariesNew"
+            paint={{
+              "line-color": "#4c1d95",
+              "line-width": ["interpolate", ["linear"], ["zoom"], 5, 3, 15, 8],
+              "line-opacity": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                5,
+                0.5,
+                15,
+                0.3,
+              ],
+            }}
+            layout={{
+              visibility: layers["tectonicPlaces(Hasterok, 2022)"]
+                ? "visible"
+                : "none",
             }}
           />
         </Source>
@@ -356,7 +419,7 @@ export default function DatabaseMap({
           id="velocitySource"
           type="geojson"
           data={morvelVelocity}
-          promoteId={"Northward Velocity"}
+          generateId
         >
           {velocityStops.map((velocity, index) => {
             return (

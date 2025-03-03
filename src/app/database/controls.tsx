@@ -55,7 +55,7 @@ const MAP_STYLE: {
 ];
 
 function camelCaseToWords(s: string) {
-  const result = s.replace(/([A-Z])/g, " $1");
+  const result = s.replace(/([A-Z]|\([A-Z])/g, " $1");
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
@@ -155,13 +155,13 @@ export default function Controls({
             {Object.keys(layers).map((layer) => (
               <div key={layer} className="flex items-center justify-between">
                 <label
-                  htmlFor="switch"
+                  htmlFor={`switch${layer}`}
                   className="text-xs font-medium text-zinc-700"
                 >
                   {camelCaseToWords(layer)}
                 </label>
                 <Switch
-                  id="switch"
+                  id={`switch${layer}`}
                   checked={layers[layer as keyof typeof layers]}
                   onCheckedChange={(e: boolean) =>
                     setLayers((prev) => ({ ...prev, [layer]: e }))
