@@ -140,6 +140,7 @@ export default async function DatabasePage() {
           smt: smtFilters[0],
           vlc: vlcFilters[0],
           seis: seisFilters[0],
+          hf: {},
         }}
       />
     </main>

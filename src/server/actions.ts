@@ -22,6 +22,7 @@ import {
   countryInInvest,
   fltInInvest,
   gnssStnInInvest,
+  heatflowInInvest,
   seisInInvest,
   smtInInvest,
   stnTypeInInvest,
@@ -293,6 +294,31 @@ export const LoadSeis = async (
     .from(seisInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, seisInInvest.seisCatId))
     .where(and(...filters));
+  const dataReturn = sqlToGeojson(data);
+
+  return { success: true, data: dataReturn };
+};
+
+export const LoadHf = async (
+  drawing?: MultiPolygon | Polygon,
+): Promise<ReturnType> => {
+  let filters;
+  if (drawing) {
+    filters = sql`ST_INTERSECTS(${heatflowInInvest.hfGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`;
+  }
+
+  const data = await db
+    .select({
+      id: heatflowInInvest.hfId,
+      name: heatflowInInvest.hfName,
+      elevation: heatflowInInvest.hfElev,
+      qval: heatflowInInvest.hfQval,
+      reference: heatflowInInvest.hfRef,
+      geojson: sql<string>`ST_ASGEOJSON(${heatflowInInvest.hfGeom})`,
+    })
+    .from(heatflowInInvest)
+    .leftJoin(biblInInvest, eq(biblInInvest.biblId, heatflowInInvest.hfSrcId))
+    .where(filters);
   const dataReturn = sqlToGeojson(data);
 
   return { success: true, data: dataReturn };

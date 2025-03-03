@@ -20,6 +20,7 @@ export const seisDataAtom = atom<FeatureCollection>();
 export const smtDataAtom = atom<FeatureCollection>();
 export const fltDataAtom = atom<FeatureCollection>();
 export const vlcDataAtom = atom<FeatureCollection>();
+export const hfDataAtom = atom<FeatureCollection>();
 
 export const dataVisibilityAtom = atom({
   gnss: true,
@@ -27,4 +28,5 @@ export const dataVisibilityAtom = atom({
   smt: true,
   flt: true,
   vlc: true,
+  hf: true,
 });

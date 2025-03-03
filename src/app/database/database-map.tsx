@@ -36,6 +36,7 @@ import {
   drawingAtom,
   fltDataAtom,
   gnssDataAtom,
+  hfDataAtom,
   layersAtom,
   seisDataAtom,
   smtDataAtom,
@@ -81,6 +82,7 @@ export default function DatabaseMap({
     gnss: GnssFilters;
     flt: FltFilters;
     seis: SeisFilters;
+    hf: Record<never, never>;
   };
 }) {
   const { map } = useMap();
@@ -89,6 +91,7 @@ export default function DatabaseMap({
   const gnssData = useAtomValue(gnssDataAtom);
   const fltData = useAtomValue(fltDataAtom);
   const vlcData = useAtomValue(vlcDataAtom);
+  const hfData = useAtomValue(hfDataAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
   const layers = useAtomValue(layersAtom);
 
@@ -261,6 +264,7 @@ export default function DatabaseMap({
           "seisMs",
           "seisNone",
           "flt",
+          "hf",
           "plates",
           "plateBoundaries",
           "platesNew",
@@ -866,6 +870,51 @@ export default function DatabaseMap({
                 ["!", ["to-boolean", ["get", "mw"]]],
                 ["!", ["to-boolean", ["get", "ms"]]],
               ]}
+            />
+          </Source>
+        )}
+        {hfData && (
+          <Source id="hfSource" type="geojson" data={hfData}>
+            <Layer
+              id="hf"
+              type="circle"
+              layout={{ visibility: dataVisibility.hf ? "visible" : "none" }}
+              paint={{
+                "circle-radius": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  2,
+                  15,
+                  12,
+                ],
+                "circle-stroke-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8,
+                  0,
+                  13,
+                  2,
+                ],
+                "circle-opacity": 0.7,
+                "circle-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "qval"],
+                  -400,
+                  "#0c4a6e",
+                  -100,
+                  "#0284c7",
+                  0,
+                  "#eeeeee",
+                  200,
+                  "#e11d48",
+                  400,
+                  "#4c0519",
+                ],
+              }}
             />
           </Source>
         )}

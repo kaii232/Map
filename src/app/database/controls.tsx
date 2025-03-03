@@ -24,6 +24,7 @@ import { useMap } from "react-map-gl/maplibre";
 import { dataVisibilityAtom, layersAtom, mapStyleAtom } from "./atoms";
 import FltFormFilters from "./flt-form-filters";
 import GnssFormFilters from "./gnss-form-filters";
+import HfFormFilters from "./heatflow-form-filters";
 import SeisFormFilters from "./seis-form-filters";
 import SmtFormFilters from "./smt-form-filters";
 import VlcFormFilters from "./vlc-form-filters";
@@ -65,6 +66,7 @@ const DATA_LABELS = {
   gnss: "GNSS Stations",
   flt: "Faults",
   seis: "Seismic",
+  hf: "Heatflow",
 };
 
 export default function Controls({
@@ -76,6 +78,7 @@ export default function Controls({
     gnss: GnssFilters;
     flt: FltFilters;
     seis: SeisFilters;
+    hf: Record<never, never>;
   };
 }) {
   const [layers, setLayers] = useAtom(layersAtom);
@@ -228,6 +231,7 @@ export default function Controls({
                     {key === "vlc" && (
                       <VlcFormFilters initialData={initialInfo as VlcFilters} />
                     )}
+                    {key === "hf" && <HfFormFilters />}
                   </CollapsibleContent>
                 </Collapsible>
                 {index !== Object.values(initialData).length - 1 && (
