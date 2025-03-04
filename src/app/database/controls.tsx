@@ -92,7 +92,7 @@ export default function Controls({
     <div
       className={cn(
         "fixed inset-y-0 left-0 z-10 max-h-screen w-full max-w-[320px] transition-transform duration-700 ease-map",
-        !open && "-tranneutral-x-full",
+        !open && "-translate-x-full",
       )}
     >
       <Button
