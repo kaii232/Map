@@ -71,7 +71,9 @@ export default async function Publications({
       <Header />
       <main className="px-4">
         <div className="mx-auto max-w-7xl space-y-4 pb-4 pt-12">
-          <h1 className="text-2xl font-semibold text-stone-50">Publications</h1>
+          <h1 className="text-2xl font-semibold text-neutral-50">
+            Publications
+          </h1>
           <PapersSearch />
           <ul className="space-y-2">
             {publications.map((pub) => {
@@ -83,17 +85,17 @@ export default async function Publications({
                     //@ts-expect-error If url is nullish Comp will be a div
                     href={pub.url ?? undefined}
                     target={pub.url ? "_blank" : undefined}
-                    className="block rounded-lg border border-stone-800 bg-stone-900/70 p-4 text-stone-300 transition hover:border-stone-700"
+                    className="block rounded-lg border border-neutral-800 bg-neutral-900/70 p-4 text-neutral-300 transition hover:border-neutral-700"
                   >
                     <div className="mb-2">
-                      <p className="text-sm text-stone-400">
+                      <p className="text-sm text-neutral-400">
                         {pub.journal}
                         {pub.journal && pub.year && " · "}
                         {pub.year}
                         {pub.year && pub.doi && " · "}
                         {pub.doi}
                       </p>
-                      <h3 className="text-lg font-medium text-stone-50">
+                      <h3 className="text-lg font-medium text-neutral-50">
                         {pub.title}
                       </h3>
                     </div>

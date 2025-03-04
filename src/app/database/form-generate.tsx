@@ -167,7 +167,7 @@ export default function FormGenerate({
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
-                <FormLabel className="font-normal text-slate-700">
+                <FormLabel className="font-normal text-neutral-300">
                   Allow null values
                 </FormLabel>
                 <FormMessage />
@@ -204,11 +204,11 @@ export default function FormGenerate({
                       <PopoverTrigger asChild>
                         <button
                           className={
-                            "flex h-10 w-full items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-normal hover:bg-slate-50 [&_svg]:size-5"
+                            "flex h-10 w-full items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 px-4 py-2 text-sm font-normal hover:bg-neutral-900 [&_svg]:size-5"
                           }
                         >
-                          <CalendarDays className="shrink-0 text-slate-600" />
-                          <div className="w-full text-left text-slate-900">
+                          <CalendarDays className="shrink-0 text-neutral-400" />
+                          <div className="w-full text-left text-neutral-50">
                             {field.value.from.toLocaleDateString(undefined, {
                               day: "numeric",
                               month: "short",
@@ -216,7 +216,7 @@ export default function FormGenerate({
                             })}
                           </div>
                           <Separator orientation="vertical" className="mx-1" />
-                          <div className="w-full text-left text-slate-900">
+                          <div className="w-full text-left text-neutral-50">
                             {field.value.to.toLocaleDateString(undefined, {
                               day: "numeric",
                               month: "short",
@@ -291,7 +291,7 @@ export default function FormGenerate({
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
-                <FormLabel className="font-normal text-slate-700">
+                <FormLabel className="font-normal text-neutral-300">
                   Allow null values
                 </FormLabel>
                 <FormMessage />

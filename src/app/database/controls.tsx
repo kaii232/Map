@@ -92,13 +92,13 @@ export default function Controls({
     <div
       className={cn(
         "fixed inset-y-0 left-0 z-10 max-h-screen w-full max-w-[320px] transition-transform duration-700 ease-map",
-        !open && "-translate-x-full",
+        !open && "-tranneutral-x-full",
       )}
     >
       <Button
         size="icon"
         variant="outline"
-        className="absolute left-[min(calc(100vw-20px-32px),320px)] top-0 ml-2.5 mt-2.5 size-8"
+        className="absolute left-[min(calc(100vw-20px-32px),320px)] top-0 ml-2.5 mt-2.5 size-8 bg-neutral-900"
         onClick={() => {
           setOpen((prev) => !prev);
           if (map) {
@@ -116,9 +116,9 @@ export default function Controls({
           )}
         />
       </Button>
-      <div className="flex h-full max-h-full flex-col gap-2 overflow-auto bg-white py-4">
+      <div className="flex h-full max-h-full flex-col gap-2 overflow-auto bg-neutral-950 py-4 text-neutral-300">
         <Collapsible defaultOpen={false} className="flex flex-col">
-          <CollapsibleTrigger className="mx-4 flex items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+          <CollapsibleTrigger className="mx-4 flex items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-neutral-50 hover:bg-neutral-800 data-[state=open]:mb-2">
             Basemap
             <ChevronsUpDown />
           </CollapsibleTrigger>
@@ -134,7 +134,7 @@ export default function Controls({
                     className="peer sr-only"
                     onClick={() => setMapStyle(MAP_STYLE[index].label)}
                   />
-                  <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-zinc-200 p-2 text-xs font-medium text-zinc-900 outline outline-0 outline-offset-4 outline-blue-700 ring-0 ring-zinc-900 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
+                  <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-neutral-700 p-2 text-xs font-medium text-neutral-50 outline outline-0 outline-offset-4 outline-blue-700 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={style.img}
@@ -150,7 +150,7 @@ export default function Controls({
         </Collapsible>
         <Separator />
         <Collapsible className="flex flex-col px-4">
-          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-neutral-50 hover:bg-neutral-800 data-[state=open]:mb-2">
             Map Layers
             <ChevronsUpDown />
           </CollapsibleTrigger>
@@ -159,7 +159,7 @@ export default function Controls({
               <div key={layer} className="flex items-center justify-between">
                 <label
                   htmlFor={`switch${layer}`}
-                  className="text-xs font-medium text-zinc-700"
+                  className="text-xs font-medium text-neutral-300"
                 >
                   {camelCaseToWords(layer)}
                 </label>
@@ -184,13 +184,13 @@ export default function Controls({
           </CollapsibleContent>
         </Collapsible>
         <Separator />
-        <div className="space-y-2 px-4">
+        <div className="space-y-2">
           {Object.entries(initialData).map(([keyRaw, initialInfo], index) => {
             const key = keyRaw as keyof typeof initialData;
             return (
               <div className="space-y-2" key={key}>
-                <Collapsible className="flex flex-col">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-zinc-700 hover:bg-slate-100 data-[state=open]:mb-2">
+                <Collapsible className="flex flex-col px-4">
+                  <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-neutral-50 hover:bg-neutral-800 data-[state=open]:mb-2">
                     {DATA_LABELS[key]}
                     <ChevronsUpDown />
                   </CollapsibleTrigger>
@@ -198,7 +198,7 @@ export default function Controls({
                     <div className="mb-2 flex items-center justify-between">
                       <label
                         htmlFor={key}
-                        className="text-xs font-medium text-zinc-700"
+                        className="text-xs font-medium text-neutral-300"
                       >
                         Visibility
                       </label>

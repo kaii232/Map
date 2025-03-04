@@ -15,7 +15,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div
         className={cn(
-          "flex h-12 w-full rounded-lg border border-stone-700 bg-transparent text-stone-50 transition hover:bg-stone-900/50 has-[input:disabled]:pointer-events-none has-[input:disabled]:bg-stone-800 has-[input:disabled]:text-stone-400 has-[input:disabled]:opacity-70 has-[input:focus-visible]:ring has-[input:focus-visible]:ring-stone-800/70 [&_input]:placeholder:text-stone-400 [&_svg]:size-5 [&_svg]:text-stone-100",
+          "flex h-12 w-full rounded-lg border border-neutral-700 bg-transparent text-neutral-50 transition hover:bg-neutral-900/50 has-[input:disabled]:pointer-events-none has-[input:disabled]:bg-neutral-800 has-[input:disabled]:text-neutral-400 has-[input:disabled]:opacity-70 has-[input:focus-visible]:ring has-[input:focus-visible]:ring-neutral-800/70 [&_input]:placeholder:text-neutral-400 [&_svg]:size-5 [&_svg]:text-neutral-100",
           className,
         )}
         onPointerDown={(event) => {
@@ -48,7 +48,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={composeRefs(inputRef, ref)}
           {...props}
           className={cn(
-            "w-full bg-transparent file:border-0 file:bg-transparent file:text-stone-50 focus-visible:outline-none",
+            "w-full bg-transparent file:border-0 file:bg-transparent file:text-neutral-50 focus-visible:outline-none",
             !left && "indent-4",
           )}
         />

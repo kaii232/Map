@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-stone-700 bg-stone-950 px-4 py-2">
+    <header className="sticky top-0 z-50 border-b border-neutral-700 bg-neutral-950 px-4 py-2">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between">
         <Link href="/">
           <Image
@@ -15,7 +15,7 @@ export default function Header() {
           <span className="sr-only">Home</span>
         </Link>
         <nav className="hidden sm:block">
-          <ul className="flex gap-4 text-sm text-stone-50">
+          <ul className="flex gap-4 text-sm text-neutral-50">
             <li>
               <Link
                 href="/"
