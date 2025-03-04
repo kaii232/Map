@@ -15,7 +15,8 @@ export function PrevButton({
   const { replace } = useRouter();
   const handlePrevPage = () => {
     const params = new URLSearchParams(searchParams);
-    params.set("page", `${pageNum - 1}`);
+    if (pageNum > 1) params.set("page", `${pageNum - 1}`);
+    else params.delete("page");
     replace(`${path}?${params.toString()}`);
   };
 

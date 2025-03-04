@@ -87,7 +87,7 @@ export default async function Publications({
                     target={pub.url ? "_blank" : undefined}
                     className="block rounded-lg border border-neutral-800 bg-neutral-900/70 p-4 text-neutral-300 transition hover:border-neutral-700"
                   >
-                    <div className="mb-2">
+                    <div className="mb-4">
                       <p className="text-sm text-neutral-400">
                         {pub.journal}
                         {pub.journal && pub.year && " · "}
