@@ -8,6 +8,34 @@ import PapersSearch from "./papers-search";
 
 const PAGE_SIZE = 20;
 
+const HighlightSearch = ({
+  query,
+  text,
+}: {
+  query: string | undefined;
+  text: string | null;
+}) => {
+  if (!query || !text) return text;
+  const splitText = text.split(new RegExp(`(${query})`, "gi"));
+  return (
+    <>
+      {splitText.map((split, index) => {
+        if (!split) return;
+        if (split.toLowerCase() === query.toLowerCase())
+          return (
+            <mark
+              key={index}
+              className="rounded-sm bg-amber-300/30 text-inherit ring-2 ring-amber-300/30"
+            >
+              {split}
+            </mark>
+          );
+        return <span key={index}>{split}</span>;
+      })}
+    </>
+  );
+};
+
 export default async function Publications({
   searchParams,
 }: {
@@ -95,11 +123,11 @@ export default async function Publications({
                         {pub.doi}
                       </p>
                       <h3 className="text-lg font-medium text-neutral-50">
-                        {pub.title}
+                        {<HighlightSearch text={pub.title} query={query} />}
                       </h3>
                     </div>
 
-                    <p>{pub.author}</p>
+                    <p>{<HighlightSearch text={pub.author} query={query} />}</p>
                   </Comp>
                 </li>
               );
