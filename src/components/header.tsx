@@ -13,7 +13,7 @@ const HeaderLink = ({ href, ...rest }: ComponentProps<typeof Link>) => {
 
   return (
     <Link
-      href="/"
+      href={href}
       className={`px-3 py-2 transition-colors hover:underline ${active ? "text-amber-400 hover:text-yellow-500" : "hover:text-yellow-500"}`}
       {...rest}
     />
