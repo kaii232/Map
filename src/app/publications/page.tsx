@@ -16,12 +16,22 @@ const HighlightSearch = ({
   text: string | null;
 }) => {
   if (!query || !text) return text;
-  const splitText = text.split(new RegExp(`(${query})`, "gi"));
+  const regex = new RegExp(
+    `${query
+      .split(/ +/g)
+      .map((part) => {
+        if (part) return `(${part})`;
+        return "";
+      })
+      .join("|")}`,
+    "gi",
+  );
+  const splitText = text.split(regex);
   return (
     <>
       {splitText.map((split, index) => {
         if (!split) return;
-        if (split.toLowerCase() === query.toLowerCase())
+        if (regex.test(split.toLowerCase()) && split.length > 1)
           return (
             <mark
               key={index}
