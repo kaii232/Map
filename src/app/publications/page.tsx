@@ -17,15 +17,14 @@ export default async function Publications({
 
   const pageNum = Number.isNaN(Number(page)) ? 0 : Number(page);
 
-  const searchVector =
-    query
-      ?.trim()
-      .replaceAll(/:|\*|\||<->|!/g, "")
-      .replaceAll("&", " ")
-      .replaceAll(/ +/g, ":* & ") + ":*";
+  const searchVector = query
+    ?.replaceAll(/[^A-Za-z0-9 &]/g, "")
+    .replaceAll("&", " ")
+    .trim()
+    .replaceAll(/ +/g, ":* & ");
 
-  const filter = query
-    ? sql`bibl_tsvector @@ to_tsquery('english', ${searchVector})`
+  const filter = searchVector
+    ? sql`bibl_tsvector @@ to_tsquery('english', ${searchVector + ":*"})`
     : undefined;
 
   const publications = filter
@@ -38,7 +37,7 @@ export default async function Publications({
           journal: biblInInvest.biblJourn,
           doi: biblInInvest.biblDoi,
           url: biblInInvest.biblUrl,
-          rank: sql`ts_rank(bibl_tsvector, to_tsquery('english', ${searchVector})) as rank`,
+          rank: sql`ts_rank(bibl_tsvector, to_tsquery('english', ${searchVector + ":*"})) as rank`,
           count: sql`count(*) OVER()`.mapWith(Number),
         })
         .from(biblInInvest)

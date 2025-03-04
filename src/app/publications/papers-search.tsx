@@ -12,8 +12,8 @@ export default function PapersSearch() {
   const debounce = useDebouncedFunction();
   const handleSearch = (search: string) => {
     const params = new URLSearchParams(searchParams);
-    if (search) {
-      params.set("query", search);
+    if (search.trim()) {
+      params.set("query", search.trim());
       params.delete("page");
     } else {
       params.delete("query");
