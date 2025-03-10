@@ -56,7 +56,7 @@ export default function SmtFormFilters({
 
   return (
     <Form {...form}>
-      <form className="space-y-4" onSubmit={form.handleSubmit(submitAction)}>
+      <form className="space-y-6" onSubmit={form.handleSubmit(submitAction)}>
         <FormGenerate
           defaults={defaults}
           filters={smtFilters}

@@ -1,11 +1,26 @@
 "use client";
 
+import {
+  SelectTabs,
+  SelectTabsContent,
+  SelectTabsItem,
+  SelectTabsTab,
+  SelectTabsTrigger,
+  SelectTabsValue,
+} from "@/components/select-tabs";
 import { Button } from "@/components/ui/button";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -17,11 +32,17 @@ import {
 } from "@/lib/filters";
 import { BasemapNames } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useAtom, useSetAtom } from "jotai";
-import { ChevronLeft, ChevronsUpDown } from "lucide-react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { ChevronDown, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
-import { dataVisibilityAtom, layersAtom, mapStyleAtom } from "./atoms";
+import {
+  dataVisibilityAtom,
+  hfDataAtom,
+  layersAtom,
+  mapStyleAtom,
+  seisDataAtom,
+} from "./atoms";
 import FltFormFilters from "./flt-form-filters";
 import GnssFormFilters from "./gnss-form-filters";
 import HfFormFilters from "./heatflow-form-filters";
@@ -53,7 +74,7 @@ const MAP_STYLE: {
     label: "Ocean",
     img: "https://learn.arcgis.com/en/projects/find-ocean-bathymetry-data/GUID-FE9C4F4D-E9AA-46CD-9C3F-D7DB28FBCBCC-web.png",
   },
-];
+] as const;
 
 function camelCaseToWords(s: string) {
   const result = s.replace(/([A-Z]|\([A-Z])/g, " $1");
@@ -85,6 +106,13 @@ export default function Controls({
   const [open, setOpen] = useState(true);
   const setMapStyle = useSetAtom(mapStyleAtom);
   const [dataVisibility, setDataVisibility] = useAtom(dataVisibilityAtom);
+  const hfData = useAtomValue(hfDataAtom);
+  const seisData = useAtomValue(seisDataAtom);
+
+  const showColourRange =
+    layers.seafloorAge ||
+    (dataVisibility.hf && hfData) ||
+    (dataVisibility.seis && seisData);
 
   const { map } = useMap();
 
@@ -116,130 +144,145 @@ export default function Controls({
           )}
         />
       </Button>
-      <div className="flex h-full max-h-full flex-col gap-2 overflow-auto bg-neutral-950 py-4 text-neutral-300">
-        <Collapsible defaultOpen={false} className="flex flex-col">
-          <CollapsibleTrigger className="mx-4 flex items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-neutral-50 hover:bg-neutral-800 data-[state=open]:mb-2">
-            Basemap
-            <ChevronsUpDown />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="flex gap-2 overflow-auto px-4 data-[state=open]:py-1">
-            {MAP_STYLE.map((style, index) => {
-              return (
-                <label className="min-w-fit" key={style.label}>
-                  <input
-                    type="radio"
-                    name="map"
-                    value={style.label}
-                    defaultChecked={index === 0}
-                    className="peer sr-only"
-                    onClick={() => setMapStyle(MAP_STYLE[index].label)}
-                  />
-                  <div className="flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-neutral-700 p-2 text-xs font-medium text-neutral-50 outline outline-0 outline-offset-4 outline-blue-700 transition-shadow peer-checked:ring-2 peer-focus-visible:outline-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={style.img}
-                      className="h-12 w-full rounded-md"
-                      alt={style.label}
-                    />
-                    {style.label}
-                  </div>
-                </label>
-              );
-            })}
-          </CollapsibleContent>
-        </Collapsible>
-        <Separator />
-        <Collapsible className="flex flex-col px-4">
-          <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-neutral-50 hover:bg-neutral-800 data-[state=open]:mb-2">
-            Map Layers
-            <ChevronsUpDown />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="flex flex-col gap-2 overflow-auto pl-2 pr-1">
-            {Object.keys(layers).map((layer) => (
-              <div key={layer} className="flex items-center justify-between">
-                <label
-                  htmlFor={`switch${layer}`}
-                  className="text-xs font-medium text-neutral-300"
-                >
-                  {camelCaseToWords(layer)}
-                </label>
-                <Switch
-                  id={`switch${layer}`}
+      {showColourRange && (
+        <div className="absolute bottom-2.5 left-[min(calc(100vw-20px-32px),320px)] mb-8 ml-2.5 flex min-w-32 flex-col gap-2 bg-neutral-950 p-1 text-xs text-neutral-300">
+          {layers.seafloorAge && (
+            <div>
+              <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]"></div>
+              <div className="flex w-full justify-between">
+                <p>0</p>
+                <p>279Mya</p>
+              </div>
+            </div>
+          )}
+          {dataVisibility.seis && seisData && (
+            <div>
+              <span className="mb-0.5 block">Seismic Depth</span>
+              <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)11%,rgba(253,212,158,1)22%,rgba(253,187,132,1)33%,rgba(235,124,73,1)44%,rgba(219,82,53,1)55%,rgba(181,33,18,1)66%,rgba(117,6,6,1)77%,rgba(18,5,4,1)88%,rgba(0,0,0,1)100%)]"></div>
+              <div className="flex w-full justify-between">
+                <p>{"<2m"}</p>
+                <p>{">1024m"}</p>
+              </div>
+            </div>
+          )}
+          {dataVisibility.hf && hfData && (
+            <div>
+              <span className="mb-0.5 block">Heatflow qval</span>
+              <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(12,74,110,1)0%,rgba(2,132,199,1)25%,rgba(238,238,238,1)50%,rgba(225,29,72,1)75%,rgba(76,5,25,1)100%)]"></div>
+              <div className="flex w-full justify-between">
+                <p>{"<-400W/m²"}</p>
+                <p>{">400W/m²"}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="flex h-full max-h-full flex-col gap-4 overflow-auto bg-neutral-950 py-4 text-neutral-300">
+        <div className="space-y-4 px-4">
+          <div>
+            <Select
+              defaultValue="Openfreemap"
+              onValueChange={(val) => setMapStyle(val as BasemapNames)}
+            >
+              <SelectTrigger>Basemap</SelectTrigger>
+              <SelectContent>
+                {MAP_STYLE.map((style) => {
+                  return (
+                    <SelectItem value={style.label} key={style.label}>
+                      <div className="flex h-8 items-center gap-2">
+                        <img
+                          src={style.img}
+                          className="h-full w-12 rounded-md"
+                          alt={style.label}
+                        />
+                        {style.label}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm ring-offset-neutral-950 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                Map Layers
+                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] rounded-2xl">
+              {Object.keys(layers).map((layer) => (
+                <DropdownMenuCheckboxItem
+                  key={layer}
+                  className="flex items-center justify-between rounded-xl"
+                  onSelect={(e) => e.preventDefault()}
                   checked={layers[layer as keyof typeof layers]}
                   onCheckedChange={(e: boolean) =>
                     setLayers((prev) => ({ ...prev, [layer]: e }))
                   }
-                />
-              </div>
-            ))}
-            {layers.seafloorAge && (
-              <div>
-                <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]"></div>
-                <div className="flex w-full justify-between text-xs">
-                  <p>0</p>
-                  <p>279Mya</p>
-                </div>
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
+                >
+                  {camelCaseToWords(layer)}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <Separator />
-        <div className="space-y-2">
-          {Object.entries(initialData).map(([keyRaw, initialInfo], index) => {
-            const key = keyRaw as keyof typeof initialData;
-            return (
-              <div className="space-y-2" key={key}>
-                <Collapsible className="flex flex-col px-4">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 rounded-md py-2 pl-2 pr-1 text-xs font-medium text-neutral-50 hover:bg-neutral-800 data-[state=open]:mb-2">
-                    {DATA_LABELS[key]}
-                    <ChevronsUpDown />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pl-2 pr-1">
-                    <div className="mb-2 flex items-center justify-between">
-                      <label
-                        htmlFor={key}
-                        className="text-xs font-medium text-neutral-300"
-                      >
-                        Visibility
-                      </label>
-                      <Switch
-                        id={key}
-                        checked={
-                          dataVisibility[key as keyof typeof initialData]
-                        }
-                        onCheckedChange={(e: boolean) =>
-                          setDataVisibility((prev) => ({ ...prev, [key]: e }))
-                        }
-                      />
-                    </div>
-                    {key === "flt" && (
-                      <FltFormFilters initialData={initialInfo as FltFilters} />
-                    )}
-                    {key === "gnss" && (
-                      <GnssFormFilters
-                        initialData={initialInfo as GnssFilters}
-                      />
-                    )}
-                    {key === "seis" && (
-                      <SeisFormFilters
-                        initialData={initialInfo as SeisFilters}
-                      />
-                    )}
-                    {key === "smt" && (
-                      <SmtFormFilters initialData={initialInfo as SmtFilters} />
-                    )}
-                    {key === "vlc" && (
-                      <VlcFormFilters initialData={initialInfo as VlcFilters} />
-                    )}
-                    {key === "hf" && <HfFormFilters />}
-                  </CollapsibleContent>
-                </Collapsible>
-                {index !== Object.values(initialData).length - 1 && (
-                  <Separator />
-                )}
-              </div>
-            );
-          })}
+        <div className="px-4">
+          <span className="mb-2 block text-sm font-medium text-neutral-50">
+            Data
+          </span>
+          <SelectTabs>
+            <SelectTabsTrigger>
+              <SelectTabsValue placeholder="Select data type" />
+            </SelectTabsTrigger>
+            <SelectTabsContent>
+              {Object.keys(initialData).map((key) => (
+                <SelectTabsItem key={key} value={key}>
+                  {DATA_LABELS[key as keyof typeof initialData]}
+                </SelectTabsItem>
+              ))}
+            </SelectTabsContent>
+            {Object.entries(initialData).map(([keyRaw, initialInfo]) => {
+              const key = keyRaw as keyof typeof initialData;
+
+              return (
+                <SelectTabsTab value={key} key={key + "tab"}>
+                  <div className="mb-6 mt-6 flex items-center justify-between">
+                    <label
+                      htmlFor={key}
+                      className="text-xs font-medium text-neutral-300"
+                    >
+                      Visibility
+                    </label>
+                    <Switch
+                      id={key}
+                      checked={dataVisibility[key as keyof typeof initialData]}
+                      onCheckedChange={(e: boolean) =>
+                        setDataVisibility((prev) => ({ ...prev, [key]: e }))
+                      }
+                    />
+                  </div>
+                  {key === "flt" && (
+                    <FltFormFilters initialData={initialInfo as FltFilters} />
+                  )}
+                  {key === "gnss" && (
+                    <GnssFormFilters initialData={initialInfo as GnssFilters} />
+                  )}
+                  {key === "seis" && (
+                    <SeisFormFilters initialData={initialInfo as SeisFilters} />
+                  )}
+                  {key === "smt" && (
+                    <SmtFormFilters initialData={initialInfo as SmtFilters} />
+                  )}
+                  {key === "vlc" && (
+                    <VlcFormFilters initialData={initialInfo as VlcFilters} />
+                  )}
+                  {key === "hf" && <HfFormFilters />}
+                </SelectTabsTab>
+              );
+            })}
+          </SelectTabs>
         </div>
       </div>
     </div>

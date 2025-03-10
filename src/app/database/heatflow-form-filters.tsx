@@ -33,7 +33,7 @@ export default function HfFormFilters() {
   };
 
   return (
-    <form className="space-y-4" action={submitAction}>
+    <form className="space-y-6" action={submitAction}>
       <Button type="submit" disabled={isPending}>
         {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
       </Button>

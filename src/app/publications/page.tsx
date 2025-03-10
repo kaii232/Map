@@ -122,7 +122,7 @@ export default async function Publications({
                     //@ts-expect-error If url is nullish Comp will be a div
                     href={pub.url ?? undefined}
                     target={pub.url ? "_blank" : undefined}
-                    className="block rounded-lg border border-neutral-800 bg-neutral-900/70 p-4 text-neutral-300 transition hover:border-neutral-700"
+                    className="block rounded-lg border border-neutral-800 bg-neutral-900/70 p-4 text-neutral-300 transition hover:border-neutral-600"
                   >
                     <div className="mb-4">
                       <p className="text-sm text-neutral-400">

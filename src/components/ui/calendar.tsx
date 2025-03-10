@@ -73,15 +73,15 @@ function Calendar({
         caption_label: "text-sm font-medium text-neutral-300",
         nav: "flex items-center absolute top-2 pointer-events-none inset-x-0 justify-between",
         button_previous:
-          "inline-flex pointer-events-auto items-center justify-center whitespace-nowrap rounded-full ring-offset-neutral-950 text-neutral-300 hover:bg-neutral-900 hover:text-neutral-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-800/70 focus-visible:ring-offset-2 disabled:text-neutral-400 disabled:pointer-events-none disabled:opacity-70 size-8 [&_svg]:size-5",
+          "inline-flex pointer-events-auto items-center justify-center whitespace-nowrap rounded-full ring-offset-neutral-950 text-neutral-300 hover:bg-neutral-900 hover:text-neutral-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:text-neutral-400 disabled:pointer-events-none disabled:opacity-70 size-8 [&_svg]:size-5",
         button_next:
-          "inline-flex pointer-events-auto items-center justify-center whitespace-nowrap rotate-180 rounded-full ring-offset-neutral-950 text-neutral-300 hover:bg-neutral-900 hover:text-neutral-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-800/70 focus-visible:ring-offset-2 disabled:text-neutral-400 disabled:pointer-events-none disabled:opacity-70 size-8 [&_svg]:size-5",
+          "inline-flex pointer-events-auto items-center justify-center whitespace-nowrap rotate-180 rounded-full ring-offset-neutral-950 text-neutral-300 hover:bg-neutral-900 hover:text-neutral-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:text-neutral-400 disabled:pointer-events-none disabled:opacity-70 size-8 [&_svg]:size-5",
         month_grid: "w-full border-separate border-spacing-y-1",
         weekday:
           "text-neutral-400 rounded-full w-9 sm:w-10 font-normal text-sm",
         day: "group text-center transition-all text-sm p-1 relative aria-selected:bg-neutral-800 first:aria-selected:rounded-l-full last:aria-selected:rounded-r-full focus-within:relative focus-within:z-20",
         day_button:
-          "inline-flex items-center justify-center text-neutral-300 hover:text-neutral-900 whitespace-nowrap rounded-full hover:bg-neutral-200 transition size-8 sm:size-9 group-[.highlight]:!bg-amber-400 group-[.highlight]:hover:!bg-amber-400/90 group-[.highlight]:!text-neutral-900 group-[.middle]:hover:bg-neutral-200 group-[.today]:bg-neutral-900 group-[.today]:hover:bg-neutral-800 group-[.today]:text-amber-300 ring-offset-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-800/70 focus-visible:ring-offset-2 disabled:text-neutral-400 disabled:pointer-events-none disabled:opacity-70",
+          "inline-flex items-center justify-center text-neutral-300 hover:text-neutral-900 whitespace-nowrap rounded-full hover:bg-neutral-200 transition size-8 sm:size-9 group-[.highlight]:!bg-amber-400 group-[.highlight]:hover:!bg-amber-400/90 group-[.highlight]:!text-neutral-900 group-[.middle]:hover:bg-neutral-200 group-[.today]:bg-neutral-900 group-[.today]:hover:bg-neutral-800 group-[.today]:text-amber-300 ring-offset-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:text-neutral-400 disabled:pointer-events-none disabled:opacity-70",
         range_end: "highlight rounded-r-full",
         range_start: "highlight rounded-l-full",
         range_middle: "middle aria-selected:text-neutral-900",

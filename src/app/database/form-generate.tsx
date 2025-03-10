@@ -25,6 +25,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { FilterDefine, GenericFiltersInfo } from "@/lib/types";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { CalendarDays } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
@@ -64,6 +65,8 @@ export default function FormGenerate({
   initialData,
   filters,
 }: FormGenerateProps) {
+  const isLarge = useMediaQuery("(min-width:640px)");
+
   return Object.entries(filters).map(([key, filter]) => {
     if (filter.type === "select")
       return (
@@ -73,7 +76,7 @@ export default function FormGenerate({
           name={key}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{filter.name}</FormLabel>
+              <FormLabel className="text-neutral-50">{filter.name}</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 value={field.value as string}
@@ -99,13 +102,32 @@ export default function FormGenerate({
       );
     if (filter.type === "range") {
       return (
-        <div className="space-y-1" key={key}>
+        <div className="space-y-4" key={key}>
           <FormField
             control={form.control}
             name={key}
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>{filter.name}</FormLabel>
+              <FormItem className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <FormLabel className="text-neutral-50">
+                    {filter.name}
+                  </FormLabel>
+                  <FormDescription className="space-x-2">
+                    {Array.isArray(field.value) && (
+                      <>
+                        <span>
+                          {Number(field.value[0].toFixed(1))}
+                          {filter.units}
+                        </span>
+                        <span>—</span>
+                        <span>
+                          {Number(field.value[1].toFixed(1))}
+                          {filter.units}
+                        </span>
+                      </>
+                    )}
+                  </FormDescription>
+                </div>
                 <FormControl>
                   <Slider
                     onValueChange={field.onChange}
@@ -134,20 +156,6 @@ export default function FormGenerate({
                     }
                   />
                 </FormControl>
-                <FormDescription className="flex w-full justify-between">
-                  {Array.isArray(field.value) && (
-                    <>
-                      <span>
-                        {Number(field.value[0].toFixed(1))}
-                        {filter.units}
-                      </span>
-                      <span>
-                        {Number(field.value[1].toFixed(1))}
-                        {filter.units}
-                      </span>
-                    </>
-                  )}
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -191,20 +199,22 @@ export default function FormGenerate({
           ? defaults[key].to
           : new Date();
       return (
-        <div className="space-y-2" key={key}>
+        <div className="space-y-3" key={key}>
           <FormField
             control={form.control}
             name={key}
             render={({ field }) =>
               typeof field.value === "object" && !Array.isArray(field.value) ? (
                 <FormItem>
-                  <FormLabel>{key}</FormLabel>
+                  <FormLabel className="text-neutral-50">
+                    {filter.name}
+                  </FormLabel>
                   <FormControl>
                     <Popover>
                       <PopoverTrigger asChild>
                         <button
                           className={
-                            "flex h-10 w-full items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 px-4 py-2 text-sm font-normal hover:bg-neutral-900 [&_svg]:size-5"
+                            "flex h-10 w-full items-center gap-2 rounded-md border border-neutral-600 bg-neutral-950 px-4 py-2 text-sm font-normal hover:bg-neutral-900 [&_svg]:size-5"
                           }
                         >
                           <CalendarDays className="shrink-0 text-neutral-400" />
@@ -264,7 +274,7 @@ export default function FormGenerate({
                           }}
                           autoFocus
                           defaultMonth={field.value.from}
-                          numberOfMonths={2}
+                          numberOfMonths={isLarge ? 2 : 1}
                         />
                       </PopoverContent>
                     </Popover>

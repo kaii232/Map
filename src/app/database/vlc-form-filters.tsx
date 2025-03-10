@@ -56,7 +56,7 @@ export default function VlcFormFilters({
 
   return (
     <Form {...form}>
-      <form className="space-y-4" onSubmit={form.handleSubmit(submitAction)}>
+      <form className="space-y-6" onSubmit={form.handleSubmit(submitAction)}>
         <FormGenerate
           form={form}
           defaults={defaults}

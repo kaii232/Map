@@ -15,21 +15,21 @@ const Slider = React.forwardRef<
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-neutral-700">
+    <SliderPrimitive.Track className="relative h-2.5 w-full grow overflow-hidden rounded-full bg-neutral-700">
       <SliderPrimitive.Range className="absolute h-full bg-neutral-300" />
     </SliderPrimitive.Track>
 
     {props.defaultValue?.map((_, index) => (
       <SliderPrimitive.Thumb
         key={index}
-        className="block h-5 w-5 rounded-full border-2 border-neutral-700 bg-neutral-900 ring-offset-neutral-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-800/70 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        className="block h-5 w-5 rounded-full border-2 border-neutral-300 bg-neutral-900 ring-offset-neutral-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
       />
     ))}
     {!props.defaultValue &&
       props.value?.map((_, index) => (
         <SliderPrimitive.Thumb
           key={index}
-          className="block h-5 w-5 rounded-full border-2 border-neutral-700 bg-neutral-900 ring-offset-neutral-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-800/70 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+          className="block h-5 w-5 rounded-full border-2 border-neutral-300 bg-neutral-900 ring-offset-neutral-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
   </SliderPrimitive.Root>
