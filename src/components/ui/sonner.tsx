@@ -8,7 +8,7 @@ type ToasterProps = React.ComponentProps<typeof Sonner>;
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
-      theme={"light"}
+      theme={"dark"}
       gap={8}
       duration={5000}
       expand
@@ -16,12 +16,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           title: "font-sans text-sm leading-none",
           description:
-            "font-sans text-sm text-slate-500 group-data-[type='success']:text-green-600 group-data-[type='error']:text-red-600 group-data-[type='warning']:text-orange-600 group-data-[type='info']:text-blue-600",
+            "font-sans text-sm text-neutral-300 group-data-[type='success']:text-green-600 group-data-[type='error']:text-red-600 group-data-[type='warning']:text-orange-600 group-data-[type='info']:text-blue-600",
           toast:
-            "border-slate-200 text-slate-700 bg-white shadow-lg rounded-lg p-4 group border-2",
+            "border-neutral-600 text-neutral-50 bg-neutral-950 shadow-lg rounded-xl p-4 group border",
           actionButton:
-            "bg-slate-700 text-zinc-50 hover:bg-slate-700/90 font-sans text-xs",
-          cancelButton: "hover:bg-slate-100 text-slate-700 font-sans text-xs",
+            "bg-neutral-700 text-neutral-50 hover:bg-neutral-700/90 font-sans text-xs border border-neutral-600",
+          cancelButton:
+            "hover:bg-neutral-100 text-neutral-200 font-sans text-xs",
           error: "!bg-rose-50 !border-rose-200 !text-red-700",
           success: "!bg-emerald-50 !border-emerald-200 !text-green-700",
           warning: "!bg-amber-50 !border-amber-200 !text-orange-700",
