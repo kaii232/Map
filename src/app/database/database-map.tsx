@@ -22,6 +22,7 @@ import {
   PropertyValueSpecification,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import {
   Layer,
@@ -888,6 +889,19 @@ export default function DatabaseMap({
             {Object.entries(hoverInfo.feature.properties).map(
               ([key, value]) => {
                 if (key === "name") return;
+                if (typeof value === "string" && value.includes("https://"))
+                  return (
+                    <div className="text-sm" key={key}>
+                      <span className="font-semibold">{key}:</span>{" "}
+                      <Link
+                        href={value}
+                        target="_blank"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {value}
+                      </Link>
+                    </div>
+                  );
                 return (
                   <div className="text-sm" key={key}>
                     <span className="font-semibold">{key}:</span> {value}
@@ -928,6 +942,19 @@ export default function DatabaseMap({
             {Object.entries(selectedFeature.feature.properties).map(
               ([key, value]) => {
                 if (key === "name") return;
+                if (typeof value === "string" && value.includes("https://"))
+                  return (
+                    <div className="text-sm" key={key}>
+                      <span className="font-semibold">{key}:</span>{" "}
+                      <Link
+                        href={value}
+                        target="_blank"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {value}
+                      </Link>
+                    </div>
+                  );
                 return (
                   <div className="text-sm" key={key}>
                     <span className="font-semibold">{key}:</span> {value}
