@@ -323,10 +323,10 @@ export default function Controls({
 
                 return (
                   <SelectTabsTab value={key} key={key + "tab"}>
-                    <div className="mb-6 mt-6 flex items-center justify-between">
+                    <div className="my-6 flex items-center justify-between">
                       <label
                         htmlFor={key}
-                        className="text-xs font-medium text-neutral-300"
+                        className="w-full text-sm font-normal text-neutral-300"
                       >
                         Visibility
                       </label>
