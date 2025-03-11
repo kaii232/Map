@@ -7,7 +7,6 @@ export const layersAtom = atom({
   plateMovementVectors: false,
   "tectonicPlates(Bird, 2003)": false,
   "tectonicPlaces(Hasterok, 2022)": false,
-  // Put as the last one always
   seafloorAge: false,
 });
 

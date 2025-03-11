@@ -159,7 +159,6 @@ export default function Controls({
   const [open, setOpen] = useState(true);
   const setMapStyle = useSetAtom(mapStyleAtom);
   const [dataVisibility, setDataVisibility] = useAtom(dataVisibilityAtom);
-
   const { map } = useMap();
 
   return (

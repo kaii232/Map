@@ -1,5 +1,6 @@
 "use client";
 
+import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import Spinner from "@/components/ui/spinner";
@@ -11,7 +12,7 @@ import {
 } from "@/lib/filters";
 import { LoadSmt } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -24,7 +25,7 @@ export default function SmtFormFilters({
 }: {
   initialData: SmtFilters;
 }) {
-  const setSmtData = useSetAtom(smtDataAtom);
+  const [smtData, setSmtData] = useAtom(smtDataAtom);
   const drawing = useAtomValue(drawingAtom);
 
   const defaults = createDefaultValues(initialData, smtFilters);
@@ -63,9 +64,16 @@ export default function SmtFormFilters({
           form={form}
           initialData={initialData}
         />
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
-        </Button>
+        <div>
+          <Button type="submit" disabled={isPending} className="mb-2 w-full">
+            {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
+          </Button>
+          <DownloadButton
+            className="w-full"
+            data={smtData}
+            fileName="smt_invest.csv"
+          />
+        </div>
       </form>
     </Form>
   );

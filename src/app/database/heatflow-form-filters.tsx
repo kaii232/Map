@@ -1,15 +1,16 @@
 "use client";
 
+import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
 import { LoadHf } from "@/server/actions";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { drawingAtom, hfDataAtom } from "./atoms";
 
 export default function HfFormFilters() {
-  const setHfData = useSetAtom(hfDataAtom);
+  const [hfData, setHfData] = useAtom(hfDataAtom);
   const drawing = useAtomValue(drawingAtom);
 
   const [isPending, startTransition] = useTransition();
@@ -34,9 +35,16 @@ export default function HfFormFilters() {
 
   return (
     <form className="space-y-6" action={submitAction}>
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
-      </Button>
+      <div>
+        <Button type="submit" disabled={isPending} className="mb-2 w-full">
+          {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
+        </Button>
+        <DownloadButton
+          className="w-full"
+          data={hfData}
+          fileName="hf_invest.csv"
+        />
+      </div>
     </form>
   );
 }

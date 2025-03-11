@@ -41,10 +41,10 @@ const SelectTabsTab = ({
   children: ReactNode;
 }) => {
   const currentValue = useContext(SelectTabsContext);
-
-  if (currentValue !== value) return null;
-
-  return children;
+  // Maintain the state when switching to other tabs
+  return (
+    <div className={currentValue !== value ? "hidden" : ""}>{children}</div>
+  );
 };
 
 export {

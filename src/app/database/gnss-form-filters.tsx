@@ -1,5 +1,6 @@
 "use client";
 
+import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import Spinner from "@/components/ui/spinner";
@@ -11,7 +12,7 @@ import {
 } from "@/lib/filters";
 import { LoadGNSS } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -24,7 +25,7 @@ export default function GnssFormFilters({
 }: {
   initialData: GnssFilters;
 }) {
-  const setGnssData = useSetAtom(gnssDataAtom);
+  const [gnssData, setGnssData] = useAtom(gnssDataAtom);
   const drawing = useAtomValue(drawingAtom);
 
   const defaults = createDefaultValues(initialData, gnssFilters);
@@ -62,9 +63,16 @@ export default function GnssFormFilters({
           form={form}
           initialData={initialData}
         />
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
-        </Button>
+        <div>
+          <Button type="submit" disabled={isPending} className="mb-2 w-full">
+            {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
+          </Button>
+          <DownloadButton
+            className="w-full"
+            data={gnssData}
+            fileName="gnss_invest.csv"
+          />
+        </div>
       </form>
     </Form>
   );
