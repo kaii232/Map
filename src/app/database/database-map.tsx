@@ -902,6 +902,7 @@ export default function DatabaseMap({
                       </Link>
                     </div>
                   );
+
                 return (
                   <div className="text-sm" key={key}>
                     <span className="font-semibold">{key}:</span> {value}
@@ -948,6 +949,19 @@ export default function DatabaseMap({
                       <span className="font-semibold">{key}:</span>{" "}
                       <Link
                         href={value}
+                        target="_blank"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {value}
+                      </Link>
+                    </div>
+                  );
+                if (typeof value === "string" && value.includes("doi:"))
+                  return (
+                    <div className="text-sm" key={key}>
+                      <span className="font-semibold">{key}:</span>{" "}
+                      <Link
+                        href={value.replace("doi:", "https://doi.org/")}
                         target="_blank"
                         className="text-blue-600 hover:underline"
                       >
