@@ -114,16 +114,9 @@ export default async function Publications({
           <PapersSearch />
           <ul className="space-y-2">
             {publications.map((pub) => {
-              const Comp = pub.url ? Link : "div";
-
               return (
                 <li key={pub.id}>
-                  <Comp
-                    //@ts-expect-error If url is nullish Comp will be a div
-                    href={pub.url ?? undefined}
-                    target={pub.url ? "_blank" : undefined}
-                    className="block rounded-lg border border-neutral-800 bg-neutral-900/70 p-4 text-neutral-300 transition hover:border-neutral-600"
-                  >
+                  <div className="relative block rounded-lg border border-neutral-800 bg-neutral-900/70 p-4 text-neutral-300 transition hover:border-neutral-600">
                     <div className="mb-4">
                       <p className="text-sm text-neutral-400">
                         {pub.journal}
@@ -132,13 +125,24 @@ export default async function Publications({
                         {pub.year && pub.doi && " · "}
                         {pub.doi}
                       </p>
-                      <h3 className="text-lg font-medium text-neutral-50">
-                        {<HighlightSearch text={pub.title} query={query} />}
-                      </h3>
+                      {pub.url ? (
+                        <Link
+                          href={pub.url}
+                          target="_blank"
+                          className="text-lg font-medium text-neutral-50"
+                        >
+                          <span className="absolute inset-0 rounded-lg"></span>
+                          {<HighlightSearch text={pub.title} query={query} />}
+                        </Link>
+                      ) : (
+                        <h3 className="text-lg font-medium text-neutral-50">
+                          {<HighlightSearch text={pub.title} query={query} />}
+                        </h3>
+                      )}
                     </div>
 
                     <p>{<HighlightSearch text={pub.author} query={query} />}</p>
-                  </Comp>
+                  </div>
                 </li>
               );
             })}
