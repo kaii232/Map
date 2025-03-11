@@ -33,7 +33,8 @@ import {
 import { BasemapNames } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { ChevronDown, ChevronLeft } from "lucide-react";
+import { Book, ChevronDown, ChevronLeft, Home, Map } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import {
@@ -215,31 +216,68 @@ export default function Controls({
         <ColourRamps className="left-full hidden sm:flex" />
 
         <div className="flex h-full max-h-full flex-col gap-4 overflow-auto bg-neutral-950 pb-4 pt-16 text-neutral-300 sm:pt-4">
+          <div className="flex flex-col gap-1 px-4">
+            <span className="mb-3 text-xs font-medium text-neutral-300">
+              Navigation
+            </span>
+            <Button
+              variant="ghost"
+              className="justify-start hover:text-yellow-500"
+              asChild
+            >
+              <Link href="/">
+                <Home />
+                Home
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              asChild
+              className="justify-start text-amber-400 hover:text-yellow-500"
+            >
+              <Link href="/database">
+                <Map />
+                Map
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start hover:text-yellow-500"
+              asChild
+            >
+              <Link href="/publications">
+                <Book />
+                Publications
+              </Link>
+            </Button>
+          </div>
+          <Separator />
           <div className="space-y-4 px-4">
-            <div>
-              <Select
-                defaultValue="Openfreemap"
-                onValueChange={(val) => setMapStyle(val as BasemapNames)}
-              >
-                <SelectTrigger>Basemap</SelectTrigger>
-                <SelectContent>
-                  {MAP_STYLE.map((style) => {
-                    return (
-                      <SelectItem value={style.label} key={style.label}>
-                        <div className="flex h-8 items-center gap-2">
-                          <img
-                            src={style.img}
-                            className="h-full w-12 rounded-md"
-                            alt={style.label}
-                          />
-                          {style.label}
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
+            <span className="text-xs font-medium text-neutral-300">
+              Map Options
+            </span>
+            <Select
+              defaultValue="Openfreemap"
+              onValueChange={(val) => setMapStyle(val as BasemapNames)}
+            >
+              <SelectTrigger>Basemap</SelectTrigger>
+              <SelectContent>
+                {MAP_STYLE.map((style) => {
+                  return (
+                    <SelectItem value={style.label} key={style.label}>
+                      <div className="flex h-8 items-center gap-2">
+                        <img
+                          src={style.img}
+                          className="h-full w-12 rounded-md"
+                          alt={style.label}
+                        />
+                        {style.label}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm ring-offset-neutral-950 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
@@ -266,7 +304,7 @@ export default function Controls({
           </div>
           <Separator />
           <div className="px-4">
-            <span className="mb-2 block text-sm font-medium text-neutral-50">
+            <span className="mb-4 block text-xs font-medium text-neutral-300">
               Data
             </span>
             <SelectTabs>
