@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
 import { LoadHf } from "@/server/actions";
 import { useAtom, useAtomValue } from "jotai";
+import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { drawingAtom, hfDataAtom } from "./atoms";
@@ -40,10 +41,15 @@ export default function HfFormFilters() {
           {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
         </Button>
         <DownloadButton
-          className="w-full"
+          className="mb-2 w-full"
           data={hfData}
           fileName="hf_invest.csv"
         />
+        <Button variant="outline" className="w-full" asChild>
+          <Link href={"IHFC_2024_GHFDB.xlsx"} target="_blank" download>
+            Download Full Original Dataset
+          </Link>
+        </Button>
       </div>
     </form>
   );

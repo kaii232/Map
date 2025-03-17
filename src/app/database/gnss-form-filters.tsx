@@ -13,6 +13,7 @@ import {
 import { LoadGNSS } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAtom, useAtomValue } from "jotai";
+import Link from "next/link";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -68,10 +69,15 @@ export default function GnssFormFilters({
             {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
           </Button>
           <DownloadButton
-            className="w-full"
+            className="mb-2 w-full"
             data={gnssData}
             fileName="gnss_invest.csv"
           />
+          <Button variant="outline" className="w-full" asChild>
+            <Link href={"stations.csv"} target="_blank" download>
+              Download Full Original Dataset
+            </Link>
+          </Button>
         </div>
       </form>
     </Form>

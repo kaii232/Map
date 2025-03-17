@@ -40,7 +40,7 @@ export default function DownloadButton({
     return (
       <Button variant="outline" className={className} asChild {...rest}>
         <Link href={url} target="_blank" download={fileName}>
-          Download as CSV
+          Download Selected Data
         </Link>
       </Button>
     );
@@ -54,7 +54,7 @@ export default function DownloadButton({
           disabled
           className={cn("disabled:pointer-events-auto", className)}
         >
-          Download as CSV
+          Download Selected Data
         </Button>
       </TooltipTrigger>
       <TooltipContent side="top">Please load some data first</TooltipContent>

@@ -119,7 +119,7 @@ export default function FormGenerate({
                           {Number(field.value[0].toFixed(1))}
                           {filter.units}
                         </span>
-                        <span>—</span>
+                        <span>–</span>
                         <span>
                           {Number(field.value[1].toFixed(1))}
                           {filter.units}

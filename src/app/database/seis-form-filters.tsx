@@ -13,6 +13,7 @@ import {
 import { LoadSeis } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAtom, useAtomValue } from "jotai";
+import Link from "next/link";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -69,10 +70,20 @@ export default function SeisFormFilters({
             {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
           </Button>
           <DownloadButton
-            className="w-full"
+            className="mb-2 w-full"
             data={seisData}
             fileName="seis_invest.csv"
           />
+          <Button variant="outline" className="mb-2 w-full" asChild>
+            <Link href={"isc-ehb-new.csv"} target="_blank" download>
+              Download ISC-EHB Catalogue
+            </Link>
+          </Button>
+          <Button variant="outline" className="w-full" asChild>
+            <Link href={"isc-gem-cat-1.csv"} target="_blank" download>
+              Download ISC-GEM Catalogue
+            </Link>
+          </Button>
         </div>
       </form>
     </Form>
