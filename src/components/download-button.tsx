@@ -38,7 +38,7 @@ export default function DownloadButton({
 
   if (url)
     return (
-      <Button variant="outline" className={className} {...rest}>
+      <Button variant="outline" className={className} asChild {...rest}>
         <Link href={url} target="_blank" download={fileName}>
           Download as CSV
         </Link>
