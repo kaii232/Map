@@ -10,9 +10,17 @@ import {
   vlcInInvest,
 } from "@/server/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { Metadata } from "next";
 import DatabaseMap from "./database-map";
 
-export const dynamic = "force-dynamic";
+// Next.js will invalidate the cache when a
+// request comes in, at most once every 12 hours.
+export const revalidate = 43200;
+
+export const metadata: Metadata = {
+  title: "Map",
+  description: "View and download data from EOS or global datasets",
+};
 
 export default async function DatabasePage() {
   // const sources = db.$with("sources").as(

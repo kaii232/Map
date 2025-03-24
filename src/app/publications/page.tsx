@@ -2,9 +2,15 @@ import Header from "@/components/header";
 import { db } from "@/server/db";
 import { biblInInvest } from "@/server/db/schema";
 import { sql } from "drizzle-orm";
+import { Metadata } from "next";
 import Link from "next/link";
 import { NextButton, PrevButton } from "./pagination";
 import PapersSearch from "./papers-search";
+
+export const metadata: Metadata = {
+  title: "Publications",
+  description: "View and search for publications.",
+};
 
 const PAGE_SIZE = 20;
 

@@ -10,8 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "InVEST Map",
-  description: "View faults and volcanoes in South Ease Asia",
+  title: { default: "InVEST", template: "%s – InVEST" },
+  description:
+    "The InVEST team will provide the essential predictive and quantitative understanding of geohazards in Southeast Asia to reduce risk and impacts and to save lives and infrastructure.",
 };
 
 export default function RootLayout({
