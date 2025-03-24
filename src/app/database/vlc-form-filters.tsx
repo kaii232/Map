@@ -18,7 +18,7 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { drawingAtom, vlcDataAtom } from "./atoms";
+import { dataAtom, drawingAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
 export default function VlcFormFilters({
@@ -26,7 +26,7 @@ export default function VlcFormFilters({
 }: {
   initialData: VlcFilters;
 }) {
-  const [vlcData, setVlcData] = useAtom(vlcDataAtom);
+  const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
 
   const defaults = createDefaultValues(initialData, vlcFilters);
@@ -51,7 +51,10 @@ export default function VlcFormFilters({
         toast.success(
           `Successfully loaded ${data.data.features.length} volcanoes`,
         );
-        setVlcData(data.data);
+        setMapData((prev) => ({
+          ...prev,
+          vlc: data.data,
+        }));
       } else toast.error(data.error);
     });
   };
@@ -71,7 +74,7 @@ export default function VlcFormFilters({
           </Button>
           <DownloadButton
             className="mb-2 w-full"
-            data={vlcData}
+            data={mapData.vlc}
             fileName="vlc_invest.csv"
           />
           <Button variant="outline" className="w-full" asChild>

@@ -17,7 +17,7 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { drawingAtom, smtDataAtom } from "./atoms";
+import { dataAtom, drawingAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
 export default function SmtFormFilters({
@@ -25,7 +25,7 @@ export default function SmtFormFilters({
 }: {
   initialData: SmtFilters;
 }) {
-  const [smtData, setSmtData] = useAtom(smtDataAtom);
+  const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
 
   const defaults = createDefaultValues(initialData, smtFilters);
@@ -50,7 +50,7 @@ export default function SmtFormFilters({
         toast.success(
           `Successfully loaded ${data.data.features.length} seamounts`,
         );
-        setSmtData(data.data);
+        setMapData((prev) => ({ ...prev, smt: data.data }));
       } else toast.error(data.error);
     });
   };
@@ -70,7 +70,7 @@ export default function SmtFormFilters({
           </Button>
           <DownloadButton
             className="w-full"
-            data={smtData}
+            data={mapData.smt}
             fileName="smt_invest.csv"
           />
         </div>

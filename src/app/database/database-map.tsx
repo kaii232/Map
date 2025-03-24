@@ -6,13 +6,7 @@ import tectonicBoundaries from "@/assets/PB2002_boundaries.json";
 import tectonicPlates from "@/assets/PB2002_plates.json";
 import tectonicBoundariesNew from "@/assets/plate_boundaries_new.geojson";
 import tectonicPlatesNew from "@/assets/plate_new.geojson";
-import {
-  FltFilters,
-  GnssFilters,
-  SeisFilters,
-  SmtFilters,
-  VlcFilters,
-} from "@/lib/filters";
+import { DataKeys, GenericFiltersInfo } from "@/lib/types";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Feature, FeatureCollection, Position } from "geojson";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -37,17 +31,7 @@ import {
   useMap,
 } from "react-map-gl/maplibre";
 import { GeoJSONStoreFeatures } from "terra-draw";
-import {
-  dataVisibilityAtom,
-  drawingAtom,
-  fltDataAtom,
-  gnssDataAtom,
-  hfDataAtom,
-  layersAtom,
-  seisDataAtom,
-  smtDataAtom,
-  vlcDataAtom,
-} from "./atoms";
+import { dataAtom, dataVisibilityAtom, drawingAtom, layersAtom } from "./atoms";
 import Basemaps from "./basemaps";
 import Controls from "./controls";
 import DrawControl from "./draw-control";
@@ -61,8 +45,6 @@ const xlsxToGeojson = (
       type: "Feature",
       properties: {
         ...input[i],
-        Longitude: undefined,
-        Latitude: undefined,
       },
       geometry: {
         type: "Point",
@@ -133,22 +115,10 @@ const seisCommonPaint: {
 export default function DatabaseMap({
   initialData,
 }: {
-  initialData: {
-    smt: SmtFilters;
-    vlc: VlcFilters;
-    gnss: GnssFilters;
-    flt: FltFilters;
-    seis: SeisFilters;
-    hf: Record<never, never>;
-  };
+  initialData: Record<DataKeys, GenericFiltersInfo>;
 }) {
   const { map } = useMap();
-  const smtData = useAtomValue(smtDataAtom);
-  const seisData = useAtomValue(seisDataAtom);
-  const gnssData = useAtomValue(gnssDataAtom);
-  const fltData = useAtomValue(fltDataAtom);
-  const vlcData = useAtomValue(vlcDataAtom);
-  const hfData = useAtomValue(hfDataAtom);
+  const mapData = useAtomValue(dataAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
   const layers = useAtomValue(layersAtom);
 
@@ -513,8 +483,8 @@ export default function DatabaseMap({
             );
           })}
         </Source>
-        {vlcData && (
-          <Source id="vlcSource" type="geojson" data={vlcData}>
+        {mapData.vlc && (
+          <Source id="vlcSource" type="geojson" data={mapData.vlc}>
             <Layer
               id="vlc"
               type="symbol"
@@ -552,8 +522,8 @@ export default function DatabaseMap({
             />
           </Source>
         )}
-        {smtData && (
-          <Source id="smtSource" type="geojson" data={smtData}>
+        {mapData.smt && (
+          <Source id="smtSource" type="geojson" data={mapData.smt}>
             <Layer
               id="smt"
               type="symbol"
@@ -591,8 +561,8 @@ export default function DatabaseMap({
             />
           </Source>
         )}
-        {gnssData && (
-          <Source id="gnssSource" type="geojson" data={gnssData}>
+        {mapData.gnss && (
+          <Source id="gnssSource" type="geojson" data={mapData.gnss}>
             <Layer
               id="gnss"
               type="symbol"
@@ -630,8 +600,8 @@ export default function DatabaseMap({
             />
           </Source>
         )}
-        {fltData && (
-          <Source id="fltSource" type="geojson" data={fltData}>
+        {mapData.flt && (
+          <Source id="fltSource" type="geojson" data={mapData.flt}>
             <Layer
               id="flt"
               type="line"
@@ -673,8 +643,8 @@ export default function DatabaseMap({
             />
           </Source>
         )}
-        {seisData && (
-          <Source id="seisSource" type="geojson" data={seisData}>
+        {mapData.seis && (
+          <Source id="seisSource" type="geojson" data={mapData.seis}>
             <Layer
               id="seisMw"
               type="circle"
@@ -802,8 +772,8 @@ export default function DatabaseMap({
             />
           </Source>
         )}
-        {hfData && (
-          <Source id="hfSource" type="geojson" data={hfData}>
+        {mapData.hf && (
+          <Source id="hfSource" type="geojson" data={mapData.hf}>
             <Layer
               id="hf"
               type="circle"

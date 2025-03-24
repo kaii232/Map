@@ -18,7 +18,7 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { drawingAtom, seisDataAtom } from "./atoms";
+import { dataAtom, drawingAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
 export default function SeisFormFilters({
@@ -26,7 +26,7 @@ export default function SeisFormFilters({
 }: {
   initialData: SeisFilters;
 }) {
-  const [seisData, setSeisData] = useAtom(seisDataAtom);
+  const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
 
   const defaults = createDefaultValues(initialData, seisFilters);
@@ -51,7 +51,10 @@ export default function SeisFormFilters({
         toast.success(
           `Successfully loaded ${data.data.features.length} seismic data`,
         );
-        setSeisData(data.data);
+        setMapData((prev) => ({
+          ...prev,
+          seis: data.data,
+        }));
       } else toast.error(data.error);
     });
   };
@@ -71,7 +74,7 @@ export default function SeisFormFilters({
           </Button>
           <DownloadButton
             className="mb-2 w-full"
-            data={seisData}
+            data={mapData.seis}
             fileName="seis_invest.csv"
           />
           <Button variant="outline" className="mb-2 w-full" asChild>

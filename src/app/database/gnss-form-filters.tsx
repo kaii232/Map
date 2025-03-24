@@ -18,7 +18,7 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { drawingAtom, gnssDataAtom } from "./atoms";
+import { dataAtom, drawingAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
 export default function GnssFormFilters({
@@ -26,7 +26,7 @@ export default function GnssFormFilters({
 }: {
   initialData: GnssFilters;
 }) {
-  const [gnssData, setGnssData] = useAtom(gnssDataAtom);
+  const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
 
   const defaults = createDefaultValues(initialData, gnssFilters);
@@ -50,7 +50,10 @@ export default function GnssFormFilters({
         toast.success(
           `Successfully loaded ${data.data.features.length} GNSS Stations`,
         );
-        setGnssData(data.data);
+        setMapData((prev) => ({
+          ...prev,
+          gnss: data.data,
+        }));
       } else toast.error(data.error);
     });
   };
@@ -70,7 +73,7 @@ export default function GnssFormFilters({
           </Button>
           <DownloadButton
             className="mb-2 w-full"
-            data={gnssData}
+            data={mapData.gnss}
             fileName="gnss_invest.csv"
           />
           <Button variant="outline" className="w-full" asChild>

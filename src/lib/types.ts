@@ -9,7 +9,7 @@ export type BasemapNames =
 
 export type Range = [number, number];
 export type Categories = string[] | null;
-export type DateFilter = readonly [string, string];
+export type DateFilter = [string, string];
 // Generic type of the data that describes the filter values
 export type GenericFiltersInfo = Record<
   string,
@@ -39,10 +39,10 @@ export type FiltersType =
 export type FilterDefine<T extends GenericFiltersInfo> = {
   [P in keyof T]: T[P] extends Range
     ? Extract<FiltersType, { type: "range" }>
-    : T[P] extends Categories
-      ? Extract<FiltersType, { type: "select" }>
-      : T[P] extends DateFilter
-        ? Extract<FiltersType, { type: "date" }>
+    : T[P] extends DateFilter
+      ? Extract<FiltersType, { type: "date" }>
+      : T[P] extends Categories
+        ? Extract<FiltersType, { type: "select" }>
         : {
             name: string;
             type: "select" | "range" | "date";
@@ -51,3 +51,5 @@ export type FilterDefine<T extends GenericFiltersInfo> = {
             units?: string;
           };
 };
+
+export type DataKeys = "smt" | "vlc" | "gnss" | "flt" | "seis" | "hf";

@@ -30,7 +30,7 @@ import {
   SmtFilters,
   VlcFilters,
 } from "@/lib/filters";
-import { BasemapNames } from "@/lib/types";
+import { BasemapNames, DataKeys, GenericFiltersInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Book, ChevronDown, ChevronLeft, Home, Map } from "lucide-react";
@@ -38,11 +38,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import {
+  dataAtom,
   dataVisibilityAtom,
-  hfDataAtom,
   layersAtom,
   mapStyleAtom,
-  seisDataAtom,
 } from "./atoms";
 import FltFormFilters from "./flt-form-filters";
 import GnssFormFilters from "./gnss-form-filters";
@@ -82,7 +81,7 @@ function camelCaseToWords(s: string) {
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
-const DATA_LABELS = {
+const DATA_LABELS: Record<DataKeys, string> = {
   smt: "Seamounts",
   vlc: "Volcanoes",
   gnss: "GNSS Stations",
@@ -94,12 +93,11 @@ const DATA_LABELS = {
 const ColourRamps = ({ className }: { className?: string }) => {
   const layers = useAtomValue(layersAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
-  const hfData = useAtomValue(hfDataAtom);
-  const seisData = useAtomValue(seisDataAtom);
+  const mapData = useAtomValue(dataAtom);
   const showColourRange =
     layers.seafloorAge ||
-    (dataVisibility.hf && hfData) ||
-    (dataVisibility.seis && seisData);
+    (dataVisibility.hf && mapData.hf) ||
+    (dataVisibility.seis && mapData.seis);
 
   if (!showColourRange) return null;
 
@@ -119,7 +117,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
           </div>
         </div>
       )}
-      {dataVisibility.seis && seisData && (
+      {dataVisibility.seis && mapData.seis && (
         <div>
           <span className="mb-0.5 block">Seismic Depth</span>
           <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)11%,rgba(253,212,158,1)22%,rgba(253,187,132,1)33%,rgba(235,124,73,1)44%,rgba(219,82,53,1)55%,rgba(181,33,18,1)66%,rgba(117,6,6,1)77%,rgba(18,5,4,1)88%,rgba(0,0,0,1)100%)]"></div>
@@ -129,7 +127,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
           </div>
         </div>
       )}
-      {dataVisibility.hf && hfData && (
+      {dataVisibility.hf && mapData.hf && (
         <div>
           <span className="mb-0.5 block">Heatflow qval</span>
           <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(12,74,110,1)0%,rgba(2,132,199,1)25%,rgba(238,238,238,1)50%,rgba(225,29,72,1)75%,rgba(76,5,25,1)100%)]"></div>
@@ -146,14 +144,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
 export default function Controls({
   initialData,
 }: {
-  initialData: {
-    smt: SmtFilters;
-    vlc: VlcFilters;
-    gnss: GnssFilters;
-    flt: FltFilters;
-    seis: SeisFilters;
-    hf: Record<never, never>;
-  };
+  initialData: Record<DataKeys, GenericFiltersInfo>;
 }) {
   const [layers, setLayers] = useAtom(layersAtom);
   const [open, setOpen] = useState(true);

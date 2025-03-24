@@ -17,7 +17,7 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { drawingAtom, fltDataAtom } from "./atoms";
+import { dataAtom, drawingAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
 export default function FltFormFilters({
@@ -25,7 +25,7 @@ export default function FltFormFilters({
 }: {
   initialData: FltFilters;
 }) {
-  const [fltData, setFltData] = useAtom(fltDataAtom);
+  const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
 
   const defaults = createDefaultValues(initialData, fltFilters);
@@ -50,7 +50,10 @@ export default function FltFormFilters({
         toast.success(
           `Successfully loaded ${data.data.features.length} faults`,
         );
-        setFltData(data.data);
+        setMapData((prev) => ({
+          ...prev,
+          flt: data.data,
+        }));
       } else toast.error(data.error);
     });
   };
@@ -70,7 +73,7 @@ export default function FltFormFilters({
           </Button>
           <DownloadButton
             className="w-full"
-            data={fltData}
+            data={mapData.flt}
             fileName="flt_invest.csv"
           />
         </div>
