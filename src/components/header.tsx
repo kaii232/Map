@@ -1,22 +1,92 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
+import { LogOut, Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ComponentProps, useState } from "react";
 import { Button } from "./ui/button";
+import Spinner from "./ui/spinner";
 
-const HeaderLink = ({ href, ...rest }: ComponentProps<typeof Link>) => {
+const HeaderLink = ({
+  href,
+  className,
+  ...rest
+}: ComponentProps<typeof Link>) => {
   const path = usePathname();
   const active = href === path;
 
   return (
     <Link
       href={href}
-      className={`px-3 py-2 transition-colors hover:underline ${active ? "text-amber-400 hover:text-yellow-500" : "hover:text-yellow-500"}`}
+      className={cn(
+        "block px-3 py-2 transition-colors hover:text-yellow-500 hover:underline",
+        active && "text-amber-400 hover:text-yellow-500",
+        className,
+      )}
       {...rest}
     />
+  );
+};
+
+const AdminDashboardLink = () => {
+  const { data: session } = authClient.useSession();
+  if (!session || session.user.role !== "admin") return null;
+  return <HeaderLink href="/admin-dashboard">Admin Dashboard</HeaderLink>;
+};
+
+export const AccountLink = ({ className }: { className?: string }) => {
+  const { data: session, isPending } = authClient.useSession();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
+
+  const handleLogOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onRequest: () => {
+          setLoggingOut(true);
+        },
+        onResponse: () => {
+          setLoggingOut(false);
+        },
+        onSuccess: () => {
+          router.push("/login");
+        },
+      },
+    });
+  };
+
+  if (isPending)
+    return (
+      <div className="flex w-16 justify-center">
+        <Spinner className="size-4" />
+      </div>
+    );
+
+  if (!session)
+    return (
+      <HeaderLink href="/login" className={className}>
+        Login
+      </HeaderLink>
+    );
+
+  return (
+    <button
+      onClick={handleLogOut}
+      className={cn(
+        "inline-flex items-center gap-1.5 px-3 py-2 transition-colors hover:text-yellow-500 hover:underline",
+        className,
+      )}
+    >
+      {loggingOut ? (
+        <Spinner className="size-4" />
+      ) : (
+        <LogOut className="size-4" />
+      )}
+      Logout
+    </button>
   );
 };
 
@@ -59,23 +129,35 @@ export default function Header() {
           <Menu />
         </Button>
         <nav className="hidden sm:block">
-          <ul className="flex gap-4 text-sm">
+          <ul className="flex items-center gap-4 text-sm">
             {links.map((link) => (
               <li key={link.href}>
                 <HeaderLink href={link.href}>{link.label}</HeaderLink>
               </li>
             ))}
+            <li>
+              <AdminDashboardLink />
+            </li>
+            <li>
+              <AccountLink />
+            </li>
           </ul>
         </nav>
       </div>
       {expanded && (
         <nav className="mx-auto max-w-[1400px] py-8 sm:hidden">
-          <ul className="flex flex-col gap-4">
+          <ul className="flex flex-col gap-2">
             {links.map((link) => (
               <li key={link.href}>
                 <HeaderLink href={link.href}>{link.label}</HeaderLink>
               </li>
             ))}
+            <li>
+              <AdminDashboardLink />
+            </li>
+            <li>
+              <AccountLink />
+            </li>
           </ul>
         </nav>
       )}

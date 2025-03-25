@@ -2,7 +2,7 @@ import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-function Home() {
+export default function Home() {
   return (
     <>
       <Header />
@@ -15,4 +15,3 @@ function Home() {
     </>
   );
 }
-export default Home;

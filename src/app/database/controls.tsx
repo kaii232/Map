@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountLink } from "@/components/header";
 import {
   SelectTabs,
   SelectTabsContent,
@@ -21,7 +22,6 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
   FltFilters,
@@ -205,8 +205,8 @@ export default function Controls({
         </Button>
         <ColourRamps className="left-full hidden sm:flex" />
 
-        <div className="flex h-full max-h-full flex-col gap-4 overflow-auto bg-neutral-950 pb-4 pt-16 text-neutral-300 sm:pt-4">
-          <div className="flex flex-col gap-1 px-4">
+        <div className="flex h-full max-h-full flex-col divide-y divide-neutral-600 overflow-auto bg-neutral-950 pt-12 text-neutral-300 sm:pt-0">
+          <div className="flex flex-col gap-1 p-4">
             <span className="mb-3 text-xs font-medium text-neutral-300">
               Navigation
             </span>
@@ -241,8 +241,7 @@ export default function Controls({
               </Link>
             </Button>
           </div>
-          <Separator />
-          <div className="space-y-4 px-4">
+          <div className="space-y-4 p-4">
             <span className="text-xs font-medium text-neutral-300">
               Map Options
             </span>
@@ -292,8 +291,7 @@ export default function Controls({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Separator />
-          <div className="px-4">
+          <div className="grow p-4">
             <span className="mb-4 block text-xs font-medium text-neutral-300">
               Data
             </span>
@@ -354,6 +352,9 @@ export default function Controls({
                 );
               })}
             </SelectTabs>
+          </div>
+          <div className="px-1 py-2">
+            <AccountLink className="w-full text-neutral-50" />
           </div>
         </div>
       </div>
