@@ -1,0 +1,1 @@
+ALTER TABLE "invest"."user" ADD COLUMN "role" text DEFAULT 'user' NOT NULL;

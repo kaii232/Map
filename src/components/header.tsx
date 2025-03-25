@@ -37,6 +37,7 @@ const links = [
 
 export default function Header() {
   const [expanded, setExpanded] = useState(false);
+
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-600 bg-neutral-950 px-4 py-2 text-neutral-50">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between">

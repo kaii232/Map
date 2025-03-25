@@ -1,0 +1,1540 @@
+{
+  "id": "d3f78963-4255-4e27-a967-c67ae978a60c",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "invest.account": {
+      "name": "account",
+      "schema": "invest",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "account_user_id_user_id_fk": {
+          "name": "account_user_id_user_id_fk",
+          "tableFrom": "account",
+          "tableTo": "user",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.bibl": {
+      "name": "bibl",
+      "schema": "invest",
+      "columns": {
+        "bibl_id": {
+          "name": "bibl_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.bibl_bibl_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "bibl_auth": {
+          "name": "bibl_auth",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bibl_yr": {
+          "name": "bibl_yr",
+          "type": "varchar(4)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "NULL"
+        },
+        "bibl_title": {
+          "name": "bibl_title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bibl_journ": {
+          "name": "bibl_journ",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bibl_doi": {
+          "name": "bibl_doi",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bibl_url": {
+          "name": "bibl_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bibl_loaddate": {
+          "name": "bibl_loaddate",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "cc_load_id": {
+          "name": "cc_load_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "bibl_issn": {
+          "name": "bibl_issn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bibl_cc_load_id_fkey": {
+          "name": "bibl_cc_load_id_fkey",
+          "tableFrom": "bibl",
+          "tableTo": "cc",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "cc_load_id"
+          ],
+          "columnsTo": [
+            "cc_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.cc": {
+      "name": "cc",
+      "schema": "invest",
+      "columns": {
+        "cc_id": {
+          "name": "cc_id",
+          "type": "smallint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.cc_cc_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "32767",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "cc_fname": {
+          "name": "cc_fname",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cc_lname": {
+          "name": "cc_lname",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cc_add": {
+          "name": "cc_add",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.country": {
+      "name": "country",
+      "schema": "invest",
+      "columns": {
+        "country_id": {
+          "name": "country_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.country_country_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "country_code": {
+          "name": "country_code",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "country_name": {
+          "name": "country_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "country_geom": {
+          "name": "country_geom",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.flt": {
+      "name": "flt",
+      "schema": "invest",
+      "columns": {
+        "flt_id": {
+          "name": "flt_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.flt_flt_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "flt_name": {
+          "name": "flt_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_seg_name": {
+          "name": "flt_seg_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_type": {
+          "name": "flt_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_len": {
+          "name": "flt_len",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_sliprate": {
+          "name": "flt_sliprate",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_ss": {
+          "name": "flt_ss",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_vert_sep": {
+          "name": "flt_vert_sep",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_horz_sep": {
+          "name": "flt_horz_sep",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_dip": {
+          "name": "flt_dip",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_rake": {
+          "name": "flt_rake",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_lock_depth": {
+          "name": "flt_lock_depth",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_geom": {
+          "name": "flt_geom",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "flt_maxm": {
+          "name": "flt_maxm",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_cmt": {
+          "name": "flt_cmt",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_src_id": {
+          "name": "flt_src_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flt_loaddate": {
+          "name": "flt_loaddate",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "cc_load_id": {
+          "name": "cc_load_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "flt_dip_dir": {
+          "name": "flt_dip_dir",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "flt_cc_load_id_fkey": {
+          "name": "flt_cc_load_id_fkey",
+          "tableFrom": "flt",
+          "tableTo": "cc",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "cc_load_id"
+          ],
+          "columnsTo": [
+            "cc_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "flt_flt_src_id_fkey": {
+          "name": "flt_flt_src_id_fkey",
+          "tableFrom": "flt",
+          "tableTo": "bibl",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "flt_src_id"
+          ],
+          "columnsTo": [
+            "bibl_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.gnss_stn": {
+      "name": "gnss_stn",
+      "schema": "invest",
+      "columns": {
+        "gnss_id": {
+          "name": "gnss_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.gnss_stn_gnss_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "gnss_name": {
+          "name": "gnss_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gnss_lon": {
+          "name": "gnss_lon",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gnss_lat": {
+          "name": "gnss_lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gnss_geom": {
+          "name": "gnss_geom",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gnss_elev": {
+          "name": "gnss_elev",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gnss_proj": {
+          "name": "gnss_proj",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gnss_inst_date": {
+          "name": "gnss_inst_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gnss_decom_date": {
+          "name": "gnss_decom_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gnss_loaddate": {
+          "name": "gnss_loaddate",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "gnss_cmt": {
+          "name": "gnss_cmt",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stn_type_id": {
+          "name": "stn_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cc_load_id": {
+          "name": "cc_load_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "gnss_stn_cc_load_id_fkey": {
+          "name": "gnss_stn_cc_load_id_fkey",
+          "tableFrom": "gnss_stn",
+          "tableTo": "cc",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "cc_load_id"
+          ],
+          "columnsTo": [
+            "cc_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gnss_stn_country_id_fkey": {
+          "name": "gnss_stn_country_id_fkey",
+          "tableFrom": "gnss_stn",
+          "tableTo": "country",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "country_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gnss_stn_stn_type_id_fkey": {
+          "name": "gnss_stn_stn_type_id_fkey",
+          "tableFrom": "gnss_stn",
+          "tableTo": "stn_type",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "stn_type_id"
+          ],
+          "columnsTo": [
+            "stn_type_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.heatflow": {
+      "name": "heatflow",
+      "schema": "invest",
+      "columns": {
+        "hf_id": {
+          "name": "hf_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.heatflow_hf_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "hf_name": {
+          "name": "hf_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_lon": {
+          "name": "hf_lon",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hf_lat": {
+          "name": "hf_lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hf_geom": {
+          "name": "hf_geom",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_elev": {
+          "name": "hf_elev",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_qval": {
+          "name": "hf_qval",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_q_unc": {
+          "name": "hf_q_unc",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_qc": {
+          "name": "hf_qc",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_qc_unc": {
+          "name": "hf_qc_unc",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_q_method": {
+          "name": "hf_q_method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_q_top": {
+          "name": "hf_q_top",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_q_bot": {
+          "name": "hf_q_bot",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_probe_pen": {
+          "name": "hf_probe_pen",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_measured_depth": {
+          "name": "hf_measured_depth",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_true_depth": {
+          "name": "hf_true_depth",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_explo_method": {
+          "name": "hf_explo_method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_purpose": {
+          "name": "hf_purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_corr_hp_flag": {
+          "name": "hf_corr_hp_flag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_year": {
+          "name": "hf_year",
+          "type": "varchar(4)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "NULL"
+        },
+        "hf_env": {
+          "name": "hf_env",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_ref": {
+          "name": "hf_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_cmt": {
+          "name": "hf_cmt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hf_loaddate": {
+          "name": "hf_loaddate",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "hf_src_id": {
+          "name": "hf_src_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cc_load_id": {
+          "name": "cc_load_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "heatflow_cc_load_id_fkey": {
+          "name": "heatflow_cc_load_id_fkey",
+          "tableFrom": "heatflow",
+          "tableTo": "cc",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "cc_load_id"
+          ],
+          "columnsTo": [
+            "cc_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "heatflow_hf_src_id": {
+          "name": "heatflow_hf_src_id",
+          "tableFrom": "heatflow",
+          "tableTo": "bibl",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "hf_src_id"
+          ],
+          "columnsTo": [
+            "bibl_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.seis": {
+      "name": "seis",
+      "schema": "invest",
+      "columns": {
+        "seis_id": {
+          "name": "seis_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.seis_seis_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "seis_lon": {
+          "name": "seis_lon",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seis_lat": {
+          "name": "seis_lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seis_geom": {
+          "name": "seis_geom",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seis_depth": {
+          "name": "seis_depth",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seis_mw": {
+          "name": "seis_mw",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seis_mb": {
+          "name": "seis_mb",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seis_ms": {
+          "name": "seis_ms",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seis_date": {
+          "name": "seis_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seis_loaddate": {
+          "name": "seis_loaddate",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "seis_cat_id": {
+          "name": "seis_cat_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cc_load_id": {
+          "name": "cc_load_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "seis_mi": {
+          "name": "seis_mi",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "seis_cc_load_id_fkey": {
+          "name": "seis_cc_load_id_fkey",
+          "tableFrom": "seis",
+          "tableTo": "cc",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "cc_load_id"
+          ],
+          "columnsTo": [
+            "cc_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "seis_seis_cat_id_fkey": {
+          "name": "seis_seis_cat_id_fkey",
+          "tableFrom": "seis",
+          "tableTo": "bibl",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "seis_cat_id"
+          ],
+          "columnsTo": [
+            "bibl_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.session": {
+      "name": "session",
+      "schema": "invest",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "session_user_id_user_id_fk": {
+          "name": "session_user_id_user_id_fk",
+          "tableFrom": "session",
+          "tableTo": "user",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "session_token_unique": {
+          "name": "session_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.smt": {
+      "name": "smt",
+      "schema": "invest",
+      "columns": {
+        "smt_id": {
+          "name": "smt_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.smt_smt_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "smt_name": {
+          "name": "smt_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_lon": {
+          "name": "smt_lon",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "smt_lat": {
+          "name": "smt_lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "smt_geom": {
+          "name": "smt_geom",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_base": {
+          "name": "smt_base",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_summit": {
+          "name": "smt_summit",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_elev": {
+          "name": "smt_elev",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_bl": {
+          "name": "smt_bl",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_bw": {
+          "name": "smt_bw",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_ba": {
+          "name": "smt_ba",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_class": {
+          "name": "smt_class",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smt_loaddate": {
+          "name": "smt_loaddate",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "smt_src_id": {
+          "name": "smt_src_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cc_load_id": {
+          "name": "cc_load_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "smt_cc_load_id_fkey": {
+          "name": "smt_cc_load_id_fkey",
+          "tableFrom": "smt",
+          "tableTo": "cc",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "cc_load_id"
+          ],
+          "columnsTo": [
+            "cc_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "smt_smt_src_id_fkey": {
+          "name": "smt_smt_src_id_fkey",
+          "tableFrom": "smt",
+          "tableTo": "bibl",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "smt_src_id"
+          ],
+          "columnsTo": [
+            "bibl_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.stn_type": {
+      "name": "stn_type",
+      "schema": "invest",
+      "columns": {
+        "stn_type_id": {
+          "name": "stn_type_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.stn_type_stn_type_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "stn_type_name": {
+          "name": "stn_type_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stn_desc": {
+          "name": "stn_desc",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.user": {
+      "name": "user",
+      "schema": "invest",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.verification": {
+      "name": "verification",
+      "schema": "invest",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "invest.vlc": {
+      "name": "vlc",
+      "schema": "invest",
+      "columns": {
+        "vlc_id": {
+          "name": "vlc_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "invest.vlc_vlc_id_seq",
+            "schema": "invest",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "vlc_name": {
+          "name": "vlc_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vlc_lon": {
+          "name": "vlc_lon",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vlc_lat": {
+          "name": "vlc_lat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vlc_geom": {
+          "name": "vlc_geom",
+          "type": "geometry(point)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vlc_elev": {
+          "name": "vlc_elev",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vlc_class": {
+          "name": "vlc_class",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vlc_loaddate": {
+          "name": "vlc_loaddate",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "vlc_cat_src": {
+          "name": "vlc_cat_src",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vlc_src_id": {
+          "name": "vlc_src_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cc_load_id": {
+          "name": "cc_load_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "gvp_id": {
+          "name": "gvp_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vlc_gvp_new": {
+          "name": "vlc_gvp_new",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vlc_gvp_url": {
+          "name": "vlc_gvp_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vlc_wovodat_url": {
+          "name": "vlc_wovodat_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "vlc_cc_load_id_fkey": {
+          "name": "vlc_cc_load_id_fkey",
+          "tableFrom": "vlc",
+          "tableTo": "cc",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "cc_load_id"
+          ],
+          "columnsTo": [
+            "cc_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "vlc_country_id_fkey": {
+          "name": "vlc_country_id_fkey",
+          "tableFrom": "vlc",
+          "tableTo": "country",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "country_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "vlc_vlc_src_id_fkey": {
+          "name": "vlc_vlc_src_id_fkey",
+          "tableFrom": "vlc",
+          "tableTo": "bibl",
+          "schemaTo": "invest",
+          "columnsFrom": [
+            "vlc_src_id"
+          ],
+          "columnsTo": [
+            "bibl_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "invest": "invest"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

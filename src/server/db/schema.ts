@@ -1,6 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   doublePrecision,
   foreignKey,
   geometry,
@@ -14,19 +15,68 @@ import {
 
 export const invest = pgSchema("invest");
 
+export const user = invest.table("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull(),
+  image: text("image"),
+  role: text("role").notNull().default("user"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const session = invest.table("session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expires_at").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+});
+
+export const account = invest.table("account", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const verification = invest.table("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+});
+
 export const gnssStnInInvest = invest.table(
   "gnss_stn",
   {
-    gnssId: integer("gnss_id")
-      .primaryKey()
-      .generatedAlwaysAsIdentity({
-        name: "invest.gnss_stn_gnss_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 2147483647,
-        cache: 1,
-      }),
+    gnssId: integer("gnss_id").primaryKey().generatedAlwaysAsIdentity({
+      name: "invest.gnss_stn_gnss_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
     gnssName: varchar("gnss_name").notNull(),
     gnssLon: doublePrecision("gnss_lon").notNull(),
     gnssLat: doublePrecision("gnss_lat").notNull(),
@@ -70,31 +120,27 @@ export const gnssStnInInvest = invest.table(
 );
 
 export const stnTypeInInvest = invest.table("stn_type", {
-  stnTypeId: integer("stn_type_id")
-    .primaryKey()
-    .generatedAlwaysAsIdentity({
-      name: "invest.stn_type_stn_type_id_seq",
-      startWith: 1,
-      increment: 1,
-      minValue: 1,
-      maxValue: 2147483647,
-      cache: 1,
-    }),
+  stnTypeId: integer("stn_type_id").primaryKey().generatedAlwaysAsIdentity({
+    name: "invest.stn_type_stn_type_id_seq",
+    startWith: 1,
+    increment: 1,
+    minValue: 1,
+    maxValue: 2147483647,
+    cache: 1,
+  }),
   stnTypeName: varchar("stn_type_name").notNull(),
   stnDesc: varchar("stn_desc"),
 });
 
 export const countryInInvest = invest.table("country", {
-  countryId: integer("country_id")
-    .primaryKey()
-    .generatedAlwaysAsIdentity({
-      name: "invest.country_country_id_seq",
-      startWith: 1,
-      increment: 1,
-      minValue: 1,
-      maxValue: 2147483647,
-      cache: 1,
-    }),
+  countryId: integer("country_id").primaryKey().generatedAlwaysAsIdentity({
+    name: "invest.country_country_id_seq",
+    startWith: 1,
+    increment: 1,
+    minValue: 1,
+    maxValue: 2147483647,
+    cache: 1,
+  }),
   countryCode: varchar("country_code", { length: 3 }).notNull(),
   countryName: varchar("country_name").notNull(),
   countryGeom: geometry("country_geom"),
@@ -103,16 +149,14 @@ export const countryInInvest = invest.table("country", {
 export const smtInInvest = invest.table(
   "smt",
   {
-    smtId: integer("smt_id")
-      .primaryKey()
-      .generatedAlwaysAsIdentity({
-        name: "invest.smt_smt_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 2147483647,
-        cache: 1,
-      }),
+    smtId: integer("smt_id").primaryKey().generatedAlwaysAsIdentity({
+      name: "invest.smt_smt_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
     smtName: varchar("smt_name"),
     smtLon: doublePrecision("smt_lon").notNull(),
     smtLat: doublePrecision("smt_lat").notNull(),
@@ -148,16 +192,14 @@ export const smtInInvest = invest.table(
 );
 
 export const ccInInvest = invest.table("cc", {
-  ccId: smallint("cc_id")
-    .primaryKey()
-    .generatedAlwaysAsIdentity({
-      name: "invest.cc_cc_id_seq",
-      startWith: 1,
-      increment: 1,
-      minValue: 1,
-      maxValue: 32767,
-      cache: 1,
-    }),
+  ccId: smallint("cc_id").primaryKey().generatedAlwaysAsIdentity({
+    name: "invest.cc_cc_id_seq",
+    startWith: 1,
+    increment: 1,
+    minValue: 1,
+    maxValue: 32767,
+    cache: 1,
+  }),
   ccFname: varchar("cc_fname"),
   ccLname: varchar("cc_lname"),
   ccAdd: varchar("cc_add"),
@@ -166,16 +208,14 @@ export const ccInInvest = invest.table("cc", {
 export const seisInInvest = invest.table(
   "seis",
   {
-    seisId: integer("seis_id")
-      .primaryKey()
-      .generatedAlwaysAsIdentity({
-        name: "invest.seis_seis_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 2147483647,
-        cache: 1,
-      }),
+    seisId: integer("seis_id").primaryKey().generatedAlwaysAsIdentity({
+      name: "invest.seis_seis_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
     seisLon: doublePrecision("seis_lon").notNull(),
     seisLat: doublePrecision("seis_lat").notNull(),
     seisGeom: geometry("seis_geom"),
@@ -211,16 +251,14 @@ export const seisInInvest = invest.table(
 export const fltInInvest = invest.table(
   "flt",
   {
-    fltId: integer("flt_id")
-      .primaryKey()
-      .generatedAlwaysAsIdentity({
-        name: "invest.flt_flt_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 2147483647,
-        cache: 1,
-      }),
+    fltId: integer("flt_id").primaryKey().generatedAlwaysAsIdentity({
+      name: "invest.flt_flt_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
     fltName: varchar("flt_name"),
     fltSegName: varchar("flt_seg_name"),
     fltType: varchar("flt_type"),
@@ -262,16 +300,14 @@ export const fltInInvest = invest.table(
 export const vlcInInvest = invest.table(
   "vlc",
   {
-    vlcId: integer("vlc_id")
-      .primaryKey()
-      .generatedAlwaysAsIdentity({
-        name: "invest.vlc_vlc_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 2147483647,
-        cache: 1,
-      }),
+    vlcId: integer("vlc_id").primaryKey().generatedAlwaysAsIdentity({
+      name: "invest.vlc_vlc_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
     vlcName: varchar("vlc_name"),
     vlcLon: doublePrecision("vlc_lon").notNull(),
     vlcLat: doublePrecision("vlc_lat").notNull(),
@@ -316,16 +352,14 @@ export const vlcInInvest = invest.table(
 export const biblInInvest = invest.table(
   "bibl",
   {
-    biblId: integer("bibl_id")
-      .primaryKey()
-      .generatedAlwaysAsIdentity({
-        name: "invest.bibl_bibl_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 2147483647,
-        cache: 1,
-      }),
+    biblId: integer("bibl_id").primaryKey().generatedAlwaysAsIdentity({
+      name: "invest.bibl_bibl_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
     biblAuth: varchar("bibl_auth"),
     biblYr: varchar("bibl_yr", { length: 4 }).default(sql`NULL`),
     biblTitle: varchar("bibl_title"),
@@ -353,16 +387,14 @@ export const biblInInvest = invest.table(
 export const heatflowInInvest = invest.table(
   "heatflow",
   {
-    hfId: integer("hf_id")
-      .primaryKey()
-      .generatedAlwaysAsIdentity({
-        name: "invest.heatflow_hf_id_seq",
-        startWith: 1,
-        increment: 1,
-        minValue: 1,
-        maxValue: 2147483647,
-        cache: 1,
-      }),
+    hfId: integer("hf_id").primaryKey().generatedAlwaysAsIdentity({
+      name: "invest.heatflow_hf_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
     hfName: text("hf_name"),
     hfLon: doublePrecision("hf_lon").notNull(),
     hfLat: doublePrecision("hf_lat").notNull(),
