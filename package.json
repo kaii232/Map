@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 9009",
     "lint": "next lint"
   },
   "prettier": {
@@ -26,11 +26,9 @@
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-switch": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
-    "@tanstack/react-table": "^8.21.2",
     "@types/adm-zip": "^0.5.7",
     "@types/geojson": "^7946.0.15",
     "adm-zip": "^0.5.16",
-    "better-auth": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "csv-parse": "^5.6.0",
@@ -40,7 +38,7 @@
     "json-2-csv": "^5.5.9",
     "lucide-react": "^0.469.0",
     "maplibre-gl": "^5.1.0",
-    "next": "^15.2.4",
+    "next": "15.2.4",
     "next-themes": "^0.4.4",
     "postgres": "^3.4.5",
     "react": "^19.0.0",

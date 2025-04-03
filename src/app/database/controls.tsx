@@ -32,7 +32,7 @@ import {
 } from "@/lib/filters";
 import { BasemapNames, DataKeys, GenericFiltersInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { Book, ChevronDown, ChevronLeft, Home, Map } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -148,7 +148,7 @@ export default function Controls({
 }) {
   const [layers, setLayers] = useAtom(layersAtom);
   const [open, setOpen] = useState(true);
-  const setMapStyle = useSetAtom(mapStyleAtom);
+  const [mapStyle, setMapStyle] = useAtom(mapStyleAtom);
   const [dataVisibility, setDataVisibility] = useAtom(dataVisibilityAtom);
   const { map } = useMap();
 
@@ -246,7 +246,7 @@ export default function Controls({
               Map Options
             </span>
             <Select
-              defaultValue="Openfreemap"
+              value={mapStyle}
               onValueChange={(val) => setMapStyle(val as BasemapNames)}
             >
               <SelectTrigger>Basemap</SelectTrigger>
