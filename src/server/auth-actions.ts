@@ -1,8 +1,13 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "./auth";
+import { db } from "./db";
+import { user } from "./db/schema";
 
 const signInFormSchema = z.object({
   email: z
@@ -50,4 +55,83 @@ export async function signIn(
     return { field: "An error has occurred" };
   }
   return redirect("/");
+}
+
+type AuthReturnType = { success: false; error: string } | { success: true };
+
+async function authenticate() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  return session;
+}
+
+export async function updateUserRole(
+  id: string,
+  role: string,
+): Promise<AuthReturnType> {
+  // Set role from admin plugin, do not need to check the user's role
+  try {
+    await auth.api.setRole({
+      headers: await headers(),
+      body: {
+        role: role,
+        userId: id,
+      },
+    });
+    revalidatePath("/admin-dashboard");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Error updating user's role" };
+  }
+}
+
+export async function updateUserName(
+  id: string,
+  name: string,
+): Promise<AuthReturnType> {
+  const session = await authenticate();
+  if (!session || session.user.role !== "admin")
+    return { success: false, error: "Unauthorised" };
+  try {
+    await db
+      .update(user)
+      .set({
+        name: name,
+      })
+      .where(eq(user.id, id));
+    revalidatePath("/admin-dashboard");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Error updating user's name" };
+  }
+}
+
+export async function updateUserPassword(
+  id: string,
+  password: string,
+): Promise<AuthReturnType> {
+  try {
+    await auth.api.setUserPassword({
+      headers: await headers(),
+      body: {
+        newPassword: password,
+        userId: id,
+      },
+    });
+    return { success: true };
+  } catch {
+    return { success: false, error: "Error updating user's password" };
+  }
+}
+
+export async function deleteUser(id: string) {
+  const session = await authenticate();
+  if (!session || session.user.role !== "admin")
+    return { success: false, error: "Unauthorised" };
+  try {
+    await db.delete(user).where(eq(user.id, id));
+    revalidatePath("/admin-dashboard");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Error deleting user" };
+  }
 }

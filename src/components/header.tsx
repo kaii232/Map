@@ -34,7 +34,11 @@ const HeaderLink = ({
 const AdminDashboardLink = () => {
   const { data: session } = authClient.useSession();
   if (!session || session.user.role !== "admin") return null;
-  return <HeaderLink href="/admin-dashboard">Admin Dashboard</HeaderLink>;
+  return (
+    <li>
+      <HeaderLink href="/admin-dashboard">Admin Dashboard</HeaderLink>
+    </li>
+  );
 };
 
 export const AccountLink = ({ className }: { className?: string }) => {
@@ -135,9 +139,7 @@ export default function Header() {
                 <HeaderLink href={link.href}>{link.label}</HeaderLink>
               </li>
             ))}
-            <li>
-              <AdminDashboardLink />
-            </li>
+            <AdminDashboardLink />
             <li>
               <AccountLink />
             </li>

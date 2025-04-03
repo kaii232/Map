@@ -1,5 +1,8 @@
 import Header from "@/components/header";
 import { auth } from "@/server/auth";
+import { db } from "@/server/db";
+import { user } from "@/server/db/schema";
+import { and, count, desc, like, ne, or } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import DataTable from "./table";
@@ -22,24 +25,39 @@ export default async function AdminDashboard({
     ? 0
     : Number(queryParams.page);
 
-  const search = queryParams.search
-    ? ({
-        searchField: "email",
-        searchOperator: "contains",
-        searchValue: queryParams.search,
-      } as const)
-    : {};
-
-  const userAccounts = await auth.api.listUsers({
-    headers: requestHeaders,
-    query: {
-      sortBy: "createdAt",
-      sortDirection: "desc",
-      limit: 50,
-      offset: 50 * pageNum,
-      ...search,
-    },
-  });
+  const [accounts, total] = await Promise.all([
+    db
+      .select()
+      .from(user)
+      .where(
+        queryParams.search
+          ? and(
+              or(
+                like(user.email, `%${queryParams.search}%`),
+                like(user.name, `%${queryParams.search}%`),
+              ),
+              ne(user.email, "admin@ntu.com"),
+            )
+          : ne(user.email, "admin@ntu.com"),
+      )
+      .orderBy(desc(user.createdAt))
+      .limit(50)
+      .offset(50 * pageNum),
+    db
+      .select({ count: count() })
+      .from(user)
+      .where(
+        queryParams.search
+          ? and(
+              or(
+                like(user.email, `%${queryParams.search}%`),
+                like(user.name, `%${queryParams.search}%`),
+              ),
+              ne(user.email, "admin@ntu.com"),
+            )
+          : ne(user.email, "admin@ntu.com"),
+      ),
+  ]);
 
   return (
     <>
@@ -52,7 +70,7 @@ export default async function AdminDashboard({
             </h1>
             <p>Manage user accounts</p>
           </div>
-          <DataTable data={userAccounts.users} rowCount={userAccounts.total} />
+          <DataTable data={accounts} rowCount={total[0].count} />
         </div>
       </main>
     </>
