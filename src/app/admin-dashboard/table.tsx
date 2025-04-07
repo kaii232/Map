@@ -175,7 +175,7 @@ export default function DataTable({
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="size-8 transition hover:bg-neutral-400/20"
+                  className="size-8 hover:bg-neutral-400/20"
                 >
                   <MoreHorizontal />
                 </Button>
@@ -704,8 +704,10 @@ const CreateUserDialog = () => {
     startTransition(async () => {
       const res = await createUser(values);
       if (!res.success) toast.error(res.error);
-      else toast.success("User created successfully!");
-      form.reset();
+      else {
+        toast.success("User created successfully!");
+        form.reset();
+      }
     });
   }
 

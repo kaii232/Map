@@ -15,7 +15,7 @@ export default function LoginForm() {
     <form action={action}>
       <div className="flex flex-col gap-6">
         {state?.field && <p className="text-sm text-red-300">{state.field}</p>}
-        <div className="grid gap-2">
+        <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -27,16 +27,8 @@ export default function LoginForm() {
             <p className="text-sm text-red-300">{state.email}</p>
           )}
         </div>
-        <div className="grid gap-2">
-          <div className="flex items-center">
-            <Label htmlFor="password">Password</Label>
-            <a
-              href="#"
-              className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-            >
-              Forgot password?
-            </a>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
           <Input
             id="password"
             name="password"

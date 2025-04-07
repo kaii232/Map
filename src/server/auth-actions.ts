@@ -78,8 +78,9 @@ export async function updateUserRole(
     await db.update(user).set({ role: role }).where(inArray(user.id, id));
     revalidatePath("/admin-dashboard");
     return { success: true };
-  } catch {
-    return { success: false, error: "Error updating user's role" };
+  } catch (e: unknown) {
+    if (e instanceof Error) return { success: false, error: e.message };
+    else return { success: false, error: "Error updating user's role" };
   }
 }
 
@@ -99,8 +100,9 @@ export async function updateUserName(
       .where(eq(user.id, id));
     revalidatePath("/admin-dashboard");
     return { success: true };
-  } catch {
-    return { success: false, error: "Error updating user's name" };
+  } catch (e: unknown) {
+    if (e instanceof Error) return { success: false, error: e.message };
+    else return { success: false, error: "Error updating user's name" };
   }
 }
 
@@ -117,8 +119,9 @@ export async function updateUserPassword(
       },
     });
     return { success: true };
-  } catch {
-    return { success: false, error: "Error updating user's password" };
+  } catch (e: unknown) {
+    if (e instanceof Error) return { success: false, error: e.message };
+    else return { success: false, error: "Error updating user's password" };
   }
 }
 
@@ -130,8 +133,9 @@ export async function deleteUser(id: string[]): Promise<AuthReturnType> {
     await db.delete(user).where(inArray(user.id, id));
     revalidatePath("/admin-dashboard");
     return { success: true };
-  } catch {
-    return { success: false, error: "Error deleting user" };
+  } catch (e: unknown) {
+    if (e instanceof Error) return { success: false, error: e.message };
+    else return { success: false, error: "Error deleting user" };
   }
 }
 
@@ -158,7 +162,8 @@ export async function createUser(
     });
     revalidatePath("/admin-dashboard");
     return { success: true };
-  } catch {
-    return { success: false, error: "Error creating user" };
+  } catch (e: unknown) {
+    if (e instanceof Error) return { success: false, error: e.message };
+    else return { success: false, error: "Error creating user" };
   }
 }

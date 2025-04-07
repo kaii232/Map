@@ -1,8 +1,21 @@
+import { auth } from "@/server/auth";
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import LoginForm from "./login-form";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    query: {
+      //@ts-expect-error Better auth bug
+      disableRefresh: true,
+    },
+  });
+
+  if (session) redirect("/");
+
   return (
     <main className="flex h-svh w-full flex-col items-center justify-center gap-6 bg-neutral-900 p-4">
       <Link href="/">

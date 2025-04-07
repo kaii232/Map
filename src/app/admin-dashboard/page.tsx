@@ -2,7 +2,7 @@ import Header from "@/components/header";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { user } from "@/server/db/schema";
-import { and, count, desc, like, ne, or } from "drizzle-orm";
+import { and, count, desc, like, ne, or, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import DataTable from "./table";
@@ -37,8 +37,14 @@ export default async function AdminDashboard({
         queryParams.search
           ? and(
               or(
-                like(user.email, `%${queryParams.search}%`),
-                like(user.name, `%${queryParams.search}%`),
+                like(
+                  sql.raw(`lower(${user.email.name})`),
+                  `%${queryParams.search.toLowerCase()}%`,
+                ),
+                like(
+                  sql.raw(`lower(${user.name.name})`),
+                  `%${queryParams.search.toLowerCase()}%`,
+                ),
               ),
               ne(user.email, "admin@ntu.com"),
             )
@@ -54,8 +60,14 @@ export default async function AdminDashboard({
         queryParams.search
           ? and(
               or(
-                like(user.email, `%${queryParams.search}%`),
-                like(user.name, `%${queryParams.search}%`),
+                like(
+                  sql.raw(`lower(${user.email.name})`),
+                  `%${queryParams.search.toLowerCase()}%`,
+                ),
+                like(
+                  sql.raw(`lower(${user.name.name})`),
+                  `%${queryParams.search.toLowerCase()}%`,
+                ),
               ),
               ne(user.email, "admin@ntu.com"),
             )
