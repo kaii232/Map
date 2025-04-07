@@ -43,9 +43,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createUserSchema, passwordSchema } from "@/lib/form-schema";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  createUserSchema,
+  passwordSchema,
+  uploadUserSchema,
+} from "@/lib/form-schema";
 import useDebouncedFunction from "@/lib/use-debounced-function";
 import {
+  createMultipleUser,
   createUser,
   deleteUser,
   updateUserName,
@@ -61,6 +71,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import type { UserWithRole } from "better-auth/plugins";
+import { parse } from "csv-parse/sync";
 import {
   ChevronLeft,
   ChevronRight,
@@ -75,9 +86,11 @@ import {
   Plus,
   Search,
   Trash,
+  Upload,
   UserPen,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -342,7 +355,7 @@ export default function DataTable({
           )}
         </div>
       </div>
-      <div className="rounded-md border border-neutral-600">
+      <div className="w-full overflow-auto rounded-2xl border border-neutral-600">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -483,6 +496,7 @@ export default function DataTable({
         onOpenChange={(open) => {
           if (!open) setDeleteOpen(undefined);
         }}
+        onDeleteSuccess={() => table.toggleAllRowsSelected(false)}
       />
     </div>
   );
@@ -642,9 +656,11 @@ const EditRoleDialog = ({
 const DeleteUserDialog = ({
   open,
   onOpenChange,
+  onDeleteSuccess,
 }: {
   open: { id: string[] } | undefined;
   onOpenChange: (open: boolean) => void;
+  onDeleteSuccess?: () => void;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const onDelete = async () => {
@@ -652,7 +668,10 @@ const DeleteUserDialog = ({
     setIsLoading(true);
     const res = await deleteUser(open.id);
     if (!res.success) toast.error(res.error);
-    else onOpenChange(false);
+    else {
+      onOpenChange(false);
+      if (onDeleteSuccess) onDeleteSuccess();
+    }
     setIsLoading(false);
   };
 
@@ -699,6 +718,18 @@ const CreateUserDialog = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [csvUsers, setCsvUsers] = useState<
+    | {
+        name: string;
+        users: z.infer<typeof uploadUserSchema>[];
+      }
+    | undefined
+  >(undefined);
+
+  const validationErrorsArr = useMemo(
+    () => csvUsers?.users.map((user) => uploadUserSchema.safeParse(user)),
+    [csvUsers],
+  );
 
   async function onSubmit(values: z.infer<typeof createUserSchema>) {
     startTransition(async () => {
@@ -711,6 +742,51 @@ const CreateUserDialog = () => {
     });
   }
 
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (
+      !(
+        file.type === ".csv" ||
+        file.type === "application/vnd.ms-excel" ||
+        file.type === "text/csv"
+      )
+    ) {
+      toast.error("Please upload a file in the CSV format!");
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsText(file);
+    reader.onloadend = () => {
+      if (typeof reader.result !== "string") return;
+      console.log(reader.result.trim());
+      const records = parse(reader.result.trim(), {
+        columns: (header) =>
+          header.map((column: string) => column.toLowerCase()),
+        skip_empty_lines: true,
+        skip_records_with_empty_values: true,
+        trim: true,
+      });
+      console.log(records);
+      setCsvUsers({ name: file.name, users: records });
+    };
+  }
+
+  const handleCSVCreate = () => {
+    if (!csvUsers) return;
+    startTransition(async () => {
+      const res = await createMultipleUser(csvUsers.users);
+      if (!res.success) toast.error(res.error);
+      else {
+        if (res.data.added)
+          toast.success(`Created ${res.data.added} users successfully!`);
+        if (Array.isArray(res.data.errors) && res.data.errors.length > 0)
+          res.data.errors.forEach((error) => toast.error(error));
+        setCsvUsers(undefined);
+      }
+    });
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -720,135 +796,279 @@ const CreateUserDialog = () => {
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create User</DialogTitle>
-          <DialogDescription>
-            Fill in the fields below to create a new user.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="mb-3 space-y-6"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="email@example.com"
-                      {...field}
-                      type="email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value as string}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type={showPassword ? "text" : "password"}
-                      right={
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          type="button"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          aria-label="Toggle password visibility"
-                        >
-                          {showPassword ? <EyeOff /> : <Eye />}
-                        </Button>
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirm"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type={showPassword ? "text" : "password"}
-                      right={
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          type="button"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          aria-label="Toggle password visibility"
-                        >
-                          {showPassword ? <EyeOff /> : <Eye />}
-                        </Button>
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+        {csvUsers && csvUsers.users.length > 0 ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Create Users</DialogTitle>
+              <DialogDescription>
+                Verify the users uploaded as shown below. Highlighted cells
+                indicate errors. Please fix these errors if there are any before
+                trying again.
+              </DialogDescription>
+              <Button variant="ghost" onClick={() => setCsvUsers(undefined)}>
+                {csvUsers.name}
+                <X />
+              </Button>
+            </DialogHeader>
+            <div className="relative max-h-96 overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="sticky top-0 bg-neutral-950">
+                      Email
+                    </TableHead>
+                    <TableHead className="sticky top-0 bg-neutral-950">
+                      Name
+                    </TableHead>
+                    <TableHead className="sticky top-0 bg-neutral-950">
+                      Password
+                    </TableHead>
+                    <TableHead className="sticky top-0 bg-neutral-950">
+                      Role
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {csvUsers.users.map((csvUser, index) => {
+                    const validationErrors =
+                      validationErrorsArr![index].error?.flatten().fieldErrors;
+                    return (
+                      <TableRow key={csvUser.email}>
+                        {validationErrors?.email ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <TableCell className="bg-red-800">
+                                {csvUser.email}
+                              </TableCell>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {validationErrors.email.join(" ")}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <TableCell>{csvUser.email}</TableCell>
+                        )}
+                        {validationErrors?.name ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <TableCell className="bg-red-800">
+                                {csvUser.name}
+                              </TableCell>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {validationErrors.name.join(" ")}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <TableCell>{csvUser.name}</TableCell>
+                        )}
+                        {validationErrors?.password ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <TableCell className="bg-red-800">
+                                {csvUser.password}
+                              </TableCell>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {validationErrors.password.join(" ")}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <TableCell>{csvUser.password}</TableCell>
+                        )}
+                        {validationErrors?.role ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <TableCell className="bg-red-800">
+                                {csvUser.role ?? "user"}
+                              </TableCell>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {validationErrors.role.join(" ")}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <TableCell>{csvUser.role ?? "user"}</TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
             <DialogFooter>
-              <Button type="submit" disabled={isPending}>
+              <Button
+                onClick={handleCSVCreate}
+                disabled={
+                  !validationErrorsArr ||
+                  validationErrorsArr.some((valid) => !valid.success) ||
+                  isPending
+                }
+              >
                 {isPending ? <Spinner className="size-4" /> : "Create"}
               </Button>
             </DialogFooter>
-          </form>
-        </Form>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Create User</DialogTitle>
+              <DialogDescription>
+                Fill in the fields below to create a new user. Optionally,
+                upload a single CSV containing a list of users you wish to
+                create. Please use the following{" "}
+                <Link
+                  href="user_create_template.csv"
+                  download
+                  prefetch={false}
+                  className="font-semibold text-neutral-50 hover:underline"
+                >
+                  template
+                </Link>{" "}
+                for uploading.
+              </DialogDescription>
+              <Button
+                variant="ghost"
+                className="w-full cursor-pointer text-center"
+                asChild
+              >
+                <Label>
+                  <Upload /> Upload CSV
+                  <Input
+                    type="file"
+                    hidden
+                    className="hidden"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                  />
+                </Label>
+              </Button>
+            </DialogHeader>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="mb-3 space-y-6"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="email@example.com"
+                          {...field}
+                          type="email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value as string}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="user">User</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type={showPassword ? "text" : "password"}
+                          right={
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              type="button"
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              aria-label="Toggle password visibility"
+                            >
+                              {showPassword ? <EyeOff /> : <Eye />}
+                            </Button>
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirm"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type={showPassword ? "text" : "password"}
+                          right={
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              type="button"
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              aria-label="Toggle password visibility"
+                            >
+                              {showPassword ? <EyeOff /> : <Eye />}
+                            </Button>
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button type="submit" disabled={isPending}>
+                    {isPending ? <Spinner className="size-4" /> : "Create"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

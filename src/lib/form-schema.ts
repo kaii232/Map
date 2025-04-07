@@ -35,3 +35,18 @@ export const createUserSchema = z
     message: "Passwords are not the same!",
     path: ["confirm"],
   });
+
+export const uploadUserSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, { message: "Name must be at least 2 characters long!" }),
+  email: z.string().email({ message: "Please check your email!" }),
+  role: z.enum(["admin", "user"]).optional(),
+  password: z
+    .string({ required_error: "Please enter a password!" })
+    .min(8, {
+      message: "The password needs to be at least 8 characters long!",
+    })
+    .max(128, { message: "The password is too long!" }),
+});

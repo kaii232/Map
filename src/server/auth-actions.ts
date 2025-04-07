@@ -1,6 +1,6 @@
 "use server";
 
-import { createUserSchema } from "@/lib/form-schema";
+import { createUserSchema, uploadUserSchema } from "@/lib/form-schema";
 import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -58,7 +58,9 @@ export async function signIn(
   return redirect("/");
 }
 
-type AuthReturnType = { success: false; error: string } | { success: true };
+type AuthReturnType<T = undefined> =
+  | { success: false; error: string }
+  | (T extends undefined ? { success: true } : { success: true; data: T });
 
 async function authenticate() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -162,6 +164,60 @@ export async function createUser(
     });
     revalidatePath("/admin-dashboard");
     return { success: true };
+  } catch (e: unknown) {
+    if (e instanceof Error) return { success: false, error: e.message };
+    else return { success: false, error: "Error creating user" };
+  }
+}
+
+export async function createMultipleUser(
+  values: z.infer<typeof uploadUserSchema>[],
+): Promise<AuthReturnType<{ added: number; errors: string[] }>> {
+  const header = await headers();
+
+  for (let i = 0; i < values.length; i++) {
+    const validation = uploadUserSchema.safeParse(values[i]);
+
+    if (!validation.success) {
+      return {
+        success: false,
+        error: "There is an issue with the information entered",
+      };
+    }
+  }
+
+  // This is NOT the ideal way to do this as we have to auth the user on every createUser call and can thus be quite slow
+  const requests = [];
+  for (let i = 0; i < values.length; i++) {
+    requests.push(
+      auth.api
+        .createUser({
+          headers: header,
+          body: {
+            email: values[i].email,
+            name: values[i].name,
+            password: values[i].password,
+            role: values[i].role,
+          },
+        })
+        .then(() => true as const)
+        .catch((e) => {
+          if (e instanceof Error) return e.message + `: ${values[i].email}`;
+          throw e;
+        }),
+    );
+  }
+
+  try {
+    const result = await Promise.all(requests);
+    let successful = 0;
+    const errors = [];
+    for (let i = 0; i < result.length; i++) {
+      if (result[i] !== true) errors.push(result[i] as string);
+      else successful += 1;
+    }
+    revalidatePath("/admin-dashboard");
+    return { success: true, data: { added: successful, errors: errors } };
   } catch (e: unknown) {
     if (e instanceof Error) return { success: false, error: e.message };
     else return { success: false, error: "Error creating user" };
