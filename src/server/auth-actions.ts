@@ -1,5 +1,6 @@
 "use server";
 
+import { createUserSchema } from "@/lib/form-schema";
 import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -121,7 +122,7 @@ export async function updateUserPassword(
   }
 }
 
-export async function deleteUser(id: string[]) {
+export async function deleteUser(id: string[]): Promise<AuthReturnType> {
   const session = await authenticate();
   if (!session || session.user.role !== "admin")
     return { success: false, error: "Unauthorised" };
@@ -131,5 +132,33 @@ export async function deleteUser(id: string[]) {
     return { success: true };
   } catch {
     return { success: false, error: "Error deleting user" };
+  }
+}
+
+export async function createUser(
+  values: z.infer<typeof createUserSchema>,
+): Promise<AuthReturnType> {
+  const validation = createUserSchema.safeParse(values);
+
+  if (!validation.success)
+    return {
+      success: false,
+      error: "There is an issue with the information entered",
+    };
+
+  try {
+    await auth.api.createUser({
+      headers: await headers(),
+      body: {
+        email: values.email,
+        name: values.name,
+        password: values.password,
+        role: values.role,
+      },
+    });
+    revalidatePath("/admin-dashboard");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Error creating user" };
   }
 }

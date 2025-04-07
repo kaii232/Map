@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -16,6 +17,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,14 +43,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { passwordSchema } from "@/lib/form-schema";
+import { createUserSchema, passwordSchema } from "@/lib/form-schema";
 import useDebouncedFunction from "@/lib/use-debounced-function";
 import {
+  createUser,
   deleteUser,
   updateUserName,
   updateUserPassword,
   updateUserRole,
 } from "@/server/auth-actions";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createColumnHelper,
   flexRender,
@@ -56,17 +67,22 @@ import {
   ChevronsLeft,
   ChevronsRight,
   CirclePlus,
+  Eye,
+  EyeOff,
   IdCard,
   KeyRound,
   MoreHorizontal,
+  Plus,
   Search,
   Trash,
   UserPen,
   X,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
 const columnHelper = createColumnHelper<UserWithRole>();
 
@@ -282,46 +298,49 @@ export default function DataTable({
             </Button>
           )}
         </div>
-        {table.getSelectedRowModel().rows.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary">
-                <CirclePlus />
-                Actions
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onSelect={() => {
-                  let allAdmins = true;
-                  setEditRoleOpen({
-                    id: table.getSelectedRowModel().rows.map((row) => {
-                      if (row.original.role !== "admin") allAdmins = false;
-                      return row.original.id;
-                    }),
-                    currentRole: allAdmins ? "admin" : "user",
-                  });
-                }}
-              >
-                <UserPen />
-                Set Role
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-300 focus:text-red-400"
-                onSelect={() => {
-                  setDeleteOpen({
-                    id: table
-                      .getSelectedRowModel()
-                      .rows.map((row) => row.original.id),
-                  });
-                }}
-              >
-                <Trash />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <CreateUserDialog />
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary">
+                  <CirclePlus />
+                  Actions
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onSelect={() => {
+                    let allAdmins = true;
+                    setEditRoleOpen({
+                      id: table.getSelectedRowModel().rows.map((row) => {
+                        if (row.original.role !== "admin") allAdmins = false;
+                        return row.original.id;
+                      }),
+                      currentRole: allAdmins ? "admin" : "user",
+                    });
+                  }}
+                >
+                  <UserPen />
+                  Set Role
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-300 focus:text-red-400"
+                  onSelect={() => {
+                    setDeleteOpen({
+                      id: table
+                        .getSelectedRowModel()
+                        .rows.map((row) => row.original.id),
+                    });
+                  }}
+                >
+                  <Trash />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
       <div className="rounded-md border border-neutral-600">
         <Table>
@@ -661,6 +680,173 @@ const DeleteUserDialog = ({
             {isLoading ? <Spinner className="size-4" /> : "Delete"}
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const CreateUserDialog = () => {
+  const form = useForm<z.infer<typeof createUserSchema>>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      role: "user",
+      password: "",
+      confirm: "",
+    },
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  async function onSubmit(values: z.infer<typeof createUserSchema>) {
+    startTransition(async () => {
+      const res = await createUser(values);
+      if (!res.success) toast.error(res.error);
+      else toast.success("User created successfully!");
+      form.reset();
+    });
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus />
+          Create
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create User</DialogTitle>
+          <DialogDescription>
+            Fill in the fields below to create a new user.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="mb-3 space-y-6"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="email@example.com"
+                      {...field}
+                      type="email"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value as string}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      right={
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          aria-label="Toggle password visibility"
+                        >
+                          {showPassword ? <EyeOff /> : <Eye />}
+                        </Button>
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      right={
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          aria-label="Toggle password visibility"
+                        >
+                          {showPassword ? <EyeOff /> : <Eye />}
+                        </Button>
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? <Spinner className="size-4" /> : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
