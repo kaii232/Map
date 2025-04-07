@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -65,18 +65,16 @@ async function authenticate() {
 }
 
 export async function updateUserRole(
-  id: string,
+  id: string[],
   role: string,
 ): Promise<AuthReturnType> {
   // Set role from admin plugin, do not need to check the user's role
+  const session = await authenticate();
+  if (!session || session.user.role !== "admin")
+    return { success: false, error: "Unauthorised" };
+
   try {
-    await auth.api.setRole({
-      headers: await headers(),
-      body: {
-        role: role,
-        userId: id,
-      },
-    });
+    await db.update(user).set({ role: role }).where(inArray(user.id, id));
     revalidatePath("/admin-dashboard");
     return { success: true };
   } catch {
@@ -123,12 +121,12 @@ export async function updateUserPassword(
   }
 }
 
-export async function deleteUser(id: string) {
+export async function deleteUser(id: string[]) {
   const session = await authenticate();
   if (!session || session.user.role !== "admin")
     return { success: false, error: "Unauthorised" };
   try {
-    await db.delete(user).where(eq(user.id, id));
+    await db.delete(user).where(inArray(user.id, id));
     revalidatePath("/admin-dashboard");
     return { success: true };
   } catch {

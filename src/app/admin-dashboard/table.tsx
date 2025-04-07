@@ -84,9 +84,9 @@ export default function DataTable({
     { id: string } | undefined
   >(undefined);
   const [editRoleOpen, setEditRoleOpen] = useState<
-    { id: string; currentRole: string } | undefined
+    { id: string[]; currentRole: string } | undefined
   >(undefined);
-  const [deleteOpen, setDeleteOpen] = useState<{ id: string } | undefined>(
+  const [deleteOpen, setDeleteOpen] = useState<{ id: string[] } | undefined>(
     undefined,
   );
 
@@ -188,7 +188,7 @@ export default function DataTable({
                 <DropdownMenuItem
                   onSelect={() => {
                     setEditRoleOpen({
-                      id: row.original.id,
+                      id: [row.original.id],
                       currentRole: row.original.role ?? "user",
                     });
                   }}
@@ -200,7 +200,7 @@ export default function DataTable({
                   className="text-red-300 focus:text-red-400"
                   onSelect={() => {
                     setDeleteOpen({
-                      id: row.original.id,
+                      id: [row.original.id],
                     });
                   }}
                 >
@@ -291,11 +291,31 @@ export default function DataTable({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  let allAdmins = true;
+                  setEditRoleOpen({
+                    id: table.getSelectedRowModel().rows.map((row) => {
+                      if (row.original.role !== "admin") allAdmins = false;
+                      return row.original.id;
+                    }),
+                    currentRole: allAdmins ? "admin" : "user",
+                  });
+                }}
+              >
                 <UserPen />
                 Set Role
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-300 focus:text-red-400">
+              <DropdownMenuItem
+                className="text-red-300 focus:text-red-400"
+                onSelect={() => {
+                  setDeleteOpen({
+                    id: table
+                      .getSelectedRowModel()
+                      .rows.map((row) => row.original.id),
+                  });
+                }}
+              >
                 <Trash />
                 Delete
               </DropdownMenuItem>
@@ -431,7 +451,7 @@ export default function DataTable({
         onOpenChange={(open) => {
           if (!open) setEditRoleOpen(undefined);
         }}
-        key={editRoleOpen?.id}
+        key={editRoleOpen?.id[0]}
       />
       <SetPasswordDialog
         open={editPasswordOpen}
@@ -477,12 +497,7 @@ const EditNameDialog = ({
         </DialogHeader>
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
-          <Input
-            ref={inputRef}
-            id="name"
-            autoFocus
-            defaultValue={open?.currentName}
-          />
+          <Input ref={inputRef} id="name" defaultValue={open?.currentName} />
         </div>
         <DialogFooter>
           <Button type="submit" disabled={isLoading} onClick={onSave}>
@@ -538,19 +553,14 @@ const SetPasswordDialog = ({
         <div className="space-y-2">
           <div className="space-y-2">
             <Label htmlFor="password">New Password</Label>
-            <Input ref={inputRef} id="password" type="password" autoFocus />
+            <Input ref={inputRef} id="password" type="password" />
             {error?.password && (
               <p className="text-sm text-red-300">{error.password[0]}</p>
             )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="new-password">Confirm Password</Label>
-            <Input
-              ref={cfmInputRef}
-              id="new-password"
-              type="password"
-              autoFocus
-            />
+            <Input ref={cfmInputRef} id="new-password" type="password" />
             {error?.confirm && (
               <p className="text-sm text-red-300">{error.confirm[0]}</p>
             )}
@@ -570,13 +580,13 @@ const EditRoleDialog = ({
   open,
   onOpenChange,
 }: {
-  open: { id: string; currentRole: string } | undefined;
+  open: { id: string[]; currentRole: string } | undefined;
   onOpenChange: (open: boolean) => void;
 }) => {
   const [value, setValue] = useState(open?.currentRole ?? "user");
   const [isLoading, setIsLoading] = useState(false);
   const onSave = async () => {
-    if (!open || open.currentRole === value) return;
+    if (!open) return;
     setIsLoading(true);
     const res = await updateUserRole(open.id, value);
     if (!res.success) toast.error(res.error);
@@ -614,7 +624,7 @@ const DeleteUserDialog = ({
   open,
   onOpenChange,
 }: {
-  open: { id: string } | undefined;
+  open: { id: string[] } | undefined;
   onOpenChange: (open: boolean) => void;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -631,10 +641,14 @@ const DeleteUserDialog = ({
     <Dialog open={!!open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete User</DialogTitle>
+          <DialogTitle>
+            {open && open.id.length > 1
+              ? "Deleter Multiple Users"
+              : "Delete User"}
+          </DialogTitle>
           <DialogDescription>
-            This action cannot be undone. Are you sure you want to delete this
-            user?
+            This action cannot be undone. Are you sure you want to delete{" "}
+            {open && open.id.length > 1 ? "these users?" : "this user?"}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

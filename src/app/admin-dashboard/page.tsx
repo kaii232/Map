@@ -15,6 +15,10 @@ export default async function AdminDashboard({
   const requestHeaders = await headers();
   const session = await auth.api.getSession({
     headers: requestHeaders,
+    query: {
+      //@ts-expect-error Better auth bug
+      disableRefresh: true,
+    },
   });
 
   if (!session || session.user.role !== "admin") redirect("/");
