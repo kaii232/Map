@@ -1,13 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: { default: "InVEST", template: "%s – InVEST" },
@@ -22,9 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.className} dark bg-neutral-950 text-neutral-300 antialiased`}
-      >
+      <body className="dark bg-neutral-950 text-neutral-300 antialiased">
         <Providers>{children}</Providers>
         <Toaster />
       </body>
