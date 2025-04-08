@@ -2,10 +2,10 @@
 
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { LogOut, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ComponentProps, useState } from "react";
 import { Button } from "./ui/button";
 import Spinner from "./ui/spinner";
@@ -43,24 +43,6 @@ const AdminDashboardLink = () => {
 
 export const AccountLink = ({ className }: { className?: string }) => {
   const { data: session, isPending } = authClient.useSession();
-  const [loggingOut, setLoggingOut] = useState(false);
-  const router = useRouter();
-
-  const handleLogOut = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onRequest: () => {
-          setLoggingOut(true);
-        },
-        onResponse: () => {
-          setLoggingOut(false);
-        },
-        onSuccess: () => {
-          router.push("/login");
-        },
-      },
-    });
-  };
 
   if (isPending)
     return (
@@ -77,20 +59,9 @@ export const AccountLink = ({ className }: { className?: string }) => {
     );
 
   return (
-    <button
-      onClick={handleLogOut}
-      className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-2 transition-colors hover:text-yellow-500 hover:underline",
-        className,
-      )}
-    >
-      {loggingOut ? (
-        <Spinner className="size-4" />
-      ) : (
-        <LogOut className="size-4" />
-      )}
-      Logout
-    </button>
+    <HeaderLink href="/account" className={className}>
+      Account
+    </HeaderLink>
   );
 };
 
@@ -154,9 +125,7 @@ export default function Header() {
                 <HeaderLink href={link.href}>{link.label}</HeaderLink>
               </li>
             ))}
-            <li>
-              <AdminDashboardLink />
-            </li>
+            <AdminDashboardLink />
             <li>
               <AccountLink />
             </li>
