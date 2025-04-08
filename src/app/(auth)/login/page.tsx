@@ -1,9 +1,15 @@
 import { auth } from "@/server/auth";
+import { Metadata } from "next";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import LoginForm from "./login-form";
+
+export const metadata: Metadata = {
+  title: "Login",
+  description: "Login to your EOS Invest account",
+};
 
 export default async function LoginPage() {
   const session = await auth.api.getSession({

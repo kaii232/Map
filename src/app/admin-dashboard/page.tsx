@@ -3,9 +3,15 @@ import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { user } from "@/server/db/schema";
 import { and, count, desc, like, ne, or, sql } from "drizzle-orm";
+import { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import DataTable from "./table";
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard",
+  description: "View and edit user accounts",
+};
 
 export default async function AdminDashboard({
   searchParams,
