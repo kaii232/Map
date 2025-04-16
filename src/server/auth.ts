@@ -21,5 +21,8 @@ export const auth = betterAuth({
       enabled: true,
     },
   },
+  advanced: {
+    cookiePrefix: "invest",
+  },
   plugins: [admin(), nextCookies()],
 });

@@ -76,11 +76,6 @@ const MAP_STYLE: {
   },
 ] as const;
 
-function camelCaseToWords(s: string) {
-  const result = s.replace(/([A-Z]|\([A-Z])/g, " $1");
-  return result.charAt(0).toUpperCase() + result.slice(1);
-}
-
 const DATA_LABELS: Record<DataKeys, string> = {
   smt: "Seamounts",
   vlc: "Volcanoes",
@@ -88,6 +83,14 @@ const DATA_LABELS: Record<DataKeys, string> = {
   flt: "Faults",
   seis: "Seismic",
   hf: "Heatflow",
+};
+
+const LAYER_LABELS: Record<string, string> = {
+  hillshade: "Hillshade",
+  plateMovementVectors: "Plate Movement Vectors",
+  plates: "Tectonic Plates (Bird, 2003)",
+  platesNew: "Tectonic Plates (Hasterok, 2022)",
+  seafloorAge: "Seafloor Age",
 };
 
 const ColourRamps = ({ className }: { className?: string }) => {
@@ -204,7 +207,6 @@ export default function Controls({
           />
         </Button>
         <ColourRamps className="left-full hidden sm:flex" />
-
         <div className="flex h-full max-h-full flex-col divide-y divide-neutral-600 overflow-auto bg-neutral-950 pt-12 text-neutral-300 sm:pt-0">
           <div className="flex flex-col gap-1 p-4">
             <span className="mb-3 text-xs font-medium text-neutral-300">
@@ -285,7 +287,7 @@ export default function Controls({
                       setLayers((prev) => ({ ...prev, [layer]: e }))
                     }
                   >
-                    {camelCaseToWords(layer)}
+                    {LAYER_LABELS[layer]}
                   </DropdownMenuCheckboxItem>
                 ))}
               </DropdownMenuContent>

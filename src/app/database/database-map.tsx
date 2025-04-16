@@ -7,6 +7,7 @@ import tectonicPlates from "@/assets/PB2002_plates.json";
 import tectonicBoundariesNew from "@/assets/plate_boundaries_new.geojson";
 import tectonicPlatesNew from "@/assets/plate_new.geojson";
 import { DataKeys, GenericFiltersInfo } from "@/lib/types";
+import { velocityStops } from "@/lib/utils";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Feature, FeatureCollection, Position } from "geojson";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -34,6 +35,7 @@ import { GeoJSONStoreFeatures } from "terra-draw";
 import { dataAtom, dataVisibilityAtom, drawingAtom, layersAtom } from "./atoms";
 import Basemaps from "./basemaps";
 import Controls from "./controls";
+import DownloadControl from "./download-control";
 import DrawControl from "./draw-control";
 
 const xlsxToGeojson = (
@@ -175,9 +177,9 @@ export default function DatabaseMap({
         }
         if (
           hoveredFeature.source === "platesSource" ||
-          hoveredFeature.source === "plateBoundariesSource" ||
-          hoveredFeature.source === "platesSourceNew" ||
-          hoveredFeature.source === "plateBoundariesNewSource"
+          hoveredFeature.source === "platesBoundariesSource" ||
+          hoveredFeature.source === "platesNewSource" ||
+          hoveredFeature.source === "platesNewBoundariesSource"
         ) {
           setHoverInfo(undefined);
           return;
@@ -262,11 +264,8 @@ export default function DatabaseMap({
     [],
   );
 
-  const morvelVelocity = xlsxToGeojson(plateVelocities);
-  const velocityStops = useMemo(
-    () => [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-    [],
-  );
+  const morvelVelocity = useMemo(() => xlsxToGeojson(plateVelocities), []);
+
   return (
     <>
       <Controls initialData={initialData} />
@@ -304,9 +303,10 @@ export default function DatabaseMap({
         <NavigationControl />
         <DrawControl modes={drawOptionsModes} open onUpdate={onUpdate} />
         <TerrainControl source={"terrain"} exaggeration={1.5} />
+        <DownloadControl />
         <Basemaps />
         <Source
-          id="seafloorSource"
+          id="seafloorAgeSource"
           type="raster"
           tiles={[
             `https://api.mapbox.com/v4/lance-ntu.b559fikp/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
@@ -316,7 +316,7 @@ export default function DatabaseMap({
         >
           <Layer
             type="raster"
-            id="seafloor"
+            id="seafloorAge"
             layout={{ visibility: layers.seafloorAge ? "visible" : "none" }}
             paint={{ "raster-opacity": 0.8, "raster-resampling": "nearest" }}
           />
@@ -334,21 +334,19 @@ export default function DatabaseMap({
               "fill-opacity": 0,
             }}
             layout={{
-              visibility: layers["tectonicPlates(Bird, 2003)"]
-                ? "visible"
-                : "none",
+              visibility: layers.plates ? "visible" : "none",
             }}
           />
         </Source>
         <Source
-          id="plateBoundariesSource"
+          id="platesBoundariesSource"
           type="geojson"
           data={tectonicBoundaries as FeatureCollection}
           generateId
         >
           <Layer
             type="line"
-            id="plateBoundaries"
+            id="platesBoundaries"
             paint={{
               "line-color": "#065f46",
               "line-width": ["interpolate", ["linear"], ["zoom"], 5, 3, 15, 8],
@@ -363,14 +361,12 @@ export default function DatabaseMap({
               ],
             }}
             layout={{
-              visibility: layers["tectonicPlates(Bird, 2003)"]
-                ? "visible"
-                : "none",
+              visibility: layers.plates ? "visible" : "none",
             }}
           />
         </Source>
         <Source
-          id="platesSourceNew"
+          id="platesNewSource"
           type="geojson"
           data={tectonicPlatesNew as FeatureCollection}
           promoteId={"id"}
@@ -382,14 +378,12 @@ export default function DatabaseMap({
               "fill-opacity": 0,
             }}
             layout={{
-              visibility: layers["tectonicPlaces(Hasterok, 2022)"]
-                ? "visible"
-                : "none",
+              visibility: layers.platesNew ? "visible" : "none",
             }}
           />
         </Source>
         <Source
-          id="plateBoundariesNewSource"
+          id="platesNewBoundariesSource"
           type="geojson"
           data={tectonicBoundariesNew as FeatureCollection}
           promoteId={"feature_id"}
@@ -399,7 +393,7 @@ export default function DatabaseMap({
         >
           <Layer
             type="line"
-            id="plateBoundariesNew"
+            id="platesNewBoundaries"
             paint={{
               "line-color": "#4c1d95",
               "line-width": ["interpolate", ["linear"], ["zoom"], 5, 3, 15, 8],
@@ -414,9 +408,7 @@ export default function DatabaseMap({
               ],
             }}
             layout={{
-              visibility: layers["tectonicPlaces(Hasterok, 2022)"]
-                ? "visible"
-                : "none",
+              visibility: layers.platesNew ? "visible" : "none",
             }}
           />
         </Source>
@@ -440,6 +432,7 @@ export default function DatabaseMap({
               "hillshade-shadow-color": "#17292b",
               "hillshade-highlight-color": "#ebf0f5",
               "hillshade-exaggeration": 0.4,
+              "hillshade-illumination-anchor": "map",
             }}
             layout={{
               visibility: layers.hillshade ? "visible" : "none",
@@ -852,7 +845,7 @@ export default function DatabaseMap({
             }
           >
             {hoverInfo.feature.properties.name && (
-              <div className="mb-2 text-lg font-semibold">
+              <div className="mb-2 text-lg font-semibold text-neutral-900">
                 {hoverInfo.feature.properties.name}
               </div>
             )}
@@ -861,7 +854,7 @@ export default function DatabaseMap({
                 if (key === "name") return;
                 if (typeof value === "string" && value.includes("https://"))
                   return (
-                    <div className="text-sm" key={key}>
+                    <div className="text-sm text-neutral-700" key={key}>
                       <span className="font-semibold">{key}:</span>{" "}
                       <Link
                         href={value}
@@ -874,7 +867,7 @@ export default function DatabaseMap({
                   );
 
                 return (
-                  <div className="text-sm" key={key}>
+                  <div className="text-sm text-neutral-700" key={key}>
                     <span className="font-semibold">{key}:</span> {value}
                   </div>
                 );
@@ -906,7 +899,7 @@ export default function DatabaseMap({
             }
           >
             {selectedFeature.feature.properties.name && (
-              <div className="mb-2 text-lg font-semibold">
+              <div className="mb-2 text-lg font-semibold text-neutral-900">
                 {selectedFeature.feature.properties.name}
               </div>
             )}
@@ -915,7 +908,7 @@ export default function DatabaseMap({
                 if (key === "name") return;
                 if (typeof value === "string" && value.includes("https://"))
                   return (
-                    <div className="text-sm" key={key}>
+                    <div className="text-sm text-neutral-700" key={key}>
                       <span className="font-semibold">{key}:</span>{" "}
                       <Link
                         href={value}
@@ -928,7 +921,7 @@ export default function DatabaseMap({
                   );
                 if (typeof value === "string" && value.includes("doi:"))
                   return (
-                    <div className="text-sm" key={key}>
+                    <div className="text-sm text-neutral-700" key={key}>
                       <span className="font-semibold">{key}:</span>{" "}
                       <Link
                         href={value.replace("doi:", "https://doi.org/")}
@@ -940,7 +933,7 @@ export default function DatabaseMap({
                     </div>
                   );
                 return (
-                  <div className="text-sm" key={key}>
+                  <div className="text-sm text-neutral-700" key={key}>
                     <span className="font-semibold">{key}:</span> {value}
                   </div>
                 );
