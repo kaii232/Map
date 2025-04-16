@@ -52,4 +52,4 @@ export type FilterDefine<T extends GenericFiltersInfo> = {
           };
 };
 
-export type DataKeys = "smt" | "vlc" | "gnss" | "flt" | "seis" | "hf";
+export type DataKeys = "smt" | "vlc" | "gnss" | "flt" | "seis" | "hf" | "slab2";

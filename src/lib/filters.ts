@@ -4,6 +4,7 @@ import {
   fltInInvest,
   gnssStnInInvest,
   seisInInvest,
+  slab2InInvest,
   smtInInvest,
   stnTypeInInvest,
   vlcInInvest,
@@ -195,6 +196,19 @@ export const fltFilters: FilterDefine<FltFilters> = {
   },
 };
 
+export type Slab2Filters = {
+  region: Categories;
+};
+
+export const slab2Filters: FilterDefine<Slab2Filters> = {
+  region: {
+    dbCol: slab2InInvest.slabRegion,
+    nullCol: slab2InInvest.slabRegion,
+    name: "Region",
+    type: "select",
+  },
+};
+
 const createZodSchema = <T extends GenericFiltersInfo>(
   filters: FilterDefine<T>,
 ) => {
@@ -278,3 +292,4 @@ export const gnssFormSchema = z.object(createZodSchema(gnssFilters));
 export const seisFormSchema = z.object(createZodSchema(seisFilters));
 export const smtFormSchema = z.object(createZodSchema(smtFilters));
 export const fltFormSchema = z.object(createZodSchema(fltFilters));
+export const slab2FormSchema = z.object(createZodSchema(slab2Filters));

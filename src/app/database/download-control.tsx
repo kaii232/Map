@@ -7,7 +7,7 @@ import { downloadZip } from "client-zip";
 import { useAtomValue } from "jotai";
 import { Download } from "lucide-react";
 import maplibregl from "maplibre-gl";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMap } from "react-map-gl/maplibre";
 import { dataAtom, dataVisibilityAtom, layersAtom } from "./atoms";
@@ -62,7 +62,7 @@ const prepareNextLayer = (
   console.log("layouts updated");
 };
 
-export default function DownloadControl() {
+const DownloadControl = () => {
   const data = useAtomValue(dataAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
   const layers = useAtomValue(layersAtom);
@@ -208,4 +208,5 @@ export default function DownloadControl() {
     </div>,
     controlContainer,
   );
-}
+};
+export default memo(DownloadControl);

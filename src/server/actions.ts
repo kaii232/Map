@@ -7,6 +7,8 @@ import {
   gnssFormSchema,
   seisFilters,
   seisFormSchema,
+  slab2Filters,
+  slab2FormSchema,
   smtFilters,
   smtFormSchema,
   vlcFilters,
@@ -24,6 +26,7 @@ import {
   gnssStnInInvest,
   heatflowInInvest,
   seisInInvest,
+  slab2InInvest,
   smtInInvest,
   stnTypeInInvest,
   vlcInInvest,
@@ -342,6 +345,40 @@ export const LoadHf = async (
     .from(heatflowInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, heatflowInInvest.hfSrcId))
     .where(filters);
+  const dataReturn = sqlToGeojson(data);
+
+  return { success: true, data: dataReturn };
+};
+
+export const LoadSlab2 = async (
+  values: z.infer<typeof slab2FormSchema>,
+  drawing?: MultiPolygon | Polygon,
+): Promise<ReturnType> => {
+  const { success } = slab2FormSchema.safeParse(values);
+  if (!success) return { success: false, error: "Values do not follow schema" };
+  const filters = generateFilters(slab2Filters, values);
+
+  if (drawing) {
+    filters.push(
+      sql`ST_INTERSECTS(${slab2InInvest.slabGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+    );
+  }
+
+  const data = await db
+    .select({
+      id: slab2InInvest.slabId,
+      depth: sql.raw(`${slab2InInvest.slabDepth.name}`).mapWith(Number),
+      region: slab2InInvest.slabRegion,
+      layer: slab2InInvest.slabLayer,
+      country: countryInInvest.countryName,
+      geojson: sql<string>`ST_ASGEOJSON(${slab2InInvest.slabGeom})`,
+    })
+    .from(slab2InInvest)
+    .leftJoin(
+      countryInInvest,
+      eq(countryInInvest.countryId, slab2InInvest.slabCountryId),
+    )
+    .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
   return { success: true, data: dataReturn };

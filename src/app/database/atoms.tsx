@@ -21,6 +21,7 @@ export const dataVisibilityAtom = atom<Record<DataKeys, boolean>>({
   flt: true,
   vlc: true,
   hf: true,
+  slab2: true,
 });
 
 export const dataAtom = atom<Partial<Record<DataKeys, FeatureCollection>>>({});

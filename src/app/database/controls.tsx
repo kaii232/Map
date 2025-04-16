@@ -27,6 +27,7 @@ import {
   FltFilters,
   GnssFilters,
   SeisFilters,
+  Slab2Filters,
   SmtFilters,
   VlcFilters,
 } from "@/lib/filters";
@@ -35,7 +36,7 @@ import { cn } from "@/lib/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { Book, ChevronDown, ChevronLeft, Home, Map } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import {
   dataAtom,
@@ -47,6 +48,7 @@ import FltFormFilters from "./flt-form-filters";
 import GnssFormFilters from "./gnss-form-filters";
 import HfFormFilters from "./heatflow-form-filters";
 import SeisFormFilters from "./seis-form-filters";
+import Slab2FormFilters from "./slab2-form-filters";
 import SmtFormFilters from "./smt-form-filters";
 import VlcFormFilters from "./vlc-form-filters";
 
@@ -83,6 +85,7 @@ const DATA_LABELS: Record<DataKeys, string> = {
   flt: "Faults",
   seis: "Seismic",
   hf: "Heatflow",
+  slab2: "Slab",
 };
 
 const LAYER_LABELS: Record<string, string> = {
@@ -100,7 +103,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
   const showColourRange =
     layers.seafloorAge ||
     (dataVisibility.hf && mapData.hf) ||
-    (dataVisibility.seis && mapData.seis);
+    (dataVisibility.seis && mapData.seis) ||
+    (dataVisibility.slab2 && mapData.slab2);
 
   if (!showColourRange) return null;
 
@@ -140,15 +144,24 @@ const ColourRamps = ({ className }: { className?: string }) => {
           </div>
         </div>
       )}
+      {dataVisibility.slab2 && mapData.slab2 && (
+        <div>
+          <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]"></div>
+          <div className="flex w-full justify-between">
+            <p>0m</p>
+            <p>1000m</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default function Controls({
+const Controls = ({
   initialData,
 }: {
   initialData: Record<DataKeys, GenericFiltersInfo>;
-}) {
+}) => {
   const [layers, setLayers] = useAtom(layersAtom);
   const [open, setOpen] = useState(true);
   const [mapStyle, setMapStyle] = useAtom(mapStyleAtom);
@@ -350,6 +363,11 @@ export default function Controls({
                       <VlcFormFilters initialData={initialInfo as VlcFilters} />
                     )}
                     {key === "hf" && <HfFormFilters />}
+                    {key === "slab2" && (
+                      <Slab2FormFilters
+                        initialData={initialInfo as Slab2Filters}
+                      />
+                    )}
                   </SelectTabsTab>
                 );
               })}
@@ -362,4 +380,6 @@ export default function Controls({
       </div>
     </>
   );
-}
+};
+
+export default memo(Controls);

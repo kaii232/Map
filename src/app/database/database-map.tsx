@@ -266,6 +266,8 @@ export default function DatabaseMap({
 
   const morvelVelocity = useMemo(() => xlsxToGeojson(plateVelocities), []);
 
+  console.log(mapData.slab2);
+
   return (
     <>
       <Controls initialData={initialData} />
@@ -291,6 +293,7 @@ export default function DatabaseMap({
           "seisNone",
           "flt",
           "hf",
+          "slab2",
           "plates",
           "plateBoundaries",
           "platesNew",
@@ -604,6 +607,65 @@ export default function DatabaseMap({
               }}
               paint={{
                 "line-color": "#f43f5e",
+                "line-width": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  [
+                    "case",
+                    ["boolean", ["feature-state", "hover"], false],
+                    6,
+                    1,
+                  ],
+                  15,
+                  [
+                    "case",
+                    ["boolean", ["feature-state", "hover"], false],
+                    16,
+                    6,
+                  ],
+                ],
+                "line-opacity": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  5,
+                  1,
+                  15,
+                  0.6,
+                ],
+              }}
+            />
+          </Source>
+        )}
+        {mapData.slab2 && (
+          <Source id="slab2Source" type="geojson" data={mapData.slab2}>
+            <Layer
+              id="slab2"
+              type="line"
+              layout={{
+                "line-cap": "round",
+                visibility: dataVisibility.slab2 ? "visible" : "none",
+              }}
+              paint={{
+                "line-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "depth"],
+                  0,
+                  "#ffffa4",
+                  200,
+                  "#fca309",
+                  400,
+                  "#db503b",
+                  600,
+                  "#922568",
+                  800,
+                  "#400a67",
+                  1000,
+                  "#fff",
+                ],
                 "line-width": [
                   "interpolate",
                   ["linear"],
