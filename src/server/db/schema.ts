@@ -5,66 +5,74 @@ import {
   doublePrecision,
   foreignKey,
   geometry,
+  index,
   integer,
+  numeric,
   pgSchema,
+  primaryKey,
   smallint,
   text,
   timestamp,
+  unique,
   varchar,
 } from "drizzle-orm/pg-core";
 
 export const invest = pgSchema("invest");
 
-export const user = invest.table("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull(),
-  image: text("image"),
-  role: text("role").notNull().default("user"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+export const slab2OgcFidSeqInInvest = invest.sequence("slab2_ogc_fid_seq", {
+  startWith: "1",
+  increment: "1",
+  minValue: "1",
+  maxValue: "2147483647",
+  cache: "1",
+  cycle: false,
 });
 
-export const session = invest.table("session", {
-  id: text("id").primaryKey(),
-  expiresAt: timestamp("expires_at").notNull(),
-  token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-});
-
-export const account = invest.table("account", {
-  id: text("id").primaryKey(),
-  accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
-  idToken: text("id_token"),
-  accessTokenExpiresAt: timestamp("access_token_expires_at"),
-  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-  scope: text("scope"),
-  password: text("password"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-});
-
-export const verification = invest.table("verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
-});
+export const slab2InInvest = invest.table(
+  "slab2",
+  {
+    slabId: integer("slab_id").primaryKey().generatedByDefaultAsIdentity({
+      name: "invest.slab2_slab_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
+    slabGeom: geometry("slab_geom", { type: "multilinestring", srid: 4326 }),
+    slabDepth: numeric("slab_depth", { precision: 10, scale: 0 }),
+    slabRegion: text("slab_region"),
+    slabLayer: text("slab_layer"),
+    slabCountryId: integer("slab_country_id"),
+    ccLoadId: smallint("cc_load_id").default(1),
+    slabSrcId: integer("slab_src_id"),
+    slabLoaddate: timestamp("slab_loaddate", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+  },
+  (table) => [
+    index("slab2_geom_geom_idx").using(
+      "gist",
+      table.slabGeom.asc().nullsLast().op("gist_geometry_ops_2d"),
+    ),
+    foreignKey({
+      columns: [table.ccLoadId],
+      foreignColumns: [ccInInvest.ccId],
+      name: "slab2_cc_load_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.slabCountryId],
+      foreignColumns: [countryInInvest.countryId],
+      name: "slab2_slab_country_id_fkey",
+    }).onUpdate("cascade"),
+    foreignKey({
+      columns: [table.slabSrcId],
+      foreignColumns: [biblInInvest.biblId],
+      name: "slab2_slab_src_id_fkey",
+    }),
+  ],
+);
 
 export const gnssStnInInvest = invest.table(
   "gnss_stn",
@@ -77,7 +85,7 @@ export const gnssStnInInvest = invest.table(
       maxValue: 2147483647,
       cache: 1,
     }),
-    gnssName: varchar("gnss_name").notNull(),
+    gnssName: text("gnss_name").notNull(),
     gnssLon: doublePrecision("gnss_lon").notNull(),
     gnssLat: doublePrecision("gnss_lat").notNull(),
     gnssGeom: geometry("gnss_geom"),
@@ -297,6 +305,43 @@ export const fltInInvest = invest.table(
   ],
 );
 
+export const biblInInvest = invest.table(
+  "bibl",
+  {
+    biblId: integer("bibl_id").primaryKey().generatedAlwaysAsIdentity({
+      name: "invest.bibl_bibl_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
+    biblAuth: varchar("bibl_auth"),
+    biblYr: varchar("bibl_yr", { length: 4 }).default(sql`NULL`),
+    biblTitle: varchar("bibl_title"),
+    biblJourn: varchar("bibl_journ"),
+    biblDoi: varchar("bibl_doi"),
+    biblUrl: varchar("bibl_url"),
+    biblLoaddate: timestamp("bibl_loaddate", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+    ccLoadId: smallint("cc_load_id").default(1),
+    biblIssn: text("bibl_issn"),
+    // TODO: failed to parse database type 'tsvector'
+    // biblTsvector: unknown("bibl_tsvector").generatedAlwaysAs(sql`to_tsvector('english'::regconfig, (((COALESCE(bibl_auth, ''::character varying))::text || ' '::text) || (COALESCE(bibl_title, ''::character varying))::text))`),
+    biblIsInvest: boolean("bibl_is_invest").default(false),
+    biblIsRestricted: boolean("bibl_is_restricted").default(false),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.ccLoadId],
+      foreignColumns: [ccInInvest.ccId],
+      name: "bibl_cc_load_id_fkey",
+    }),
+  ],
+);
+
 export const vlcInInvest = invest.table(
   "vlc",
   {
@@ -329,6 +374,11 @@ export const vlcInInvest = invest.table(
     vlcGvpNew: bigint("vlc_gvp_new", { mode: "number" }),
     vlcGvpUrl: text("vlc_gvp_url"),
     vlcWovodatUrl: text("vlc_wovodat_url"),
+    vlcRegion: text("vlc_region"),
+    vlcLandform: text("vlc_landform"),
+    vlcLastEruption: text("vlc_last_eruption"),
+    vlcSetting: text("vlc_setting"),
+    vlcTimePeriod: text("vlc_time_period"),
   },
   (table) => [
     foreignKey({
@@ -349,39 +399,63 @@ export const vlcInInvest = invest.table(
   ],
 );
 
-export const biblInInvest = invest.table(
-  "bibl",
+export const account = invest.table("account", {
+  id: text().primaryKey().notNull(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: text("user_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at", {
+    mode: "string",
+  }),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+    mode: "string",
+  }),
+  scope: text(),
+  password: text(),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),
+});
+
+export const session = invest.table(
+  "session",
   {
-    biblId: integer("bibl_id").primaryKey().generatedAlwaysAsIdentity({
-      name: "invest.bibl_bibl_id_seq",
-      startWith: 1,
-      increment: 1,
-      minValue: 1,
-      maxValue: 2147483647,
-      cache: 1,
-    }),
-    biblAuth: varchar("bibl_auth"),
-    biblYr: varchar("bibl_yr", { length: 4 }).default(sql`NULL`),
-    biblTitle: varchar("bibl_title"),
-    biblJourn: varchar("bibl_journ"),
-    biblDoi: varchar("bibl_doi"),
-    biblUrl: varchar("bibl_url"),
-    biblLoaddate: timestamp("bibl_loaddate", {
-      withTimezone: true,
-      mode: "string",
-    }).defaultNow(),
-    ccLoadId: smallint("cc_load_id").default(1),
-    biblIssn: text("bibl_issn"),
-    // TODO: failed to parse database type 'tsvector'
-    // biblTsvector: unknown("bibl_tsvector").generatedAlwaysAs(sql`to_tsvector('english'::regconfig, (((COALESCE(bibl_auth, ''::character varying))::text || ' '::text) || (COALESCE(bibl_title, ''::character varying))::text))`),
+    id: text().primaryKey().notNull(),
+    expiresAt: timestamp("expires_at", { mode: "string" }).notNull(),
+    token: text().notNull(),
+    createdAt: timestamp("created_at", { mode: "string" }).notNull(),
+    updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id").notNull(),
   },
-  (table) => [
-    foreignKey({
-      columns: [table.ccLoadId],
-      foreignColumns: [ccInInvest.ccId],
-      name: "bibl_cc_load_id_fkey",
-    }),
-  ],
+  (table) => [unique("session_token_unique").on(table.token)],
+);
+
+export const verification = invest.table("verification", {
+  id: text().primaryKey().notNull(),
+  identifier: text().notNull(),
+  value: text().notNull(),
+  expiresAt: timestamp("expires_at", { mode: "string" }).notNull(),
+  createdAt: timestamp("created_at", { mode: "string" }),
+  updatedAt: timestamp("updated_at", { mode: "string" }),
+});
+
+export const user = invest.table(
+  "user",
+  {
+    id: text().primaryKey().notNull(),
+    name: text().notNull(),
+    email: text().notNull(),
+    emailVerified: boolean("email_verified").notNull(),
+    image: text(),
+    createdAt: timestamp("created_at", { mode: "string" }).notNull(),
+    updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),
+    role: text().default("user").notNull(),
+  },
+  (table) => [unique("user_email_unique").on(table.email)],
 );
 
 export const heatflowInInvest = invest.table(
@@ -437,6 +511,112 @@ export const heatflowInInvest = invest.table(
   ],
 );
 
+export const slipModelInInvest = invest.table(
+  "slip_model",
+  {
+    modelId: integer("model_id").notNull(),
+    patchId: integer("patch_id").notNull(),
+    patchLat: doublePrecision("patch_lat").notNull(),
+    patchLon: doublePrecision("patch_lon").notNull(),
+    patchCorner1Lat: doublePrecision("patch_corner1_lat"),
+    patchCorner1Lon: doublePrecision("patch_corner1_lon"),
+    patchCorner2Lat: doublePrecision("patch_corner2_lat"),
+    patchCorner2Lon: doublePrecision("patch_corner2_lon"),
+    patchCorner3Lat: doublePrecision("patch_corner3_lat"),
+    patchCorner3Lon: doublePrecision("patch_corner3_lon"),
+    patchCorner4Lat: doublePrecision("patch_corner4_lat"),
+    patchCorner4Lon: doublePrecision("patch_corner4_lon"),
+    patchGeom: geometry("patch_geom"),
+    patchDepth: doublePrecision("patch_depth"),
+    patchLength: doublePrecision("patch_length"),
+    patchWidth: doublePrecision("patch_width"),
+    patchRake: doublePrecision("patch_rake"),
+    patchStrike: doublePrecision("patch_strike"),
+    patchDip: doublePrecision("patch_dip"),
+    patchSlip: doublePrecision("patch_slip"),
+    patchStrikeslip: doublePrecision("patch_strikeslip"),
+    patchDipslip: doublePrecision("patch_dipslip"),
+    patchTensileslip: doublePrecision("patch_tensileslip"),
+    modelUploaddate: timestamp("model_uploaddate", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+    modelSrcId: integer("model_src_id"),
+    ccLoadId: smallint("cc_load_id").default(sql`'1'`),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.ccLoadId],
+      foreignColumns: [ccInInvest.ccId],
+      name: "slip_model_cc_load_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.modelSrcId],
+      foreignColumns: [biblInInvest.biblId],
+      name: "slip_model_model_src_id_fkey",
+    }),
+    primaryKey({
+      columns: [table.modelId, table.patchId],
+      name: "slip_model_pkey",
+    }),
+  ],
+);
+
+export const slab2InInvestRelations = relations(slab2InInvest, ({ one }) => ({
+  ccInInvest: one(ccInInvest, {
+    fields: [slab2InInvest.ccLoadId],
+    references: [ccInInvest.ccId],
+  }),
+  countryInInvest: one(countryInInvest, {
+    fields: [slab2InInvest.slabCountryId],
+    references: [countryInInvest.countryId],
+  }),
+  biblInInvest: one(biblInInvest, {
+    fields: [slab2InInvest.slabSrcId],
+    references: [biblInInvest.biblId],
+  }),
+}));
+
+export const ccInInvestRelations = relations(ccInInvest, ({ many }) => ({
+  slab2InInvests: many(slab2InInvest),
+  gnssStnInInvests: many(gnssStnInInvest),
+  smtInInvests: many(smtInInvest),
+  seisInInvests: many(seisInInvest),
+  fltInInvests: many(fltInInvest),
+  biblInInvests: many(biblInInvest),
+  vlcInInvests: many(vlcInInvest),
+  heatflowInInvests: many(heatflowInInvest),
+  slipModelInInvests: many(slipModelInInvest),
+}));
+
+export const countryInInvestRelations = relations(
+  countryInInvest,
+  ({ many }) => ({
+    slab2InInvests: many(slab2InInvest),
+    gnssStnInInvests: many(gnssStnInInvest),
+    vlcInInvests: many(vlcInInvest),
+  }),
+);
+
+export const biblInInvestRelations = relations(
+  biblInInvest,
+  ({ one, many }) => ({
+    slab2InInvests: many(slab2InInvest),
+    smtInInvests: many(smtInInvest),
+    seisInInvests: many(seisInInvest),
+    fltInInvests: many(fltInInvest),
+    ccInInvest: one(ccInInvest, {
+      fields: [biblInInvest.ccLoadId],
+      references: [ccInInvest.ccId],
+    }),
+    vlcInInvests: many(vlcInInvest),
+    heatflowInInvests: many(heatflowInInvest),
+    slipModelInInvests: many(slipModelInInvest),
+  }),
+);
+
 export const gnssStnInInvestRelations = relations(
   gnssStnInInvest,
   ({ one }) => ({
@@ -452,24 +632,6 @@ export const gnssStnInInvestRelations = relations(
       fields: [gnssStnInInvest.stnTypeId],
       references: [stnTypeInInvest.stnTypeId],
     }),
-  }),
-);
-
-export const ccInInvestRelations = relations(ccInInvest, ({ many }) => ({
-  gnssStnInInvests: many(gnssStnInInvest),
-  smtInInvests: many(smtInInvest),
-  seisInInvests: many(seisInInvest),
-  fltInInvests: many(fltInInvest),
-  vlcInInvests: many(vlcInInvest),
-  biblInInvests: many(biblInInvest),
-  heatflowInInvests: many(heatflowInInvest),
-}));
-
-export const countryInInvestRelations = relations(
-  countryInInvest,
-  ({ many }) => ({
-    gnssStnInInvests: many(gnssStnInInvest),
-    vlcInInvests: many(vlcInInvest),
   }),
 );
 
@@ -490,21 +652,6 @@ export const smtInInvestRelations = relations(smtInInvest, ({ one }) => ({
     references: [biblInInvest.biblId],
   }),
 }));
-
-export const biblInInvestRelations = relations(
-  biblInInvest,
-  ({ one, many }) => ({
-    smtInInvests: many(smtInInvest),
-    seisInInvests: many(seisInInvest),
-    fltInInvests: many(fltInInvest),
-    vlcInInvests: many(vlcInInvest),
-    ccInInvest: one(ccInInvest, {
-      fields: [biblInInvest.ccLoadId],
-      references: [ccInInvest.ccId],
-    }),
-    heatflowInInvests: many(heatflowInInvest),
-  }),
-);
 
 export const seisInInvestRelations = relations(seisInInvest, ({ one }) => ({
   ccInInvest: one(ccInInvest, {
@@ -552,6 +699,20 @@ export const heatflowInInvestRelations = relations(
     }),
     biblInInvest: one(biblInInvest, {
       fields: [heatflowInInvest.hfSrcId],
+      references: [biblInInvest.biblId],
+    }),
+  }),
+);
+
+export const slipModelInInvestRelations = relations(
+  slipModelInInvest,
+  ({ one }) => ({
+    ccInInvest: one(ccInInvest, {
+      fields: [slipModelInInvest.ccLoadId],
+      references: [ccInInvest.ccId],
+    }),
+    biblInInvest: one(biblInInvest, {
+      fields: [slipModelInInvest.modelSrcId],
       references: [biblInInvest.biblId],
     }),
   }),
