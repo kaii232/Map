@@ -76,21 +76,13 @@ export default function DownloadControl() {
     if (!map) return;
     setIsDrawing(true);
 
-    // Way to make the resolution of the image larger
-    const actualRatio = window.devicePixelRatio;
-    Object.defineProperty(window, "devicePixelRatio", {
-      get: function () {
-        return 3;
-      },
-    });
-
     const hidden = document.createElement("div");
     hidden.className = "sr-only";
     document.body.appendChild(hidden);
     const container = document.createElement("div");
     // Make the canvas a square
     container.style.height = window.innerHeight + "px";
-    container.style.width = window.innerHeight + "px";
+    container.style.width = window.innerWidth + "px";
     hidden.appendChild(container);
     const newMap = new maplibregl.Map({
       container: container,
@@ -100,6 +92,8 @@ export default function DownloadControl() {
       bearing: map.getBearing(),
       pitch: map.getPitch(),
       interactive: false,
+      maxCanvasSize: [8192, 8192],
+      pixelRatio: 4,
       canvasContextAttributes: {
         preserveDrawingBuffer: true,
       },
@@ -118,12 +112,10 @@ export default function DownloadControl() {
       container.remove();
       hidden.remove();
       newMap.remove();
-      Object.defineProperty(window, "devicePixelRatio", {
-        get: function () {
-          return actualRatio;
-        },
-      });
     };
+    newMap.once("load", () => {
+      newMap.setPadding(map.getPadding());
+    });
 
     newMap.on("idle", async () => {
       console.log("Map is idle", iteration);
