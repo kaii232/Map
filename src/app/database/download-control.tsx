@@ -23,7 +23,7 @@ const SOURCES_LAYERS: Record<string, string[]> = {
 const downladFiles = async (images: Blob[]) => {
   const blob = await downloadZip(
     images.map((image, index) => ({
-      name: `Layer_${index}.png`,
+      name: index === 0 ? "Combined_map.png" : `Layer_${index}.png`,
       input: image,
     })),
   ).blob();
@@ -34,7 +34,7 @@ const downladFiles = async (images: Blob[]) => {
   link.remove();
 };
 
-const renderNextLayer = (
+const prepareNextLayer = (
   map: maplibregl.Map,
   layersToExport: (string | string[])[] = [],
   activeLayer: number,
@@ -60,7 +60,6 @@ const renderNextLayer = (
     map.setLayoutProperty(addLayers, "visibility", "visible");
   }
   console.log("layouts updated");
-  return activeLayer + 1;
 };
 
 export default function DownloadControl() {
@@ -76,6 +75,8 @@ export default function DownloadControl() {
   const drawLayers = () => {
     if (!map) return;
     setIsDrawing(true);
+
+    // Way to make the resolution of the image larger
     const actualRatio = window.devicePixelRatio;
     Object.defineProperty(window, "devicePixelRatio", {
       get: function () {
@@ -87,12 +88,13 @@ export default function DownloadControl() {
     hidden.className = "sr-only";
     document.body.appendChild(hidden);
     const container = document.createElement("div");
+    // Make the canvas a square
     container.style.height = window.innerHeight + "px";
     container.style.width = window.innerHeight + "px";
     hidden.appendChild(container);
     const newMap = new maplibregl.Map({
       container: container,
-      style: { ...map.getStyle(), terrain: undefined },
+      style: map.getStyle(),
       center: map.getCenter(),
       zoom: map.getZoom(),
       bearing: map.getBearing(),
@@ -106,51 +108,29 @@ export default function DownloadControl() {
     });
     const images: Blob[] = [];
     const layersToExport: (string | string[])[] = [];
-    let isTerrainEnabled = false;
-    let iteration = 0;
-    newMap.on("load", () => {
-      const terrain = map.getTerrain();
-      if (terrain) {
-        isTerrainEnabled = true;
-        // Map will not fire "idle" event when terrain is enabled before hillshade for some reason
-        newMap.setTerrain({
-          source: terrain.source,
-          exaggeration: 1.5,
-        });
-      }
-      // For loaded data
-      Object.entries(dataVisibility).map(([src, visible]) => {
-        if (visible && data[src as DataKeys]) {
-          if (src === "seis") {
-            layersToExport.push([
-              `${src}Mw`,
-              `${src}Mb`,
-              `${src}Ms`,
-              `${src}None`,
-            ]);
-            newMap.setLayoutProperty(`${src}Mw`, "visibility", "none");
-            newMap.setLayoutProperty(`${src}Mb`, "visibility", "none");
-            newMap.setLayoutProperty(`${src}Ms`, "visibility", "none");
-            newMap.setLayoutProperty(`${src}None`, "visibility", "none");
-          } else {
-            layersToExport.push(src);
-            newMap.setLayoutProperty(src, "visibility", "none");
-          }
-        }
+    const isTerrainEnabled = !!map.getTerrain();
+    let iteration = -1;
+
+    const cleanup = async () => {
+      await downladFiles(images);
+      // Cleanup
+      setIsDrawing(false);
+      container.remove();
+      hidden.remove();
+      newMap.remove();
+      Object.defineProperty(window, "devicePixelRatio", {
+        get: function () {
+          return actualRatio;
+        },
       });
-      // For additional data layers
-      Object.entries(layers).map(([src, visible]) => {
-        // If terrain is enabled do not disable hillshade as "idle" event will not be fired
-        if (visible && (!isTerrainEnabled || src !== "hillshade")) {
-          layersToExport.push(SOURCES_LAYERS[src]);
-          SOURCES_LAYERS[src].forEach((layerId) =>
-            newMap.setLayoutProperty(layerId, "visibility", "none"),
-          );
-        }
-      });
-    });
+    };
+
     newMap.on("idle", async () => {
       console.log("Map is idle", iteration);
+      // Converts the map to an image
+      // Iteration -1: Combined map
+      // Iteration 1: Basemap only
+      // Iteration 2+: Individual layers
       await new Promise((resolve) =>
         newMap.getCanvas().toBlob((blob) => {
           if (blob) images.push(blob);
@@ -158,18 +138,46 @@ export default function DownloadControl() {
         }),
       );
       if (iteration >= layersToExport.length) {
-        await downladFiles(images);
-        // Cleanup
-        setIsDrawing(false);
-        container.remove();
-        hidden.remove();
-        newMap.remove();
-        Object.defineProperty(window, "devicePixelRatio", {
-          get: function () {
-            return actualRatio;
-          },
-        });
+        await cleanup();
         return;
+      }
+      if (iteration === -1) {
+        // Hide everything but the basemap
+        Object.entries(dataVisibility).map(([src, visible]) => {
+          if (visible && data[src as DataKeys]) {
+            if (src === "seis") {
+              layersToExport.push([
+                `${src}Mw`,
+                `${src}Mb`,
+                `${src}Ms`,
+                `${src}None`,
+              ]);
+              newMap.setLayoutProperty(`${src}Mw`, "visibility", "none");
+              newMap.setLayoutProperty(`${src}Mb`, "visibility", "none");
+              newMap.setLayoutProperty(`${src}Ms`, "visibility", "none");
+              newMap.setLayoutProperty(`${src}None`, "visibility", "none");
+            } else {
+              layersToExport.push(src);
+              newMap.setLayoutProperty(src, "visibility", "none");
+            }
+          }
+        });
+        // For additional data layers
+        Object.entries(layers).map(([src, visible]) => {
+          // If terrain is enabled do not disable hillshade as "idle" event will not be fired
+          if (visible && (!isTerrainEnabled || src !== "hillshade")) {
+            layersToExport.push(SOURCES_LAYERS[src]);
+            SOURCES_LAYERS[src].forEach((layerId) =>
+              newMap.setLayoutProperty(layerId, "visibility", "none"),
+            );
+          }
+        });
+        console.log(layersToExport);
+        // If layersToExport is empty, no layers are hidden, idle function will not be called again
+        if (layersToExport.length === 0) {
+          await cleanup();
+          return;
+        }
       }
       if (iteration === 0) {
         // Set all layers to be invisible, this hides the basemap
@@ -177,9 +185,12 @@ export default function DownloadControl() {
         for (let i = 0; i < allLayers.length; i++) {
           newMap.setLayoutProperty(allLayers[i].id, "visibility", "none");
         }
+        // Need to remove terrain from map if any otherwise the idle event will not be fired
         newMap.setTerrain(null);
       }
-      iteration = renderNextLayer(newMap, layersToExport, iteration);
+      // Hides the previous layer and shows the current layer
+      if (iteration >= 0) prepareNextLayer(newMap, layersToExport, iteration);
+      iteration += 1;
     });
   };
 
