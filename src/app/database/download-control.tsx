@@ -1,7 +1,7 @@
 "use client";
 
 import Spinner from "@/components/ui/spinner";
-import { DataKeys } from "@/lib/types";
+import { ALL_FILTERS } from "@/lib/filters";
 import { velocityStops } from "@/lib/utils";
 import { downloadZip } from "client-zip";
 import { useAtomValue } from "jotai";
@@ -136,7 +136,7 @@ const DownloadControl = () => {
       if (iteration === -1) {
         // Hide everything but the basemap
         Object.entries(dataVisibility).map(([src, visible]) => {
-          if (visible && data[src as DataKeys]) {
+          if (visible && data[src as keyof typeof ALL_FILTERS]) {
             if (src === "seis") {
               layersToExport.push([
                 `${src}Mw`,

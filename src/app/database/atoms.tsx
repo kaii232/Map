@@ -1,4 +1,5 @@
-import { BasemapNames, DataKeys } from "@/lib/types";
+import { ALL_FILTERS } from "@/lib/filters";
+import { BasemapNames } from "@/lib/types";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
 
@@ -14,14 +15,16 @@ export const mapStyleAtom = atom<BasemapNames>("Openfreemap");
 
 export const drawingAtom = atom<Polygon | MultiPolygon>();
 
-export const dataVisibilityAtom = atom<Record<DataKeys, boolean>>({
-  gnss: true,
-  seis: true,
-  smt: true,
-  flt: true,
-  vlc: true,
-  hf: true,
-  slab2: true,
-});
+const defaultVisibility = () => {
+  const defaultVal: Record<string, true> = {};
+  Object.keys(ALL_FILTERS).forEach((val) => {
+    defaultVal[val] = true;
+  });
+  return defaultVal;
+};
+export const dataVisibilityAtom =
+  atom<Record<keyof typeof ALL_FILTERS, boolean>>(defaultVisibility());
 
-export const dataAtom = atom<Partial<Record<DataKeys, FeatureCollection>>>({});
+export const dataAtom = atom<
+  Partial<Record<keyof typeof ALL_FILTERS, FeatureCollection>>
+>({});

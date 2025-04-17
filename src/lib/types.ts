@@ -51,5 +51,3 @@ export type FilterDefine<T extends GenericFiltersInfo> = {
             units?: string;
           };
 };
-
-export type DataKeys = "smt" | "vlc" | "gnss" | "flt" | "seis" | "hf" | "slab2";

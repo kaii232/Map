@@ -3,35 +3,46 @@
 import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
-import { LoadHf } from "@/server/actions";
+import { ALL_FILTERS } from "@/lib/filters";
+import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
+import { ActionReturn } from "@/server/actions";
+import { MultiPolygon, Polygon } from "geojson";
 import { useAtom, useAtomValue } from "jotai";
-import Link from "next/link";
-import { useTransition } from "react";
+import { memo, ReactNode, useTransition } from "react";
 import { toast } from "sonner";
 import { dataAtom, drawingAtom } from "./atoms";
 
-export default function HfFormFilters() {
+const DataNoFilter = ({
+  dataKey,
+  additionalActions,
+}: {
+  dataKey: keyof typeof ALL_FILTERS;
+  additionalActions?: ReactNode;
+}) => {
   const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
+  const loadAction = LOADERS[dataKey] as (
+    drawing?: Polygon | MultiPolygon,
+  ) => Promise<ActionReturn>;
 
   const [isPending, startTransition] = useTransition();
 
   const submitAction = async () => {
     startTransition(async () => {
-      toast("Loading data...", {
+      toast(`Loading ${TOAST_MESSAGE[dataKey]}...`, {
         icon: <Spinner className="size-5" />,
         duration: Infinity,
-        id: "Loadhf",
+        id: `Load${dataKey}`,
       });
-      const data = await LoadHf(drawing);
-      toast.dismiss("Loadhf");
+      const data = await loadAction(drawing);
+      toast.dismiss(`Load${dataKey}`);
       if (data.success) {
         toast.success(
-          `Successfully loaded ${data.data.features.length} heatflow data`,
+          `Successfully loaded ${data.data.features.length} ${TOAST_MESSAGE[dataKey]}`,
         );
         setMapData((prev) => ({
           ...prev,
-          hf: data.data,
+          [dataKey]: data.data,
         }));
       } else toast.error(data.error);
     });
@@ -44,16 +55,16 @@ export default function HfFormFilters() {
           {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
         </Button>
         <DownloadButton
-          className="mb-2 w-full"
-          data={mapData.hf}
-          fileName="hf_invest.csv"
+          className="w-full"
+          data={mapData[dataKey]}
+          fileName={`${dataKey}_invest.csv`}
         />
-        <Button variant="outline" className="w-full" asChild>
-          <Link href={"IHFC_2024_GHFDB.xlsx"} target="_blank" download>
-            Download Full Original Dataset
-          </Link>
-        </Button>
+        {additionalActions && (
+          <div className="mt-2 space-y-2">{additionalActions}</div>
+        )}
       </div>
     </form>
   );
-}
+};
+
+export default memo(DataNoFilter);

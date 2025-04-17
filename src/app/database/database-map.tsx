@@ -6,7 +6,8 @@ import tectonicBoundaries from "@/assets/PB2002_boundaries.json";
 import tectonicPlates from "@/assets/PB2002_plates.json";
 import tectonicBoundariesNew from "@/assets/plate_boundaries_new.geojson";
 import tectonicPlatesNew from "@/assets/plate_new.geojson";
-import { DataKeys, GenericFiltersInfo } from "@/lib/types";
+import { ALL_FILTERS } from "@/lib/filters";
+import { GenericFiltersInfo } from "@/lib/types";
 import { velocityStops } from "@/lib/utils";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Feature, FeatureCollection, Position } from "geojson";
@@ -117,7 +118,7 @@ const seisCommonPaint: {
 export default function DatabaseMap({
   initialData,
 }: {
-  initialData: Record<DataKeys, GenericFiltersInfo>;
+  initialData: Record<keyof typeof ALL_FILTERS, GenericFiltersInfo>;
 }) {
   const { map } = useMap();
   const mapData = useAtomValue(dataAtom);
@@ -265,8 +266,6 @@ export default function DatabaseMap({
   );
 
   const morvelVelocity = useMemo(() => xlsxToGeojson(plateVelocities), []);
-
-  console.log(mapData.slab2);
 
   return (
     <>

@@ -23,20 +23,13 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import {
-  FltFilters,
-  GnssFilters,
-  SeisFilters,
-  Slab2Filters,
-  SmtFilters,
-  VlcFilters,
-} from "@/lib/filters";
-import { BasemapNames, DataKeys, GenericFiltersInfo } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { ALL_FILTERS } from "@/lib/filters";
+import { BasemapNames, GenericFiltersInfo } from "@/lib/types";
+import { cn, DATA_LABELS } from "@/lib/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { Book, ChevronDown, ChevronLeft, Home, Map } from "lucide-react";
 import Link from "next/link";
-import { memo, useState } from "react";
+import { memo, ReactNode, useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import {
   dataAtom,
@@ -44,13 +37,8 @@ import {
   layersAtom,
   mapStyleAtom,
 } from "./atoms";
-import FltFormFilters from "./flt-form-filters";
-import GnssFormFilters from "./gnss-form-filters";
-import HfFormFilters from "./heatflow-form-filters";
-import SeisFormFilters from "./seis-form-filters";
-import Slab2FormFilters from "./slab2-form-filters";
-import SmtFormFilters from "./smt-form-filters";
-import VlcFormFilters from "./vlc-form-filters";
+import DataFormFilters from "./data-filter";
+import DataNoFilter from "./data-no-filter";
 
 const MAP_STYLE: {
   label: BasemapNames;
@@ -78,22 +66,72 @@ const MAP_STYLE: {
   },
 ] as const;
 
-const DATA_LABELS: Record<DataKeys, string> = {
-  smt: "Seamounts",
-  vlc: "Volcanoes",
-  gnss: "GNSS Stations",
-  flt: "Faults",
-  seis: "Seismic",
-  hf: "Heatflow",
-  slab2: "Slab",
-};
-
+// Labels used by the layer select component
 const LAYER_LABELS: Record<string, string> = {
   hillshade: "Hillshade",
   plateMovementVectors: "Plate Movement Vectors",
   plates: "Tectonic Plates (Bird, 2003)",
   platesNew: "Tectonic Plates (Hasterok, 2022)",
   seafloorAge: "Seafloor Age",
+};
+
+// For adding the original source download button to the data loader
+const ORIGINAL_SOURCES: Partial<Record<keyof typeof ALL_FILTERS, ReactNode>> = {
+  gnss: (
+    <Button variant="outline" className="w-full" asChild>
+      <Link href={"stations.csv"} target="_blank" download prefetch={false}>
+        Download Full Original Dataset
+      </Link>
+    </Button>
+  ),
+  hf: (
+    <Button variant="outline" className="w-full" asChild>
+      <Link
+        href={"IHFC_2024_GHFDB.xlsx"}
+        target="_blank"
+        download
+        prefetch={false}
+      >
+        Download Full Original Dataset
+      </Link>
+    </Button>
+  ),
+  seis: (
+    <>
+      <Button variant="outline" className="w-full" asChild>
+        <Link
+          href={"isc-ehb-new.csv"}
+          target="_blank"
+          download
+          prefetch={false}
+        >
+          Download ISC-EHB Catalogue
+        </Link>
+      </Button>
+      <Button variant="outline" className="w-full" asChild>
+        <Link
+          href={"isc-gem-cat-1.csv"}
+          target="_blank"
+          download
+          prefetch={false}
+        >
+          Download ISC-GEM Catalogue
+        </Link>
+      </Button>
+    </>
+  ),
+  vlc: (
+    <Button variant="outline" className="w-full" asChild>
+      <Link
+        href={"EOS_volcanoes.xlsx"}
+        target="_blank"
+        download
+        prefetch={false}
+      >
+        Download Full Original Dataset
+      </Link>
+    </Button>
+  ),
 };
 
 const ColourRamps = ({ className }: { className?: string }) => {
@@ -117,6 +155,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
     >
       {layers.seafloorAge && (
         <div>
+          <span className="mb-0.5 block">Seafloor age</span>
           <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]"></div>
           <div className="flex w-full justify-between">
             <p>0</p>
@@ -126,7 +165,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
       )}
       {dataVisibility.seis && mapData.seis && (
         <div>
-          <span className="mb-0.5 block">Seismic Depth</span>
+          <span className="mb-0.5 block">Seismic depth</span>
           <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)11%,rgba(253,212,158,1)22%,rgba(253,187,132,1)33%,rgba(235,124,73,1)44%,rgba(219,82,53,1)55%,rgba(181,33,18,1)66%,rgba(117,6,6,1)77%,rgba(18,5,4,1)88%,rgba(0,0,0,1)100%)]"></div>
           <div className="flex w-full justify-between">
             <p>{"<2m"}</p>
@@ -146,6 +185,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
       )}
       {dataVisibility.slab2 && mapData.slab2 && (
         <div>
+          <span className="mb-0.5 block">Slab depth</span>
           <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]"></div>
           <div className="flex w-full justify-between">
             <p>0m</p>
@@ -160,7 +200,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
 const Controls = ({
   initialData,
 }: {
-  initialData: Record<DataKeys, GenericFiltersInfo>;
+  initialData: Record<keyof typeof ALL_FILTERS, GenericFiltersInfo>;
 }) => {
   const [layers, setLayers] = useAtom(layersAtom);
   const [open, setOpen] = useState(true);
@@ -343,29 +383,16 @@ const Controls = ({
                         }
                       />
                     </div>
-                    {key === "flt" && (
-                      <FltFormFilters initialData={initialInfo as FltFilters} />
-                    )}
-                    {key === "gnss" && (
-                      <GnssFormFilters
-                        initialData={initialInfo as GnssFilters}
+                    {ALL_FILTERS[key] ? (
+                      <DataFormFilters
+                        initialData={initialInfo}
+                        dataKey={key}
+                        additionalActions={ORIGINAL_SOURCES[key]}
                       />
-                    )}
-                    {key === "seis" && (
-                      <SeisFormFilters
-                        initialData={initialInfo as SeisFilters}
-                      />
-                    )}
-                    {key === "smt" && (
-                      <SmtFormFilters initialData={initialInfo as SmtFilters} />
-                    )}
-                    {key === "vlc" && (
-                      <VlcFormFilters initialData={initialInfo as VlcFilters} />
-                    )}
-                    {key === "hf" && <HfFormFilters />}
-                    {key === "slab2" && (
-                      <Slab2FormFilters
-                        initialData={initialInfo as Slab2Filters}
+                    ) : (
+                      <DataNoFilter
+                        dataKey={key}
+                        additionalActions={ORIGINAL_SOURCES[key]}
                       />
                     )}
                   </SelectTabsTab>

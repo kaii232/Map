@@ -1,19 +1,6 @@
 "use server";
 
-import {
-  fltFilters,
-  fltFormSchema,
-  gnssFilters,
-  gnssFormSchema,
-  seisFilters,
-  seisFormSchema,
-  slab2Filters,
-  slab2FormSchema,
-  smtFilters,
-  smtFormSchema,
-  vlcFilters,
-  vlcFormSchema,
-} from "@/lib/filters";
+import { ALL_FILTERS, createZodSchema } from "@/lib/filters";
 import { FilterDefine, GenericFiltersInfo } from "@/lib/types";
 import { and, between, eq, isNull, or, type SQL, sql } from "drizzle-orm";
 import { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
@@ -58,7 +45,7 @@ const sqlToGeojson = (
   };
 };
 
-type ReturnType =
+export type ActionReturn =
   | { success: false; error: string }
   | { success: true; data: FeatureCollection };
 
@@ -128,13 +115,15 @@ const generateFilters = (
   return output;
 };
 
+const smtFormSchema = z.object(createZodSchema(ALL_FILTERS.smt));
+
 export const LoadSmt = async (
   values: z.infer<typeof smtFormSchema>,
   drawing?: Polygon | MultiPolygon,
-): Promise<ReturnType> => {
+): Promise<ActionReturn> => {
   const { success } = smtFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(smtFilters, values);
+  const filters = generateFilters(ALL_FILTERS.smt, values);
   if (drawing) {
     filters.push(
       sql`ST_INTERSECTS(${smtInInvest.smtGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
@@ -164,13 +153,15 @@ export const LoadSmt = async (
   return { success: true, data: dataReturn };
 };
 
+const vlcFormSchema = z.object(createZodSchema(ALL_FILTERS.vlc));
+
 export const LoadVlc = async (
   values: z.infer<typeof vlcFormSchema>,
   drawing?: Polygon | MultiPolygon,
-): Promise<ReturnType> => {
+): Promise<ActionReturn> => {
   const { success } = vlcFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(vlcFilters, values);
+  const filters = generateFilters(ALL_FILTERS.vlc, values);
   if (drawing) {
     filters.push(
       sql`ST_INTERSECTS(${vlcInInvest.vlcGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
@@ -204,13 +195,14 @@ export const LoadVlc = async (
   return { success: true, data: dataReturn };
 };
 
+const gnssFormSchema = z.object(createZodSchema(ALL_FILTERS.gnss));
 export const LoadGNSS = async (
   values: z.infer<typeof gnssFormSchema>,
   drawing?: Polygon | MultiPolygon,
-): Promise<ReturnType> => {
+): Promise<ActionReturn> => {
   const { success } = gnssFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(gnssFilters, values);
+  const filters = generateFilters(ALL_FILTERS.gnss, values);
   if (drawing) {
     filters.push(
       sql`ST_INTERSECTS(${gnssStnInInvest.gnssGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
@@ -246,14 +238,15 @@ export const LoadGNSS = async (
   return { success: true, data: dataReturn };
 };
 
+const fltFormSchema = z.object(createZodSchema(ALL_FILTERS.flt));
 export const LoadFlt = async (
   values: z.infer<typeof fltFormSchema>,
   drawing?: MultiPolygon | Polygon,
-): Promise<ReturnType> => {
+): Promise<ActionReturn> => {
   const { success } = fltFormSchema.safeParse(values);
   console.log(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(fltFilters, values);
+  const filters = generateFilters(ALL_FILTERS.flt, values);
 
   if (drawing) {
     filters.push(
@@ -288,13 +281,14 @@ export const LoadFlt = async (
   return { success: true, data: dataReturn };
 };
 
+const seisFormSchema = z.object(createZodSchema(ALL_FILTERS.seis));
 export const LoadSeis = async (
   values: z.infer<typeof seisFormSchema>,
   drawing?: MultiPolygon | Polygon,
-): Promise<ReturnType> => {
+): Promise<ActionReturn> => {
   const { success } = seisFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(seisFilters, values);
+  const filters = generateFilters(ALL_FILTERS.seis, values);
 
   if (drawing) {
     filters.push(
@@ -325,7 +319,7 @@ export const LoadSeis = async (
 
 export const LoadHf = async (
   drawing?: MultiPolygon | Polygon,
-): Promise<ReturnType> => {
+): Promise<ActionReturn> => {
   let filters;
   if (drawing) {
     filters = sql`ST_INTERSECTS(${heatflowInInvest.hfGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`;
@@ -350,13 +344,14 @@ export const LoadHf = async (
   return { success: true, data: dataReturn };
 };
 
+const slab2FormSchema = z.object(createZodSchema(ALL_FILTERS.slab2));
 export const LoadSlab2 = async (
   values: z.infer<typeof slab2FormSchema>,
   drawing?: MultiPolygon | Polygon,
-): Promise<ReturnType> => {
+): Promise<ActionReturn> => {
   const { success } = slab2FormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(slab2Filters, values);
+  const filters = generateFilters(ALL_FILTERS.slab2, values);
 
   if (drawing) {
     filters.push(

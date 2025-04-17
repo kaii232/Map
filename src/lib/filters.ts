@@ -209,7 +209,7 @@ export const slab2Filters: FilterDefine<Slab2Filters> = {
   },
 };
 
-const createZodSchema = <T extends GenericFiltersInfo>(
+export const createZodSchema = <T extends GenericFiltersInfo>(
   filters: FilterDefine<T>,
 ) => {
   const schema: Record<
@@ -248,9 +248,19 @@ const createZodSchema = <T extends GenericFiltersInfo>(
   return schema;
 };
 
-export const createDefaultValues = (
-  initialData: GenericFiltersInfo,
-  filters: FilterDefine<GenericFiltersInfo>,
+export const ALL_FILTERS = {
+  smt: smtFilters,
+  vlc: vlcFilters,
+  gnss: gnssFilters,
+  flt: fltFilters,
+  seis: seisFilters,
+  hf: null,
+  slab2: slab2Filters,
+};
+
+export const createDefaultValues = <T extends GenericFiltersInfo>(
+  initialData: T,
+  filters: FilterDefine<T>,
 ) => {
   const values: {
     [key: string]:
@@ -286,10 +296,3 @@ export const createDefaultValues = (
   });
   return values;
 };
-
-export const vlcFormSchema = z.object(createZodSchema(vlcFilters));
-export const gnssFormSchema = z.object(createZodSchema(gnssFilters));
-export const seisFormSchema = z.object(createZodSchema(seisFilters));
-export const smtFormSchema = z.object(createZodSchema(smtFilters));
-export const fltFormSchema = z.object(createZodSchema(fltFilters));
-export const slab2FormSchema = z.object(createZodSchema(slab2Filters));
