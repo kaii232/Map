@@ -19,6 +19,21 @@ import type {
   Range,
 } from "./types";
 
+/**
+ * To add new data with filters follow these steps:
+ * 1. Define the filter types for each filter of either catagory type (select), range (slider), dateRange (calendar)
+ * 2. Create the filterDefine object, this object will denote
+ *    name: The label of the filter
+ *    type: The the type of filter it is
+ *    dbCol: The drizzle column that the filter will be applied on
+ *    nullCol: For select filters, if NULL is selected, the column that the IS NULL filter should be applied on
+ * 3. Create server action to load the data
+ * 4. Update the labels and loaders in utils.ts
+ * 5. Update database/page.tsx to fetch the data needed to populate the filter
+ * 6. Update database-map.tsx interactiveLayerIds and add source and layers. For consistency, Source ID should be [key]Source and the Layer ID should be [key]
+ * 7. Update controls.tsx ColourRamps (showColourRange and add gradient) if a legend is needed to display the data
+ */
+
 type VlcFilters = {
   classes: Categories;
   countries: Categories;
