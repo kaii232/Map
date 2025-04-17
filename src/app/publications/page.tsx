@@ -1,8 +1,10 @@
 import Header from "@/components/header";
+import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { biblInInvest } from "@/server/db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { NextButton, PrevButton } from "./pagination";
 import PapersSearch from "./papers-search";
@@ -57,6 +59,12 @@ export default async function Publications({
 }: {
   searchParams: Promise<{ query?: string; page?: string }>;
 }) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    query: {
+      disableRefresh: true,
+    },
+  });
   const { query, page } = await searchParams;
 
   const pageNum = Number.isNaN(Number(page)) ? 0 : Number(page);
@@ -85,7 +93,13 @@ export default async function Publications({
           count: sql`count(*) OVER()`.mapWith(Number),
         })
         .from(biblInInvest)
-        .where(and(filter, eq(biblInInvest.biblIsInvest, true)))
+        .where(
+          and(
+            filter,
+            eq(biblInInvest.biblIsInvest, true),
+            session ? eq(biblInInvest.biblIsRestricted, false) : undefined,
+          ),
+        )
         .orderBy(sql`rank DESC NULLS LAST`, desc(biblInInvest.biblYr))
         .offset(pageNum)
         .limit(PAGE_SIZE)
@@ -101,7 +115,12 @@ export default async function Publications({
           count: sql`count(*) OVER()`.mapWith(Number),
         })
         .from(biblInInvest)
-        .where(eq(biblInInvest.biblIsInvest, true))
+        .where(
+          and(
+            eq(biblInInvest.biblIsInvest, true),
+            session ? eq(biblInInvest.biblIsRestricted, false) : undefined,
+          ),
+        )
         .orderBy(desc(biblInInvest.biblYr))
         .offset(pageNum)
         .limit(PAGE_SIZE);

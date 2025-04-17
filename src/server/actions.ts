@@ -46,9 +46,13 @@ const sqlToGeojson = (
   };
 };
 
-export type ActionReturn =
-  | { success: false; error: string }
-  | { success: true; data: FeatureCollection };
+type ActionSuccess<T = undefined> = T extends undefined
+  ? { success: true; data: FeatureCollection }
+  : { success: true; data: FeatureCollection; metadata: T };
+
+export type ActionReturn<T = undefined> =
+  | ActionSuccess<T>
+  | { success: false; error: string };
 
 const generateFilters = (
   filters: FilterDefine<GenericFiltersInfo>,
