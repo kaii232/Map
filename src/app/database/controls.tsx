@@ -142,7 +142,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
     layers.seafloorAge ||
     (dataVisibility.hf && mapData.hf) ||
     (dataVisibility.seis && mapData.seis) ||
-    (dataVisibility.slab2 && mapData.slab2);
+    (dataVisibility.slab2 && mapData.slab2) ||
+    (dataVisibility.slip && mapData.slip);
 
   if (!showColourRange) return null;
 
@@ -190,6 +191,16 @@ const ColourRamps = ({ className }: { className?: string }) => {
           <div className="flex w-full justify-between">
             <p>0m</p>
             <p>1000m</p>
+          </div>
+        </div>
+      )}
+      {dataVisibility.slip && mapData.slip && (
+        <div>
+          <span className="mb-0.5 block">Slip</span>
+          <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,_#FCFDBF_3.28%,_#FDDC9E_10.05%,_#FEBA80_16.71%,_#FD9869_23.11%,_#F8765C_30.04%,_#EB5760_36.81%,_#D3436E_43.23%,_#B63779_50.1%,_#982D80_56.61%,_#7B2382_63.38%,_#5F187F_70.41%,_#410F74_76.57%,_#231151_83.43%,_#0C0927_90.09%,_#000004_96.86%)]"></div>
+          <div className="flex w-full justify-between">
+            <p>0m</p>
+            <p>10m</p>
           </div>
         </div>
       )}

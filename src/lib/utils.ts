@@ -5,6 +5,7 @@ import {
   LoadHf,
   LoadSeis,
   LoadSlab2,
+  LoadSlip,
   LoadSmt,
   LoadVlc,
 } from "@/server/actions";
@@ -29,6 +30,7 @@ export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS, string> = {
   slab2: "slab data",
   smt: "seamounts",
   vlc: "volcanoes",
+  slip: "slip model data",
 };
 
 // Labels used for the data select component
@@ -40,6 +42,7 @@ export const DATA_LABELS: Record<keyof typeof ALL_FILTERS, string> = {
   seis: "Seismic",
   hf: "Heatflow",
   slab2: "Slab",
+  slip: "Slip Models",
 };
 
 // Server actions used to load the data
@@ -58,4 +61,5 @@ export const LOADERS: Record<
   seis: LoadSeis,
   hf: LoadHf,
   slab2: LoadSlab2,
+  slip: LoadSlip,
 };

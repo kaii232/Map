@@ -14,6 +14,7 @@ import {
   heatflowInInvest,
   seisInInvest,
   slab2InInvest,
+  slipModelInInvest,
   smtInInvest,
   stnTypeInInvest,
   vlcInInvest,
@@ -372,6 +373,46 @@ export const LoadSlab2 = async (
     .leftJoin(
       countryInInvest,
       eq(countryInInvest.countryId, slab2InInvest.slabCountryId),
+    )
+    .where(and(...filters));
+  const dataReturn = sqlToGeojson(data);
+
+  return { success: true, data: dataReturn };
+};
+
+const slipFormSchema = z.object(createZodSchema(ALL_FILTERS.slip));
+export const LoadSlip = async (
+  values: z.infer<typeof slipFormSchema>,
+  drawing?: MultiPolygon | Polygon,
+): Promise<ActionReturn> => {
+  const { success } = slipFormSchema.safeParse(values);
+  if (!success) return { success: false, error: "Values do not follow schema" };
+  const filters = generateFilters(ALL_FILTERS.slip, values);
+
+  if (drawing) {
+    filters.push(
+      sql`ST_INTERSECTS(${slipModelInInvest.patchGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+    );
+  }
+
+  const data = await db
+    .select({
+      id: slipModelInInvest.patchId,
+      model_id: slipModelInInvest.modelId,
+      depth: slipModelInInvest.patchDepth,
+      strike: slipModelInInvest.patchStrike,
+      rake: slipModelInInvest.patchRake,
+      dip: slipModelInInvest.patchDip,
+      slip: slipModelInInvest.patchSlip,
+      catalog: biblInInvest.biblTitle,
+      longitude: slipModelInInvest.patchLon,
+      latitude: slipModelInInvest.patchLat,
+      geojson: sql<string>`ST_ASGEOJSON(${slipModelInInvest.patchGeom})`,
+    })
+    .from(slipModelInInvest)
+    .leftJoin(
+      biblInInvest,
+      eq(slipModelInInvest.modelSrcId, biblInInvest.biblId),
     )
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);

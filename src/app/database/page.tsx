@@ -1,3 +1,4 @@
+import { GenericFiltersInfo } from "@/lib/types";
 import { db } from "@/server/db";
 import {
   biblInInvest,
@@ -6,6 +7,7 @@ import {
   gnssStnInInvest,
   seisInInvest,
   slab2InInvest,
+  slipModelInInvest,
   smtInInvest,
   stnTypeInInvest,
   vlcInInvest,
@@ -21,6 +23,12 @@ export const revalidate = 43200;
 export const metadata: Metadata = {
   title: "Map",
   description: "View and download data from EOS or global datasets",
+};
+
+const safeFirstRow = <T extends GenericFiltersInfo>(data: T[]): T => {
+  if (data.length) return data[0];
+
+  return {} as T;
 };
 
 export default async function DatabasePage() {
@@ -42,6 +50,7 @@ export default async function DatabasePage() {
     gnssFilters,
     fltFilters,
     slab2Filters,
+    slipFilters,
   ] = await Promise.all([
     db
       // .with(sources)
@@ -139,19 +148,29 @@ export default async function DatabasePage() {
         region: sql<string[]>`ARRAY_AGG(DISTINCT ${slab2InInvest.slabRegion})`,
       })
       .from(slab2InInvest),
+    db
+      .select({
+        catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
+      })
+      .from(slipModelInInvest)
+      .leftJoin(
+        biblInInvest,
+        eq(slipModelInInvest.modelSrcId, biblInInvest.biblId),
+      ),
   ]);
 
   return (
     <main className="h-screen w-full">
       <DatabaseMap
         initialData={{
-          flt: fltFilters[0],
-          gnss: gnssFilters[0],
-          smt: smtFilters[0],
-          vlc: vlcFilters[0],
-          seis: seisFilters[0],
+          flt: safeFirstRow(fltFilters),
+          gnss: safeFirstRow(gnssFilters),
+          smt: safeFirstRow(smtFilters),
+          vlc: safeFirstRow(vlcFilters),
+          seis: safeFirstRow(seisFilters),
           hf: {},
-          slab2: slab2Filters[0],
+          slab2: safeFirstRow(slab2Filters),
+          slip: safeFirstRow(slipFilters),
         }}
       />
     </main>

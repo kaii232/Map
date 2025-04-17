@@ -293,6 +293,7 @@ export default function DatabaseMap({
           "flt",
           "hf",
           "slab2",
+          "slip",
           "plates",
           "plateBoundaries",
           "platesNew",
@@ -478,6 +479,47 @@ export default function DatabaseMap({
             );
           })}
         </Source>
+        {mapData.slip && (
+          <Source id="slipSource" type="geojson" data={mapData.slip}>
+            <Layer
+              id="slip"
+              type="fill"
+              paint={{
+                "fill-opacity": 0.5,
+                "fill-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "slip"],
+                  0,
+                  "#FCFDBF",
+                  1,
+                  "#FDDC9E",
+                  2,
+                  "#FD9869",
+                  3,
+                  "#F8765C",
+                  4,
+                  "#D3436E",
+                  5,
+                  "#B63779",
+                  6,
+                  "#7B2382",
+                  7,
+                  "#5F187F",
+                  8,
+                  "#231151",
+                  9,
+                  "#0C0927",
+                  10,
+                  "#000004",
+                ],
+              }}
+              layout={{
+                visibility: dataVisibility.slip ? "visible" : "none",
+              }}
+            />
+          </Source>
+        )}
         {mapData.vlc && (
           <Source id="vlcSource" type="geojson" data={mapData.vlc}>
             <Layer
