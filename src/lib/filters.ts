@@ -5,6 +5,7 @@ import {
   gnssStnInInvest,
   seisInInvest,
   slab2InInvest,
+  slipModelInInvest,
   smtInInvest,
   stnTypeInInvest,
   vlcInInvest,
@@ -18,13 +19,13 @@ import type {
   Range,
 } from "./types";
 
-export type VlcFilters = {
+type VlcFilters = {
   classes: Categories;
   countries: Categories;
   sources: Categories;
 };
 
-export const vlcFilters: FilterDefine<VlcFilters> = {
+const vlcFilters: FilterDefine<VlcFilters> = {
   classes: {
     name: "Class",
     type: "select",
@@ -45,14 +46,14 @@ export const vlcFilters: FilterDefine<VlcFilters> = {
   },
 };
 
-export type SeisFilters = {
+type SeisFilters = {
   depthRange: Range;
   mwRange: Range;
   dateRange: DateFilter;
   catalogs: Categories;
 };
 
-export const seisFilters: FilterDefine<SeisFilters> = {
+const seisFilters: FilterDefine<SeisFilters> = {
   depthRange: {
     dbCol: seisInInvest.seisDepth,
     name: "Depth",
@@ -77,14 +78,14 @@ export const seisFilters: FilterDefine<SeisFilters> = {
   },
 };
 
-export type SmtFilters = {
+type SmtFilters = {
   elevRange: Range;
   baseRange: Range;
   summitRange: Range;
   classes: Categories;
   catalogs: Categories;
 };
-export const smtFilters: FilterDefine<SmtFilters> = {
+const smtFilters: FilterDefine<SmtFilters> = {
   elevRange: {
     dbCol: smtInInvest.smtElev,
     name: "Elevation",
@@ -117,14 +118,14 @@ export const smtFilters: FilterDefine<SmtFilters> = {
   },
 };
 
-export type GnssFilters = {
+type GnssFilters = {
   elevRange: Range;
   dateRange: DateFilter;
   projects: Categories;
   stations: Categories;
   countries: Categories;
 };
-export const gnssFilters: FilterDefine<GnssFilters> = {
+const gnssFilters: FilterDefine<GnssFilters> = {
   elevRange: {
     dbCol: gnssStnInInvest.gnssElev,
     name: "Elevation",
@@ -156,7 +157,7 @@ export const gnssFilters: FilterDefine<GnssFilters> = {
   },
 };
 
-export type FltFilters = {
+type FltFilters = {
   lengthRange: Range;
   sliprateRange: Range;
   depthRange: Range;
@@ -164,7 +165,7 @@ export type FltFilters = {
   catalogs: Categories;
 };
 
-export const fltFilters: FilterDefine<FltFilters> = {
+const fltFilters: FilterDefine<FltFilters> = {
   lengthRange: {
     dbCol: fltInInvest.fltLen,
     name: "Length",
@@ -196,17 +197,41 @@ export const fltFilters: FilterDefine<FltFilters> = {
   },
 };
 
-export type Slab2Filters = {
+type Slab2Filters = {
   region: Categories;
 };
 
-export const slab2Filters: FilterDefine<Slab2Filters> = {
+const slab2Filters: FilterDefine<Slab2Filters> = {
   region: {
     dbCol: slab2InInvest.slabRegion,
     nullCol: slab2InInvest.slabRegion,
     name: "Region",
     type: "select",
   },
+};
+
+type SlipFilters = {
+  catalogs: Categories;
+};
+
+const slipFilters: FilterDefine<SlipFilters> = {
+  catalogs: {
+    dbCol: biblInInvest.biblTitle,
+    name: "Catalog",
+    nullCol: slipModelInInvest.modelSrcId,
+    type: "select",
+  },
+};
+
+export const ALL_FILTERS = {
+  smt: smtFilters,
+  vlc: vlcFilters,
+  gnss: gnssFilters,
+  flt: fltFilters,
+  seis: seisFilters,
+  hf: null,
+  slab2: slab2Filters,
+  slip: slipFilters,
 };
 
 export const createZodSchema = <T extends GenericFiltersInfo>(
@@ -248,16 +273,6 @@ export const createZodSchema = <T extends GenericFiltersInfo>(
   return schema;
 };
 
-export const ALL_FILTERS = {
-  smt: smtFilters,
-  vlc: vlcFilters,
-  gnss: gnssFilters,
-  flt: fltFilters,
-  seis: seisFilters,
-  hf: null,
-  slab2: slab2Filters,
-};
-
 export const createDefaultValues = <T extends GenericFiltersInfo>(
   initialData: T,
   filters: FilterDefine<T>,
@@ -274,21 +289,22 @@ export const createDefaultValues = <T extends GenericFiltersInfo>(
       values[key] = "All";
     } else if (filters[key].type === "range") {
       values[key] = [
-        (initialData[key]![0] as number) || 0,
-        (initialData[key]![1] as number) || 0,
+        (initialData[key] ? Number(initialData[key][0]) : 0) || 0,
+        (initialData[key] ? Number(initialData[key][1]) : 0) || 0,
       ];
       values[`${key}AllowNull`] = true;
     } else {
+      const now = Date.now();
       values[key] = {
         from: new Date(
           initialData[key] && initialData[key][0] !== "NULL"
             ? initialData[key][0]
-            : 0,
+            : now,
         ),
         to: new Date(
-          initialData[key] && initialData[key][0] !== "NULL"
+          initialData[key] && initialData[key][1] !== "NULL"
             ? initialData[key][1]
-            : 0,
+            : now,
         ),
       };
       values[`${key}AllowNull`] = true;
