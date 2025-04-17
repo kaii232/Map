@@ -404,7 +404,7 @@ export const LoadSlip = async (
       rake: slipModelInInvest.patchRake,
       dip: slipModelInInvest.patchDip,
       slip: slipModelInInvest.patchSlip,
-      catalog: biblInInvest.biblTitle,
+      model_event: biblInInvest.biblTitle,
       longitude: slipModelInInvest.patchLon,
       latitude: slipModelInInvest.patchLat,
       geojson: sql<string>`ST_ASGEOJSON(${slipModelInInvest.patchGeom})`,

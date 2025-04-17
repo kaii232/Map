@@ -150,7 +150,9 @@ export default async function DatabasePage() {
       .from(slab2InInvest),
     db
       .select({
-        catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
+        model_event: sql<
+          string[]
+        >`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
       })
       .from(slipModelInInvest)
       .leftJoin(

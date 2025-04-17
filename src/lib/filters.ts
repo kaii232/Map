@@ -226,13 +226,13 @@ const slab2Filters: FilterDefine<Slab2Filters> = {
 };
 
 type SlipFilters = {
-  catalogs: Categories;
+  model_event: Categories;
 };
 
 const slipFilters: FilterDefine<SlipFilters> = {
-  catalogs: {
+  model_event: {
     dbCol: biblInInvest.biblTitle,
-    name: "Catalog",
+    name: "Model Event",
     nullCol: slipModelInInvest.modelSrcId,
     type: "select",
   },
