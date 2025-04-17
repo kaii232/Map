@@ -1,7 +1,7 @@
 import Header from "@/components/header";
 import { db } from "@/server/db";
 import { biblInInvest } from "@/server/db/schema";
-import { sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { Metadata } from "next";
 import Link from "next/link";
 import { NextButton, PrevButton } from "./pagination";
@@ -85,8 +85,8 @@ export default async function Publications({
           count: sql`count(*) OVER()`.mapWith(Number),
         })
         .from(biblInInvest)
-        .where(filter)
-        .orderBy(sql`rank DESC NULLS LAST`)
+        .where(and(filter, eq(biblInInvest.biblIsInvest, true)))
+        .orderBy(sql`rank DESC NULLS LAST`, desc(biblInInvest.biblYr))
         .offset(pageNum)
         .limit(PAGE_SIZE)
     : await db
@@ -101,6 +101,8 @@ export default async function Publications({
           count: sql`count(*) OVER()`.mapWith(Number),
         })
         .from(biblInInvest)
+        .where(eq(biblInInvest.biblIsInvest, true))
+        .orderBy(desc(biblInInvest.biblYr))
         .offset(pageNum)
         .limit(PAGE_SIZE);
 
