@@ -24,7 +24,12 @@ const SOURCES_LAYERS: Record<string, string[]> = {
 const downladFiles = async (images: Blob[]) => {
   const blob = await downloadZip(
     images.map((image, index) => ({
-      name: index === 0 ? "Combined_map.png" : `Layer_${index}.png`,
+      name:
+        index === 0
+          ? "combined_map.png"
+          : index === 1
+            ? `basemap.png`
+            : `layer_${index - 1}.png`,
       input: image,
     })),
   ).blob();
@@ -87,7 +92,6 @@ const DownloadControl = () => {
     hidden.className = "sr-only";
     document.body.appendChild(hidden);
     const container = document.createElement("div");
-    // Make the canvas a square
     container.style.height = window.innerHeight + "px";
     container.style.width = window.innerWidth + "px";
     hidden.appendChild(container);
@@ -103,6 +107,7 @@ const DownloadControl = () => {
       pixelRatio: 8192 / window.innerWidth, // Always make the width max resolution
       canvasContextAttributes: {
         preserveDrawingBuffer: true,
+        antialias: true,
       },
       fadeDuration: 0,
       attributionControl: false,
@@ -125,7 +130,6 @@ const DownloadControl = () => {
     });
 
     newMap.on("idle", async () => {
-      console.log("Map is idle", iteration);
       // Converts the map to an image
       // Iteration -1: Combined map
       // Iteration 1: Basemap only
@@ -173,7 +177,6 @@ const DownloadControl = () => {
             );
           }
         });
-        console.log(layersToExport);
         // If layersToExport is empty, no layers are hidden, idle function will not be called again
         if (layersToExport.length === 0) {
           await cleanup();
