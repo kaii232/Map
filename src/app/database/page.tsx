@@ -26,8 +26,8 @@ import { Metadata } from "next";
 import DatabaseMap from "./database-map";
 
 // Next.js will invalidate the cache when a
-// request comes in, at most once every 12 hours.
-export const revalidate = 43200;
+// request comes in, at most once every revalidate seconds.
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Map",
