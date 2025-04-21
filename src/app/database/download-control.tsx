@@ -99,8 +99,9 @@ const DownloadControl = () => {
       container: container,
       style: map.getStyle(),
       center: map.getCenter(),
-      zoom: map.getZoom(),
       bearing: map.getBearing(),
+      bounds: map.getBounds(),
+      fitBoundsOptions: { padding: map.getPadding() },
       pitch: map.getPitch(),
       interactive: false,
       maxCanvasSize: [8192, 8192],
@@ -118,6 +119,8 @@ const DownloadControl = () => {
     let iteration = -1;
 
     const cleanup = async () => {
+      toast.dismiss("download-map");
+      toast.success("All map layers processed!");
       await downladFiles(images);
       // Cleanup
       setIsDrawing(false);
@@ -125,9 +128,6 @@ const DownloadControl = () => {
       hidden.remove();
       newMap.remove();
     };
-    newMap.once("load", () => {
-      newMap.setPadding(map.getPadding());
-    });
 
     newMap.on("idle", async () => {
       // Converts the map to an image
@@ -141,8 +141,6 @@ const DownloadControl = () => {
         }),
       );
       if (iteration >= layersToExport.length) {
-        toast.dismiss("download-map");
-        toast.success("All map layers processed!");
         await cleanup();
         return;
       }
