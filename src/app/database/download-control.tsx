@@ -10,6 +10,7 @@ import maplibregl from "maplibre-gl";
 import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMap } from "react-map-gl/maplibre";
+import { toast } from "sonner";
 import { dataAtom, dataVisibilityAtom, layersAtom } from "./atoms";
 
 const SOURCES_LAYERS: Record<string, string[]> = {
@@ -59,7 +60,9 @@ const prepareNextLayer = (
   } else {
     map.setLayoutProperty(addLayers, "visibility", "visible");
   }
-  console.log("layouts updated");
+  toast(`Processing layer ${activeLayer + 1} of ${layersToExport.length}`, {
+    id: "download-map",
+  });
 };
 
 const DownloadControl = () => {
@@ -75,7 +78,11 @@ const DownloadControl = () => {
   const drawLayers = () => {
     if (!map) return;
     setIsDrawing(true);
-
+    toast("Downloading map layers...", {
+      icon: <Spinner className="size-5" />,
+      duration: Infinity,
+      id: `download-map`,
+    });
     const hidden = document.createElement("div");
     hidden.className = "sr-only";
     document.body.appendChild(hidden);
@@ -93,7 +100,7 @@ const DownloadControl = () => {
       pitch: map.getPitch(),
       interactive: false,
       maxCanvasSize: [8192, 8192],
-      pixelRatio: 4,
+      pixelRatio: 8192 / window.innerWidth, // Always make the width max resolution
       canvasContextAttributes: {
         preserveDrawingBuffer: true,
       },
@@ -130,6 +137,8 @@ const DownloadControl = () => {
         }),
       );
       if (iteration >= layersToExport.length) {
+        toast.dismiss("download-map");
+        toast.success("All map layers processed!");
         await cleanup();
         return;
       }
