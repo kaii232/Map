@@ -583,11 +583,11 @@ export default function DatabaseMap({
             closeButton={false}
             closeOnClick={true}
             className={
-              "[&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
+              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-neutral-950 [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-neutral-950 [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-neutral-950 [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-neutral-950 [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-neutral-950 [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-neutral-950 [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-neutral-950 [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-neutral-950 [&_.maplibregl-popup-content]:bg-neutral-950 [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
           >
             {hoverInfo.feature.properties.name && (
-              <div className="mb-2 text-lg font-semibold text-neutral-900">
+              <div className="mb-2 text-lg font-semibold text-neutral-50">
                 {hoverInfo.feature.properties.name}
               </div>
             )}
@@ -596,12 +596,25 @@ export default function DatabaseMap({
                 if (key === "name") return;
                 if (typeof value === "string" && value.includes("https://"))
                   return (
-                    <div className="text-sm text-neutral-700" key={key}>
+                    <div className="text-sm text-neutral-300" key={key}>
                       <span className="font-semibold">{key}:</span>{" "}
                       <Link
                         href={value}
                         target="_blank"
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-400 hover:underline"
+                      >
+                        {value}
+                      </Link>
+                    </div>
+                  );
+                if (typeof value === "string" && value.includes("doi:"))
+                  return (
+                    <div className="text-sm text-neutral-300" key={key}>
+                      <span className="font-semibold">{key}:</span>{" "}
+                      <Link
+                        href={value.replace("doi:", "https://doi.org/")}
+                        target="_blank"
+                        className="text-blue-400 hover:underline"
                       >
                         {value}
                       </Link>
@@ -609,7 +622,7 @@ export default function DatabaseMap({
                   );
 
                 return (
-                  <div className="text-sm text-neutral-700" key={key}>
+                  <div className="text-sm text-neutral-300" key={key}>
                     <span className="font-semibold">{key}:</span> {value}
                   </div>
                 );
@@ -637,11 +650,11 @@ export default function DatabaseMap({
             onClose={() => setselectedFeature(undefined)}
             closeOnClick={false}
             className={
-              "[&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
+              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-neutral-950 [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-neutral-950 [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-neutral-950 [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-neutral-950 [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-neutral-950 [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-neutral-950 [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-neutral-950 [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-neutral-950 [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-neutral-950 [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
           >
             {selectedFeature.feature.properties.name && (
-              <div className="mb-2 text-lg font-semibold text-neutral-900">
+              <div className="mb-2 text-lg font-semibold text-neutral-50">
                 {selectedFeature.feature.properties.name}
               </div>
             )}
@@ -650,12 +663,12 @@ export default function DatabaseMap({
                 if (key === "name") return;
                 if (typeof value === "string" && value.includes("https://"))
                   return (
-                    <div className="text-sm text-neutral-700" key={key}>
+                    <div className="text-sm text-neutral-300" key={key}>
                       <span className="font-semibold">{key}:</span>{" "}
                       <Link
                         href={value}
                         target="_blank"
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-400 hover:underline"
                       >
                         {value}
                       </Link>
@@ -663,19 +676,19 @@ export default function DatabaseMap({
                   );
                 if (typeof value === "string" && value.includes("doi:"))
                   return (
-                    <div className="text-sm text-neutral-700" key={key}>
+                    <div className="text-sm text-neutral-300" key={key}>
                       <span className="font-semibold">{key}:</span>{" "}
                       <Link
                         href={value.replace("doi:", "https://doi.org/")}
                         target="_blank"
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-400 hover:underline"
                       >
                         {value}
                       </Link>
                     </div>
                   );
                 return (
-                  <div className="text-sm text-neutral-700" key={key}>
+                  <div className="text-sm text-neutral-300" key={key}>
                     <span className="font-semibold">{key}:</span> {value}
                   </div>
                 );
