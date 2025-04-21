@@ -1,3 +1,12 @@
+import {
+  FltFilters,
+  GnssFilters,
+  SeisFilters,
+  Slab2Filters,
+  SlipFilters,
+  SmtFilters,
+  VlcFilters,
+} from "@/lib/filters";
 import { GenericFiltersInfo } from "@/lib/types";
 import { db } from "@/server/db";
 import {
@@ -51,6 +60,14 @@ export default async function DatabasePage() {
     fltFilters,
     slab2Filters,
     slipFilters,
+  ]: [
+    VlcFilters[],
+    SeisFilters[],
+    SmtFilters[],
+    GnssFilters[],
+    FltFilters[],
+    Slab2Filters[],
+    SlipFilters[],
   ] = await Promise.all([
     db
       // .with(sources)
@@ -150,9 +167,12 @@ export default async function DatabasePage() {
       .from(slab2InInvest),
     db
       .select({
-        model_event: sql<
+        modelEvent: sql<
           string[]
         >`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
+        slipRate: sql<
+          [number, number]
+        >`ARRAY[MIN(${slipModelInInvest.patchSlip}), MAX(${slipModelInInvest.patchSlip})]`,
       })
       .from(slipModelInInvest)
       .leftJoin(
