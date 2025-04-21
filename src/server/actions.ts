@@ -1,9 +1,15 @@
 "use server";
 
 import { ALL_FILTERS, createZodSchema } from "@/lib/filters";
-import { FilterDefine, GenericFiltersInfo } from "@/lib/types";
+import { FilterDefine, GenericFiltersInfo, Range } from "@/lib/types";
 import { and, between, eq, isNull, or, type SQL, sql } from "drizzle-orm";
-import { Feature, FeatureCollection, MultiPolygon, Polygon } from "geojson";
+import {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  MultiPolygon,
+  Polygon,
+} from "geojson";
 import { z } from "zod";
 import { db } from "./db";
 import {
@@ -24,19 +30,20 @@ const sqlToGeojson = (
   input: {
     id: number;
     geojson: string;
-    [key: string]: string | number | null | Date;
+    [key: string]: unknown;
   }[],
+  excludeKey?: string,
 ): FeatureCollection => {
   const features: Feature[] = [];
   for (let i = 0; i < input.length; i++) {
+    const properties: GeoJsonProperties = { ...input[i] };
+    delete properties.geojson;
+    delete properties.id;
+    if (excludeKey) delete properties[excludeKey];
     features.push({
       type: "Feature",
       id: input[i].id,
-      properties: {
-        ...input[i],
-        geojson: undefined,
-        id: undefined,
-      },
+      properties,
       geometry: JSON.parse(input[i].geojson),
     });
   }
@@ -388,7 +395,7 @@ const slipFormSchema = z.object(createZodSchema(ALL_FILTERS.slip));
 export const LoadSlip = async (
   values: z.infer<typeof slipFormSchema>,
   drawing?: MultiPolygon | Polygon,
-): Promise<ActionReturn> => {
+): Promise<ActionReturn<Range>> => {
   const { success } = slipFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
   const filters = generateFilters(ALL_FILTERS.slip, values);
@@ -411,6 +418,7 @@ export const LoadSlip = async (
       model_event: biblInInvest.biblTitle,
       longitude: slipModelInInvest.patchLon,
       latitude: slipModelInInvest.patchLat,
+      range: sql<Range>`ARRAY[FLOOR(MIN(${slipModelInInvest.patchSlip}) OVER()), CEIL(MAX(${slipModelInInvest.patchSlip}) OVER())]`,
       geojson: sql<string>`ST_ASGEOJSON(${slipModelInInvest.patchGeom})`,
     })
     .from(slipModelInInvest)
@@ -419,7 +427,8 @@ export const LoadSlip = async (
       eq(slipModelInInvest.modelSrcId, biblInInvest.biblId),
     )
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const range: Range = data.length ? data[0].range : [0, 0];
+  const dataReturn = sqlToGeojson(data, "range");
 
-  return { success: true, data: dataReturn };
+  return { success: true, data: dataReturn, metadata: range };
 };

@@ -24,18 +24,20 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ALL_FILTERS } from "@/lib/filters";
-import { BasemapNames, GenericFiltersInfo } from "@/lib/types";
+import { BasemapNames, GenericFiltersInfo, Range } from "@/lib/types";
 import { cn, DATA_LABELS } from "@/lib/utils";
-import { useAtom, useAtomValue } from "jotai";
+import { ActionReturn } from "@/server/actions";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Book, ChevronDown, ChevronLeft, Home, Map } from "lucide-react";
 import Link from "next/link";
-import { memo, ReactNode, useState } from "react";
+import { memo, ReactNode, useMemo, useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import {
   dataAtom,
   dataVisibilityAtom,
   layersAtom,
   mapStyleAtom,
+  slipRangeAtom,
 } from "./atoms";
 import DataFormFilters from "./data-filter";
 import DataNoFilter from "./data-no-filter";
@@ -75,69 +77,11 @@ const LAYER_LABELS: Record<string, string> = {
   seafloorAge: "Seafloor Age",
 };
 
-// For adding the original source download button to the data loader
-const ORIGINAL_SOURCES: Partial<Record<keyof typeof ALL_FILTERS, ReactNode>> = {
-  gnss: (
-    <Button variant="outline" className="w-full" asChild>
-      <Link href={"stations.csv"} target="_blank" download prefetch={false}>
-        Download Full Original Dataset
-      </Link>
-    </Button>
-  ),
-  hf: (
-    <Button variant="outline" className="w-full" asChild>
-      <Link
-        href={"IHFC_2024_GHFDB.xlsx"}
-        target="_blank"
-        download
-        prefetch={false}
-      >
-        Download Full Original Dataset
-      </Link>
-    </Button>
-  ),
-  seis: (
-    <>
-      <Button variant="outline" className="w-full" asChild>
-        <Link
-          href={"isc-ehb-new.csv"}
-          target="_blank"
-          download
-          prefetch={false}
-        >
-          Download ISC-EHB Catalogue
-        </Link>
-      </Button>
-      <Button variant="outline" className="w-full" asChild>
-        <Link
-          href={"isc-gem-cat-1.csv"}
-          target="_blank"
-          download
-          prefetch={false}
-        >
-          Download ISC-GEM Catalogue
-        </Link>
-      </Button>
-    </>
-  ),
-  vlc: (
-    <Button variant="outline" className="w-full" asChild>
-      <Link
-        href={"EOS_volcanoes.xlsx"}
-        target="_blank"
-        download
-        prefetch={false}
-      >
-        Download Full Original Dataset
-      </Link>
-    </Button>
-  ),
-};
-
 const ColourRamps = ({ className }: { className?: string }) => {
   const layers = useAtomValue(layersAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
   const mapData = useAtomValue(dataAtom);
+  const slipRange = useAtomValue(slipRangeAtom);
 
   const legends: {
     name: string;
@@ -189,8 +133,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Slip",
       colour:
         "bg-[linear-gradient(90deg,_#FCFDBF_3.28%,_#FDDC9E_10.05%,_#FEBA80_16.71%,_#FD9869_23.11%,_#F8765C_30.04%,_#EB5760_36.81%,_#D3436E_43.23%,_#B63779_50.1%,_#982D80_56.61%,_#7B2382_63.38%,_#5F187F_70.41%,_#410F74_76.57%,_#231151_83.43%,_#0C0927_90.09%,_#000004_96.86%)]",
-      min: "0m",
-      max: "10m",
+      min: `${slipRange[0]}m`,
+      max: `${slipRange[1]}m`,
       visible:
         dataVisibility.slip &&
         !!mapData.slip &&
@@ -238,7 +182,98 @@ const Controls = ({
   const [open, setOpen] = useState(true);
   const [mapStyle, setMapStyle] = useAtom(mapStyleAtom);
   const [dataVisibility, setDataVisibility] = useAtom(dataVisibilityAtom);
+  const setSlipRange = useSetAtom(slipRangeAtom);
   const { map } = useMap();
+
+  // For adding specific behaviours to the form filters
+  const MAP_DATA_SPECIFICS: Partial<
+    Record<
+      keyof typeof ALL_FILTERS,
+      {
+        onLoad?: (
+          data: Extract<ActionReturn<unknown>, { success: true }>,
+        ) => void;
+        additionalActions?: ReactNode;
+      }
+    >
+  > = useMemo(
+    () => ({
+      gnss: {
+        additionalActions: (
+          <Button variant="outline" className="w-full" asChild>
+            <Link
+              href={"stations.csv"}
+              target="_blank"
+              download
+              prefetch={false}
+            >
+              Download Full Original Dataset
+            </Link>
+          </Button>
+        ),
+      },
+      hf: {
+        additionalActions: (
+          <Button variant="outline" className="w-full" asChild>
+            <Link
+              href={"IHFC_2024_GHFDB.xlsx"}
+              target="_blank"
+              download
+              prefetch={false}
+            >
+              Download Full Original Dataset
+            </Link>
+          </Button>
+        ),
+      },
+      seis: {
+        additionalActions: (
+          <>
+            <Button variant="outline" className="w-full" asChild>
+              <Link
+                href={"isc-ehb-new.csv"}
+                target="_blank"
+                download
+                prefetch={false}
+              >
+                Download ISC-EHB Catalogue
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full" asChild>
+              <Link
+                href={"isc-gem-cat-1.csv"}
+                target="_blank"
+                download
+                prefetch={false}
+              >
+                Download ISC-GEM Catalogue
+              </Link>
+            </Button>
+          </>
+        ),
+      },
+      vlc: {
+        additionalActions: (
+          <Button variant="outline" className="w-full" asChild>
+            <Link
+              href={"EOS_volcanoes.xlsx"}
+              target="_blank"
+              download
+              prefetch={false}
+            >
+              Download Full Original Dataset
+            </Link>
+          </Button>
+        ),
+      },
+      slip: {
+        onLoad(data) {
+          if (data.metadata) setSlipRange(data.metadata as Range);
+        },
+      },
+    }),
+    [setSlipRange],
+  );
 
   return (
     <>
@@ -419,12 +454,18 @@ const Controls = ({
                       <DataFormFilters
                         initialData={initialInfo}
                         dataKey={key}
-                        additionalActions={ORIGINAL_SOURCES[key]}
+                        onDataLoad={MAP_DATA_SPECIFICS[key]?.onLoad}
+                        additionalActions={
+                          MAP_DATA_SPECIFICS[key]?.additionalActions
+                        }
                       />
                     ) : (
                       <DataNoFilter
                         dataKey={key}
-                        additionalActions={ORIGINAL_SOURCES[key]}
+                        onDataLoad={MAP_DATA_SPECIFICS[key]?.onLoad}
+                        additionalActions={
+                          MAP_DATA_SPECIFICS[key]?.additionalActions
+                        }
                       />
                     )}
                   </SelectTabsTab>

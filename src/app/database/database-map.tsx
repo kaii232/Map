@@ -2,7 +2,7 @@
 
 import { style } from "@/assets/map_style";
 import { ALL_FILTERS } from "@/lib/filters";
-import { GenericFiltersInfo } from "@/lib/types";
+import { GenericFiltersInfo, Range } from "@/lib/types";
 import { velocityStops } from "@/lib/utils";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Position } from "geojson";
@@ -24,7 +24,12 @@ import {
   useMap,
 } from "react-map-gl/maplibre";
 import { GeoJSONStoreFeatures } from "terra-draw";
-import { dataAtom, dataVisibilityAtom, drawingAtom } from "./atoms";
+import {
+  dataAtom,
+  dataVisibilityAtom,
+  drawingAtom,
+  slipRangeAtom,
+} from "./atoms";
 import Basemaps from "./basemaps";
 import Controls from "./controls";
 import DownloadControl from "./download-control";
@@ -115,6 +120,17 @@ const getSeisProps = (
         ],
 });
 
+// Convenience function to map a range to user defined stops for map layer style specification
+const getInterpolateRange = (range: Range, stops: (string | number)[]) => {
+  const step = (range[1] - range[0]) / (stops.length - 1);
+  const out = [];
+  for (let i = 0, length = stops.length; i < length; i++) {
+    out.push(range[0] + i * step);
+    out.push(stops[i]);
+  }
+  return out;
+};
+
 export default function DatabaseMap({
   initialData,
 }: {
@@ -137,6 +153,7 @@ export default function DatabaseMap({
   }>();
 
   const setDrawing = useSetAtom(drawingAtom);
+  const slipRange = useAtomValue(slipRangeAtom);
 
   const onUpdate = useCallback(
     (features: GeoJSONStoreFeatures[] | undefined) => {
@@ -260,28 +277,19 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "slip"],
-            0,
-            "#FCFDBF",
-            1,
-            "#FDDC9E",
-            2,
-            "#FD9869",
-            3,
-            "#F8765C",
-            4,
-            "#D3436E",
-            5,
-            "#B63779",
-            6,
-            "#7B2382",
-            7,
-            "#5F187F",
-            8,
-            "#231151",
-            9,
-            "#0C0927",
-            10,
-            "#000004",
+            ...getInterpolateRange(slipRange, [
+              "#FCFDBF",
+              "#FDDC9E",
+              "#FD9869",
+              "#F8765C",
+              "#D3436E",
+              "#B63779",
+              "#7B2382",
+              "#5F187F",
+              "#231151",
+              "#0C0927",
+              "#000004",
+            ]),
           ],
         },
       },
@@ -465,7 +473,7 @@ export default function DatabaseMap({
         },
       },
     }),
-    [],
+    [slipRange],
   );
 
   // Gets all the layer IDs for the map's interactiveLayerIds prop

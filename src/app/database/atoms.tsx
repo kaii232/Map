@@ -1,5 +1,5 @@
 import { ALL_FILTERS } from "@/lib/filters";
-import { BasemapNames } from "@/lib/types";
+import { BasemapNames, Range } from "@/lib/types";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
 
@@ -28,3 +28,5 @@ export const dataVisibilityAtom =
 export const dataAtom = atom<
   Partial<Record<keyof typeof ALL_FILTERS, FeatureCollection>>
 >({});
+
+export const slipRangeAtom = atom<Range>([0, 0]);

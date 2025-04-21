@@ -26,10 +26,14 @@ const DataFormFilters = <T extends GenericFiltersInfo>({
   initialData,
   dataKey,
   additionalActions,
+  onDataLoad,
 }: {
   initialData: T;
   dataKey: keyof typeof ALL_FILTERS;
   additionalActions?: ReactNode;
+  onDataLoad?: (
+    data: Extract<ActionReturn<unknown>, { success: true }>,
+  ) => void;
 }) => {
   const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
@@ -47,7 +51,7 @@ const DataFormFilters = <T extends GenericFiltersInfo>({
   const loadAction = LOADERS[dataKey] as (
     values: z.infer<typeof formSchema>,
     drawing?: Polygon | MultiPolygon,
-  ) => Promise<ActionReturn>;
+  ) => Promise<ActionReturn<unknown>>;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,6 +75,7 @@ const DataFormFilters = <T extends GenericFiltersInfo>({
           ...prev,
           [dataKey]: data.data,
         }));
+        if (onDataLoad) onDataLoad(data);
       } else toast.error(data.error);
     });
   };

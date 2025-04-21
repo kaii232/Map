@@ -15,15 +15,19 @@ import { dataAtom, drawingAtom } from "./atoms";
 const DataNoFilter = ({
   dataKey,
   additionalActions,
+  onDataLoad,
 }: {
   dataKey: keyof typeof ALL_FILTERS;
   additionalActions?: ReactNode;
+  onDataLoad?: (
+    data: Extract<ActionReturn<unknown>, { success: true }>,
+  ) => void;
 }) => {
   const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
   const loadAction = LOADERS[dataKey] as (
     drawing?: Polygon | MultiPolygon,
-  ) => Promise<ActionReturn>;
+  ) => Promise<ActionReturn<unknown>>;
 
   const [isPending, startTransition] = useTransition();
 
@@ -44,6 +48,7 @@ const DataNoFilter = ({
           ...prev,
           [dataKey]: data.data,
         }));
+        if (onDataLoad) onDataLoad(data);
       } else toast.error(data.error);
     });
   };
