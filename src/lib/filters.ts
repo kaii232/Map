@@ -30,8 +30,13 @@ import type {
  * 3. Create server action to load the data
  * 4. Update the labels and loaders in utils.ts
  * 5. Update database/page.tsx to fetch the data needed to populate the filter
- * 6. Update database-map.tsx interactiveLayerIds and add source and layers. For consistency, Source ID should be [key]Source and the Layer ID should be [key]
- * 7. Update controls.tsx ColourRamps (showColourRange and add gradient) if a legend is needed to display the data
+ * 6. Update database-map.tsx mapDataLayers to specify the layer styles
+ * 7. Update controls.tsx ColourRamps legends object if a legend is needed to display the data
+ *
+ * To add additional filters:
+ * 1. Update the filter type
+ * 2. Update the filterDefine object
+ * 3. Update database/page.tsx to fetch the data needed to populate the filter
  */
 
 type VlcFilters = {
