@@ -138,12 +138,67 @@ const ColourRamps = ({ className }: { className?: string }) => {
   const layers = useAtomValue(layersAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
   const mapData = useAtomValue(dataAtom);
-  const showColourRange =
-    layers.seafloorAge ||
-    (dataVisibility.hf && mapData.hf) ||
-    (dataVisibility.seis && mapData.seis) ||
-    (dataVisibility.slab2 && mapData.slab2) ||
-    (dataVisibility.slip && mapData.slip);
+
+  const legends: {
+    name: string;
+    colour: string;
+    min: string;
+    max: string;
+    visible: boolean;
+  }[] = [
+    {
+      name: "Seafloor age",
+      colour:
+        "bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]",
+      min: "0",
+      max: "279Mya",
+      visible: layers.seafloorAge,
+    },
+    {
+      name: "Seismic depth",
+      colour:
+        "bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)11%,rgba(253,212,158,1)22%,rgba(253,187,132,1)33%,rgba(235,124,73,1)44%,rgba(219,82,53,1)55%,rgba(181,33,18,1)66%,rgba(117,6,6,1)77%,rgba(18,5,4,1)88%,rgba(0,0,0,1)100%)]",
+      min: "<2m",
+      max: ">1024m",
+      visible:
+        dataVisibility.seis &&
+        !!mapData.seis &&
+        mapData.seis.features.length > 0,
+    },
+    {
+      name: "Heatflow qval",
+      colour:
+        "bg-[linear-gradient(90deg,rgba(12,74,110,1)0%,rgba(2,132,199,1)25%,rgba(238,238,238,1)50%,rgba(225,29,72,1)75%,rgba(76,5,25,1)100%)]",
+      min: "<-400W/m²",
+      max: ">400W/m²",
+      visible:
+        dataVisibility.hf && !!mapData.hf && mapData.hf.features.length > 0,
+    },
+    {
+      name: "Slab depth",
+      colour:
+        "bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]",
+      min: "0m",
+      max: "1000m",
+      visible:
+        dataVisibility.slab2 &&
+        !!mapData.slab2 &&
+        mapData.slab2.features.length > 0,
+    },
+    {
+      name: "Slip",
+      colour:
+        "bg-[linear-gradient(90deg,_#FCFDBF_3.28%,_#FDDC9E_10.05%,_#FEBA80_16.71%,_#FD9869_23.11%,_#F8765C_30.04%,_#EB5760_36.81%,_#D3436E_43.23%,_#B63779_50.1%,_#982D80_56.61%,_#7B2382_63.38%,_#5F187F_70.41%,_#410F74_76.57%,_#231151_83.43%,_#0C0927_90.09%,_#000004_96.86%)]",
+      min: "0m",
+      max: "10m",
+      visible:
+        dataVisibility.slip &&
+        !!mapData.slip &&
+        mapData.slip.features.length > 0,
+    },
+  ];
+
+  const showColourRange = legends.some((legend) => legend.visible);
 
   if (!showColourRange) return null;
 
@@ -154,56 +209,22 @@ const ColourRamps = ({ className }: { className?: string }) => {
         className,
       )}
     >
-      {layers.seafloorAge && (
-        <div>
-          <span className="mb-0.5 block">Seafloor age</span>
-          <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]"></div>
-          <div className="flex w-full justify-between">
-            <p>0</p>
-            <p>279Mya</p>
+      {legends.map((legend) => {
+        if (!legend.visible) return null;
+        return (
+          <div key={legend.name}>
+            <span className="mb-0.5 block">{legend.name}</span>
+            <div
+              role="presentation"
+              className={`mb-1 h-6 w-full ${legend.colour}`}
+            ></div>
+            <div className="flex w-full justify-between">
+              <span>{legend.min}</span>
+              <span>{legend.max}</span>
+            </div>
           </div>
-        </div>
-      )}
-      {dataVisibility.seis && mapData.seis && (
-        <div>
-          <span className="mb-0.5 block">Seismic depth</span>
-          <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)11%,rgba(253,212,158,1)22%,rgba(253,187,132,1)33%,rgba(235,124,73,1)44%,rgba(219,82,53,1)55%,rgba(181,33,18,1)66%,rgba(117,6,6,1)77%,rgba(18,5,4,1)88%,rgba(0,0,0,1)100%)]"></div>
-          <div className="flex w-full justify-between">
-            <p>{"<2m"}</p>
-            <p>{">1024m"}</p>
-          </div>
-        </div>
-      )}
-      {dataVisibility.hf && mapData.hf && (
-        <div>
-          <span className="mb-0.5 block">Heatflow qval</span>
-          <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(12,74,110,1)0%,rgba(2,132,199,1)25%,rgba(238,238,238,1)50%,rgba(225,29,72,1)75%,rgba(76,5,25,1)100%)]"></div>
-          <div className="flex w-full justify-between">
-            <p>{"<-400W/m²"}</p>
-            <p>{">400W/m²"}</p>
-          </div>
-        </div>
-      )}
-      {dataVisibility.slab2 && mapData.slab2 && (
-        <div>
-          <span className="mb-0.5 block">Slab depth</span>
-          <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]"></div>
-          <div className="flex w-full justify-between">
-            <p>0m</p>
-            <p>1000m</p>
-          </div>
-        </div>
-      )}
-      {dataVisibility.slip && mapData.slip && (
-        <div>
-          <span className="mb-0.5 block">Slip</span>
-          <div className="mb-1 h-6 w-full bg-[linear-gradient(90deg,_#FCFDBF_3.28%,_#FDDC9E_10.05%,_#FEBA80_16.71%,_#FD9869_23.11%,_#F8765C_30.04%,_#EB5760_36.81%,_#D3436E_43.23%,_#B63779_50.1%,_#982D80_56.61%,_#7B2382_63.38%,_#5F187F_70.41%,_#410F74_76.57%,_#231151_83.43%,_#0C0927_90.09%,_#000004_96.86%)]"></div>
-          <div className="flex w-full justify-between">
-            <p>0m</p>
-            <p>10m</p>
-          </div>
-        </div>
-      )}
+        );
+      })}
     </div>
   );
 };
