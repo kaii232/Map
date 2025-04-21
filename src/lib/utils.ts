@@ -21,7 +21,9 @@ export function cn(...inputs: ClassValue[]) {
 
 export const velocityStops = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
-// Used for displaying the message on the toast when loading data
+/**
+ * Used for displaying the message on the toast when loading data
+ */
 export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS, string> = {
   flt: "faults",
   gnss: "GNSS stations",
@@ -33,7 +35,9 @@ export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS, string> = {
   slip: "slip model data",
 };
 
-// Labels used for the data select component
+/**
+ * Labels used for the data select component
+ */
 export const DATA_LABELS: Record<keyof typeof ALL_FILTERS, string> = {
   smt: "Seamounts",
   vlc: "Volcanoes",
@@ -45,7 +49,9 @@ export const DATA_LABELS: Record<keyof typeof ALL_FILTERS, string> = {
   slip: "Slip Models",
 };
 
-// Server actions used to load the data
+/**
+ * This object contains the server actions used to load each data type
+ */
 export const LOADERS: Record<
   keyof typeof ALL_FILTERS,
   | ((

@@ -30,6 +30,7 @@ import { CalendarDays } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
 type FormGenerateProps = {
+  /** The React Hook Form instance */
   form: UseFormReturn<
     {
       [x: string]:
@@ -41,10 +42,10 @@ type FormGenerateProps = {
             to: Date;
           };
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any,
+    unknown,
     undefined
   >;
+  /** Default values for each input */
   defaults: {
     [key: string]:
       | string
@@ -55,10 +56,15 @@ type FormGenerateProps = {
           to: Date;
         };
   };
+  /** Data from database to populate controls */
   initialData: GenericFiltersInfo;
+  /** The filters for the data type */
   filters: FilterDefine<GenericFiltersInfo>;
 };
 
+/**
+ * Component for automatically rendering the correct controls for each filter
+ */
 export default function FormGenerate({
   form,
   defaults,
@@ -219,7 +225,7 @@ export default function FormGenerate({
                         >
                           <CalendarDays className="shrink-0 text-neutral-400" />
                           <div className="w-full text-left text-neutral-50">
-                            {field.value.from.toLocaleDateString(undefined, {
+                            {field.value.from.toLocaleDateString("en-GB", {
                               day: "numeric",
                               month: "short",
                               year: "2-digit",
@@ -227,7 +233,7 @@ export default function FormGenerate({
                           </div>
                           <Separator orientation="vertical" className="mx-1" />
                           <div className="w-full text-left text-neutral-50">
-                            {field.value.to.toLocaleDateString(undefined, {
+                            {field.value.to.toLocaleDateString("en-GB", {
                               day: "numeric",
                               month: "short",
                               year: "2-digit",

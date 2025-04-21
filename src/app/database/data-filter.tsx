@@ -22,15 +22,20 @@ import { z } from "zod";
 import { dataAtom, drawingAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
+/** This component renders out the given filters for the data type */
 const DataFormFilters = <T extends GenericFiltersInfo>({
   initialData,
   dataKey,
   additionalActions,
   onDataLoad,
 }: {
+  /** Data from database to populate filter controls */
   initialData: T;
+  /** The key for the data type */
   dataKey: keyof typeof ALL_FILTERS;
+  /** Components to render below the Download button of each form */
   additionalActions?: ReactNode;
+  /** Callback that is invoked when data is loaded successfully */
   onDataLoad?: (
     data: Extract<ActionReturn<unknown>, { success: true }>,
   ) => void;

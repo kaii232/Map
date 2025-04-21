@@ -42,6 +42,7 @@ import {
 import DataFormFilters from "./data-filter";
 import DataNoFilter from "./data-no-filter";
 
+/** Used to populate the basemap select component */
 const MAP_STYLE: {
   label: BasemapNames;
   img: string;
@@ -68,7 +69,7 @@ const MAP_STYLE: {
   },
 ] as const;
 
-// Labels used by the layer select component
+/** Labels for the map layer select component */
 const LAYER_LABELS: Record<string, string> = {
   hillshade: "Hillshade",
   plateMovementVectors: "Plate Movement Vectors",
@@ -77,12 +78,14 @@ const LAYER_LABELS: Record<string, string> = {
   seafloorAge: "Seafloor Age",
 };
 
+/** Displays the colour ramp legends for currently visible data on the map */
 const ColourRamps = ({ className }: { className?: string }) => {
   const layers = useAtomValue(layersAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
   const mapData = useAtomValue(dataAtom);
   const slipRange = useAtomValue(slipRangeAtom);
 
+  /** Defines how to display the legend and when it should be visible */
   const legends: {
     name: string;
     colour: string;
@@ -173,9 +176,11 @@ const ColourRamps = ({ className }: { className?: string }) => {
   );
 };
 
+/** Contains all the controls for the map */
 const Controls = ({
   initialData,
 }: {
+  /** Data from database to populate filter controls */
   initialData: Record<keyof typeof ALL_FILTERS, GenericFiltersInfo>;
 }) => {
   const [layers, setLayers] = useAtom(layersAtom);
@@ -185,7 +190,7 @@ const Controls = ({
   const setSlipRange = useSetAtom(slipRangeAtom);
   const { map } = useMap();
 
-  // For adding specific behaviours to the form filters
+  /** Specific actions and callbacks for each data type */
   const MAP_DATA_SPECIFICS: Partial<
     Record<
       keyof typeof ALL_FILTERS,

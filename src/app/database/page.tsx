@@ -25,8 +25,7 @@ import { eq, sql } from "drizzle-orm";
 import { Metadata } from "next";
 import DatabaseMap from "./database-map";
 
-// Next.js will invalidate the cache when a
-// request comes in, at most once every revalidate seconds.
+// Disable caching
 export const revalidate = 0;
 
 export const metadata: Metadata = {
@@ -51,6 +50,16 @@ export default async function DatabasePage() {
   //     })
   //     .from(vlcInInvest),
   // );
+
+  // const session = await auth.api.getSession({
+  //   headers: await headers(),
+  //   query: {
+  //     disableRefresh: true,
+  //   },
+  // });
+  // const restrict = session
+  //   ? undefined
+  //   : eq(biblInInvest.biblIsRestricted, false);
 
   const [
     vlcFilters,
@@ -85,6 +94,7 @@ export default async function DatabasePage() {
         eq(vlcInInvest.countryId, countryInInvest.countryId),
       )
       .leftJoin(biblInInvest, eq(vlcInInvest.vlcSrcId, biblInInvest.biblId)),
+    // .where(restrict),
     // .leftJoin(sources, eq(sources.vlcId, vlcInInvest.vlcId)),
     db
       .select({
@@ -101,6 +111,7 @@ export default async function DatabasePage() {
       })
       .from(seisInInvest)
       .leftJoin(biblInInvest, eq(seisInInvest.seisCatId, biblInInvest.biblId)),
+    // .where(restrict),
     db
       .select({
         elevRange: sql<
@@ -117,6 +128,7 @@ export default async function DatabasePage() {
       })
       .from(smtInInvest)
       .leftJoin(biblInInvest, eq(smtInInvest.smtSrcId, biblInInvest.biblId)),
+    // .where(restrict),
     db
       .select({
         elevRange: sql<
@@ -160,6 +172,7 @@ export default async function DatabasePage() {
       })
       .from(fltInInvest)
       .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId)),
+    // .where(restrict),
     db
       .select({
         region: sql<string[]>`ARRAY_AGG(DISTINCT ${slab2InInvest.slabRegion})`,
@@ -179,6 +192,7 @@ export default async function DatabasePage() {
         biblInInvest,
         eq(slipModelInInvest.modelSrcId, biblInInvest.biblId),
       ),
+    // .where(restrict),
   ]);
 
   return (

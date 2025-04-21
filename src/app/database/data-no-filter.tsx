@@ -12,13 +12,17 @@ import { memo, ReactNode, useTransition } from "react";
 import { toast } from "sonner";
 import { dataAtom, drawingAtom } from "./atoms";
 
+/** This component renders out a way to load data with no filters */
 const DataNoFilter = ({
   dataKey,
   additionalActions,
   onDataLoad,
 }: {
+  /** The key for the data type */
   dataKey: keyof typeof ALL_FILTERS;
+  /** Components to render below the Download button of each form */
   additionalActions?: ReactNode;
+  /** Callback that is invoked when data is loaded successfully */
   onDataLoad?: (
     data: Extract<ActionReturn<unknown>, { success: true }>,
   ) => void;

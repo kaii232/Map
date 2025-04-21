@@ -13,6 +13,7 @@ import { useMap } from "react-map-gl/maplibre";
 import { toast } from "sonner";
 import { dataAtom, dataVisibilityAtom, layersAtom } from "./atoms";
 
+/** Layer IDs for each map layer for separating when downloading */
 const SOURCES_LAYERS: Record<string, string[]> = {
   hillshade: ["terrainHillshade"],
   plateMovementVectors: velocityStops.map((_, index) => `velocity_${index}`),
@@ -21,6 +22,7 @@ const SOURCES_LAYERS: Record<string, string[]> = {
   seafloorAge: ["seafloorAge"],
 };
 
+/** Zips and downloads the files */
 const downladFiles = async (images: Blob[]) => {
   const blob = await downloadZip(
     images.map((image, index) => ({
@@ -40,6 +42,7 @@ const downladFiles = async (images: Blob[]) => {
   link.remove();
 };
 
+/** Toggles the visibility of the previous and current layers */
 const prepareNextLayer = (
   map: maplibregl.Map,
   layersToExport: (string | string[])[] = [],
@@ -70,6 +73,7 @@ const prepareNextLayer = (
   });
 };
 
+/** Downloads the currently visible map in separate layers */
 const DownloadControl = () => {
   const data = useAtomValue(dataAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
@@ -130,16 +134,17 @@ const DownloadControl = () => {
     };
 
     newMap.on("idle", async () => {
-      // Converts the map to an image
       // Iteration -1: Combined map
       // Iteration 1: Basemap only
       // Iteration 2+: Individual layers
       await new Promise((resolve) =>
+        // Converts the map to an image
         newMap.getCanvas().toBlob((blob) => {
           if (blob) images.push(blob);
           resolve(blob);
         }),
       );
+
       if (iteration >= layersToExport.length) {
         await cleanup();
         return;
@@ -187,7 +192,7 @@ const DownloadControl = () => {
         for (let i = 0; i < allLayers.length; i++) {
           newMap.setLayoutProperty(allLayers[i].id, "visibility", "none");
         }
-        // Need to remove terrain from map if any otherwise the idle event will not be fired
+        // Need to remove terrain from map if any, otherwise the idle event will not be fired
         newMap.setTerrain(null);
       }
       // Hides the previous layer and shows the current layer

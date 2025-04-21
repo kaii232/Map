@@ -248,6 +248,11 @@ const slipFilters: FilterDefine<SlipFilters> = {
   },
 };
 
+/**
+ * An object containing the filter types for all the different data types. The key of this object is used as the key for all other objects
+ * dealing with the different data types, and its value
+ * defines the filters. Value is `null` when there are no filters for that data type.
+ */
 export const ALL_FILTERS = {
   smt: smtFilters,
   vlc: vlcFilters,
@@ -259,6 +264,11 @@ export const ALL_FILTERS = {
   slip: slipFilters,
 };
 
+/**
+ * This function creates a zod schema for input validation for the given filters
+ * @param filters An object describing the type of filters
+ * @returns A zodSchema for input validation
+ */
 export const createZodSchema = <T extends GenericFiltersInfo>(
   filters: FilterDefine<T>,
 ) => {
@@ -267,23 +277,12 @@ export const createZodSchema = <T extends GenericFiltersInfo>(
     | z.ZodArray<z.ZodNumber, "many">
     | z.ZodBoolean
     | z.ZodString
-    | z.ZodObject<
-        {
-          from: z.ZodDate;
-          to: z.ZodDate;
-        },
-        "strip",
-        z.ZodTypeAny,
-        {
-          from: Date;
-          to: Date;
-        },
-        {
-          from: Date;
-          to: Date;
-        }
-      >
+    | z.ZodObject<{
+        from: z.ZodDate;
+        to: z.ZodDate;
+      }>
   > = {};
+
   Object.keys(filters).forEach((key) => {
     if (filters[key].type === "select") {
       schema[key] = z.string();
@@ -298,6 +297,12 @@ export const createZodSchema = <T extends GenericFiltersInfo>(
   return schema;
 };
 
+/**
+ * A function that creates an object containing the default values for the given filters
+ * @param initialData Data fetched from database for populating the filter values
+ * @param filters An object describing the type of filters
+ * @returns An object containing the default values for each filter
+ */
 export const createDefaultValues = <T extends GenericFiltersInfo>(
   initialData: T,
   filters: FilterDefine<T>,

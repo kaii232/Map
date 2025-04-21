@@ -17,7 +17,9 @@ const flattenGeoJsonToCSV = (input: FeatureCollection) => {
   const csv = json2csv(res);
   return csv;
 };
-
+/**
+ * Creates a download link for downloading the data passed in its `data` prop as a csv file
+ */
 export default function DownloadButton({
   data,
   fileName,

@@ -3,6 +3,7 @@ import { BasemapNames, Range } from "@/lib/types";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
 
+/** Keeps track of which layers are visible */
 export const layersAtom = atom({
   hillshade: false,
   plateMovementVectors: false,
@@ -11,8 +12,9 @@ export const layersAtom = atom({
   seafloorAge: false,
 });
 
+/** Keeps track of the currently selected basemap */
 export const mapStyleAtom = atom<BasemapNames>("Openfreemap");
-
+/** Keeps track of the drawings the user currently has on the map */
 export const drawingAtom = atom<Polygon | MultiPolygon>();
 
 const defaultVisibility = () => {
@@ -22,11 +24,13 @@ const defaultVisibility = () => {
   });
   return defaultVal;
 };
+/** Keeps track of which data types are visible */
 export const dataVisibilityAtom =
   atom<Record<keyof typeof ALL_FILTERS, boolean>>(defaultVisibility());
-
+/** Contains the geojson for each data type */
 export const dataAtom = atom<
   Partial<Record<keyof typeof ALL_FILTERS, FeatureCollection>>
 >({});
 
+/** Contains the slip range of currently loaded slip data. Used for mapping the colour range to the slip range */
 export const slipRangeAtom = atom<Range>([0, 0]);

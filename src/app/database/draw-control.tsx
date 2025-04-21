@@ -8,8 +8,10 @@ type DrawControlProps = ConstructorParameters<
   typeof MaplibreTerradrawControl
 >[0] & {
   position?: ControlPosition;
+  /** Callback that is invoked when an action has occurred including adding a new drawing, removing drawing, updating exitsing drawing */
   onUpdate: (features: GeoJSONStoreFeatures[]) => void;
 };
+/** Adds controls to draw on the map */
 export const DrawControl = memo((props: DrawControlProps) => {
   const drawControl = useRef<MaplibreTerradrawControl>(
     new MaplibreTerradrawControl(props),

@@ -53,7 +53,7 @@ const drawOptionsModes: (
   | "download"
 )[] = ["polygon", "rectangle", "select", "delete-selection", "delete"];
 
-// Convenience function to get the layer props for seismic data
+/** Convenience function to get the layer props for seismic data */
 const getSeisProps = (
   property: "none" | "mb" | "mw" | "ms",
 ): LayerProps & { id: string } => ({
@@ -120,7 +120,7 @@ const getSeisProps = (
         ],
 });
 
-// Convenience function to map a range to user defined stops for map layer style specification
+/** Convenience function to map a range to user defined stops for map layer style specification */
 const getInterpolateRange = (range: Range, stops: (string | number)[]) => {
   const step = (range[1] - range[0]) / (stops.length - 1);
   const out = [];
@@ -134,6 +134,7 @@ const getInterpolateRange = (range: Range, stops: (string | number)[]) => {
 export default function DatabaseMap({
   initialData,
 }: {
+  /** Data from database to populate filter controls */
   initialData: Record<keyof typeof ALL_FILTERS, GenericFiltersInfo>;
 }) {
   const { map } = useMap();
@@ -261,9 +262,11 @@ export default function DatabaseMap({
     [map],
   );
 
-  // Defined the styles for each data type. Layout visibility, Source ID and Layer ID will be set automatically
-  // ID is required when source has multiple layers. Final Layer ID will automatically be key + id.
-  // E.g. For seismic data, id specified of "Mw" will have a layer id of "seisMw"
+  /** Defines the styles for each data type. Layout visibility, Source ID and Layer ID will be set automatically to
+   * `key + Source` and `key` respectively.
+   *  ID is required when source has multiple layers. For sources with multiple layers, the Layer IDs will be `key + id`.
+   *  E.g. For seismic data, id specified of `Mw` will have a layer id of `seisMw`
+   * */
   const mapDataLayers: Record<
     keyof typeof ALL_FILTERS,
     LayerProps | (LayerProps & { id: string })[]

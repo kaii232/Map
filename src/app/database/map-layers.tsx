@@ -9,6 +9,7 @@ import { useAtomValue } from "jotai";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { layersAtom } from "./atoms";
 
+/** Turns a loaded xlsx file into a geojson object */
 const xlsxToGeojson = (
   input: Record<string, string | number>[],
 ): FeatureCollection => {
@@ -36,6 +37,7 @@ const xlsxToGeojson = (
 
 const morvelVelocity = xlsxToGeojson(plateVelocities);
 
+/** Contains the source and layers for the different map layers */
 export default function MapLayers() {
   const layers = useAtomValue(layersAtom);
 
