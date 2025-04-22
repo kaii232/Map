@@ -22,7 +22,7 @@ const HeaderLink = ({
     <Link
       href={href}
       className={cn(
-        "block px-3 py-2 transition-colors hover:text-yellow-500 hover:underline",
+        "block px-3 py-2 text-sm transition-colors hover:text-yellow-500 hover:underline",
         active && "text-amber-400 hover:text-yellow-500",
         className,
       )}
@@ -46,7 +46,7 @@ export const AccountLink = ({ className }: { className?: string }) => {
 
   if (isPending)
     return (
-      <div className="flex w-16 justify-center">
+      <div className="flex h-9 w-16 items-center justify-center">
         <Spinner className="size-4" />
       </div>
     );
