@@ -8,6 +8,7 @@ import {
   VlcFilters,
 } from "@/lib/filters";
 import { GenericFiltersInfo } from "@/lib/types";
+import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import {
   biblInInvest,
@@ -23,6 +24,7 @@ import {
 } from "@/server/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { Metadata } from "next";
+import { headers } from "next/headers";
 import DatabaseMap from "./database-map";
 
 // Disable caching
@@ -51,15 +53,15 @@ export default async function DatabasePage() {
   //     .from(vlcInInvest),
   // );
 
-  // const session = await auth.api.getSession({
-  //   headers: await headers(),
-  //   query: {
-  //     disableRefresh: true,
-  //   },
-  // });
-  // const restrict = session
-  //   ? undefined
-  //   : eq(biblInInvest.biblIsRestricted, false);
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    query: {
+      disableRefresh: true,
+    },
+  });
+  const restrict = session
+    ? undefined
+    : eq(biblInInvest.biblIsRestricted, false);
 
   const [
     vlcFilters,
@@ -93,8 +95,8 @@ export default async function DatabasePage() {
         countryInInvest,
         eq(vlcInInvest.countryId, countryInInvest.countryId),
       )
-      .leftJoin(biblInInvest, eq(vlcInInvest.vlcSrcId, biblInInvest.biblId)),
-    // .where(restrict),
+      .leftJoin(biblInInvest, eq(vlcInInvest.vlcSrcId, biblInInvest.biblId))
+      .where(restrict),
     // .leftJoin(sources, eq(sources.vlcId, vlcInInvest.vlcId)),
     db
       .select({
@@ -110,8 +112,8 @@ export default async function DatabasePage() {
         catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
       })
       .from(seisInInvest)
-      .leftJoin(biblInInvest, eq(seisInInvest.seisCatId, biblInInvest.biblId)),
-    // .where(restrict),
+      .leftJoin(biblInInvest, eq(seisInInvest.seisCatId, biblInInvest.biblId))
+      .where(restrict),
     db
       .select({
         elevRange: sql<
@@ -127,8 +129,8 @@ export default async function DatabasePage() {
         catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
       })
       .from(smtInInvest)
-      .leftJoin(biblInInvest, eq(smtInInvest.smtSrcId, biblInInvest.biblId)),
-    // .where(restrict),
+      .leftJoin(biblInInvest, eq(smtInInvest.smtSrcId, biblInInvest.biblId))
+      .where(restrict),
     db
       .select({
         elevRange: sql<
@@ -171,8 +173,8 @@ export default async function DatabasePage() {
         catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
       })
       .from(fltInInvest)
-      .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId)),
-    // .where(restrict),
+      .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId))
+      .where(restrict),
     db
       .select({
         region: sql<string[]>`ARRAY_AGG(DISTINCT ${slab2InInvest.slabRegion})`,
@@ -191,8 +193,8 @@ export default async function DatabasePage() {
       .leftJoin(
         biblInInvest,
         eq(slipModelInInvest.modelSrcId, biblInInvest.biblId),
-      ),
-    // .where(restrict),
+      )
+      .where(restrict),
   ]);
 
   return (

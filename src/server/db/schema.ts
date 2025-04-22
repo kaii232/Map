@@ -415,18 +415,18 @@ export const account = invest.table("account", {
   }),
   scope: text(),
   password: text(),
-  createdAt: timestamp("created_at", { mode: "string" }).notNull(),
-  updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 export const session = invest.table(
   "session",
   {
     id: text().primaryKey().notNull(),
-    expiresAt: timestamp("expires_at", { mode: "string" }).notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
     token: text().notNull(),
-    createdAt: timestamp("created_at", { mode: "string" }).notNull(),
-    updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at").notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     userId: text("user_id").notNull(),
@@ -438,9 +438,9 @@ export const verification = invest.table("verification", {
   id: text().primaryKey().notNull(),
   identifier: text().notNull(),
   value: text().notNull(),
-  expiresAt: timestamp("expires_at", { mode: "string" }).notNull(),
-  createdAt: timestamp("created_at", { mode: "string" }),
-  updatedAt: timestamp("updated_at", { mode: "string" }),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
 });
 
 export const user = invest.table(
@@ -451,8 +451,8 @@ export const user = invest.table(
     email: text().notNull(),
     emailVerified: boolean("email_verified").notNull(),
     image: text(),
-    createdAt: timestamp("created_at", { mode: "string" }).notNull(),
-    updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at").notNull(),
     role: text().default("user").notNull(),
   },
   (table) => [unique("user_email_unique").on(table.email)],

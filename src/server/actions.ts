@@ -10,7 +10,9 @@ import {
   MultiPolygon,
   Polygon,
 } from "geojson";
+import { headers } from "next/headers";
 import { z } from "zod";
+import { auth } from "./auth";
 import { db } from "./db";
 import {
   biblInInvest,
@@ -51,6 +53,14 @@ const sqlToGeojson = (
     type: "FeatureCollection",
     features: features,
   };
+};
+
+/** Mutates `filters` array in place and adds filter that restricts data if the user is not logged in */
+const restrictData = async (filters: (SQL | undefined)[]) => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) filters.push(eq(biblInInvest.biblIsRestricted, false));
 };
 
 type ActionSuccess<T = undefined> = T extends undefined
@@ -141,6 +151,7 @@ export const LoadSmt = async (
       sql`ST_INTERSECTS(${smtInInvest.smtGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
+  await restrictData(filters);
 
   const data = await db
     .select({
@@ -179,6 +190,7 @@ export const LoadVlc = async (
       sql`ST_INTERSECTS(${vlcInInvest.vlcGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
+  await restrictData(filters);
 
   const data = await db
     .select({
@@ -266,6 +278,8 @@ export const LoadFlt = async (
     );
   }
 
+  await restrictData(filters);
+
   const data = await db
     .select({
       id: fltInInvest.fltId,
@@ -308,6 +322,8 @@ export const LoadSeis = async (
     );
   }
 
+  await restrictData(filters);
+
   const data = await db
     .select({
       id: seisInInvest.seisId,
@@ -332,10 +348,13 @@ export const LoadSeis = async (
 export const LoadHf = async (
   drawing?: MultiPolygon | Polygon,
 ): Promise<ActionReturn> => {
-  let filters;
+  const filters = [];
   if (drawing) {
-    filters = sql`ST_INTERSECTS(${heatflowInInvest.hfGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`;
+    filters.push(
+      sql`ST_INTERSECTS(${heatflowInInvest.hfGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+    );
   }
+  await restrictData(filters);
 
   const data = await db
     .select({
@@ -350,7 +369,7 @@ export const LoadHf = async (
     })
     .from(heatflowInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, heatflowInInvest.hfSrcId))
-    .where(filters);
+    .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
   return { success: true, data: dataReturn };
@@ -405,6 +424,8 @@ export const LoadSlip = async (
       sql`ST_INTERSECTS(${slipModelInInvest.patchGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
     );
   }
+
+  await restrictData(filters);
 
   const data = await db
     .select({

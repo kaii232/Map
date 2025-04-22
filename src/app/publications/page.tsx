@@ -97,7 +97,7 @@ export default async function Publications({
           and(
             filter,
             eq(biblInInvest.biblIsInvest, true),
-            session ? eq(biblInInvest.biblIsRestricted, false) : undefined,
+            !session ? eq(biblInInvest.biblIsRestricted, false) : undefined,
           ),
         )
         .orderBy(sql`rank DESC NULLS LAST`, desc(biblInInvest.biblYr))
@@ -118,7 +118,7 @@ export default async function Publications({
         .where(
           and(
             eq(biblInInvest.biblIsInvest, true),
-            session ? eq(biblInInvest.biblIsRestricted, false) : undefined,
+            !session ? eq(biblInInvest.biblIsRestricted, false) : undefined,
           ),
         )
         .orderBy(desc(biblInInvest.biblYr))
