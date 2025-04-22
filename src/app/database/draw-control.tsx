@@ -1,74 +1,75 @@
-import { MaplibreTerradrawControl } from "@watergis/maplibre-gl-terradraw";
+import {
+  MaplibreTerradrawControl,
+  TerradrawControlOptions,
+} from "@watergis/maplibre-gl-terradraw";
 import { memo, useEffect, useRef } from "react";
-import type { ControlPosition } from "react-map-gl/maplibre";
-import { useMap } from "react-map-gl/maplibre";
+import { ControlPosition, useMap } from "react-map-gl/maplibre";
 import { GeoJSONStoreFeatures } from "terra-draw";
 
-type DrawControlProps = ConstructorParameters<
-  typeof MaplibreTerradrawControl
->[0] & {
+interface DrawControlProps extends TerradrawControlOptions {
   position?: ControlPosition;
   /** Callback that is invoked when an action has occurred including adding a new drawing, removing drawing, updating exitsing drawing */
   onUpdate: (features: GeoJSONStoreFeatures[]) => void;
-};
+}
 /** Adds controls to draw on the map */
-export const DrawControl = memo((props: DrawControlProps) => {
-  const drawControl = useRef<MaplibreTerradrawControl>(
-    new MaplibreTerradrawControl(props),
-  );
-  const { map } = useMap();
+export const DrawControl = memo(
+  ({ onUpdate, position, ...rest }: DrawControlProps) => {
+    const drawControl = useRef<MaplibreTerradrawControl>(null);
+    const { map } = useMap();
 
-  useEffect(() => {
-    if (!map) return;
-    drawControl.current = new MaplibreTerradrawControl(props);
-    const draw = drawControl.current;
-    const mapRef = map;
+    useEffect(() => {
+      if (!map) return;
+      drawControl.current = new MaplibreTerradrawControl(rest);
+      const draw = drawControl.current;
+      const mapRef = map;
 
-    mapRef.addControl(draw);
+      mapRef.addControl(draw, position);
 
-    const drawInstance = draw.getTerraDrawInstance();
+      const drawInstance = draw.getTerraDrawInstance();
 
-    const onFeatureDelete = (
-      event:
-        | {
-            feature?: GeoJSONStoreFeatures[];
-            mode?: string;
-          }
-        | undefined,
-    ) => {
-      if (event && event.mode === "default") props.onUpdate([]);
-    };
+      const onFeatureDelete = (
+        event:
+          | {
+              feature?: GeoJSONStoreFeatures[];
+              mode?: string;
+            }
+          | undefined,
+      ) => {
+        if (event && event.mode === "default") onUpdate([]);
+      };
 
-    const onChange = (ids: (string | number)[], type: string) => {
-      if (type === "delete") {
-        const snapshot = drawInstance.getSnapshot();
-        props.onUpdate(snapshot);
-      }
-    };
-    const onFinish = (
-      id: string | number,
-      context: { action: string; mode: string },
-    ) => {
-      if (context.action === "draw") {
-        const snapshot = drawInstance.getSnapshot();
-        props.onUpdate(snapshot);
-      }
-    };
+      const onChange = (ids: (string | number)[], type: string) => {
+        if (type === "delete") {
+          const snapshot = drawInstance.getSnapshot();
+          onUpdate(snapshot);
+        }
+      };
+      const onFinish = (
+        id: string | number,
+        context: { action: string; mode: string },
+      ) => {
+        if (context.action === "draw") {
+          const snapshot = drawInstance.getSnapshot();
+          onUpdate(snapshot);
+        }
+      };
 
-    draw.on("feature-deleted", onFeatureDelete);
-    drawInstance.on("change", onChange);
-    drawInstance.on("finish", onFinish);
+      draw.on("feature-deleted", onFeatureDelete);
+      drawInstance.on("change", onChange);
+      drawInstance.on("finish", onFinish);
 
-    return () => {
-      draw.off("feature-deleted", onFeatureDelete);
-      drawInstance.off("change", onChange);
-      drawInstance.off("finish", onFinish);
-      mapRef.removeControl(draw);
-    };
-  }, [map, props]);
+      return () => {
+        onUpdate([]);
+        draw.off("feature-deleted", onFeatureDelete);
+        drawInstance.off("change", onChange);
+        drawInstance.off("finish", onFinish);
+        mapRef.removeControl(draw);
+      };
+    }, [map, onUpdate, position, rest]);
 
-  return null;
-});
+    return null;
+  },
+);
 
 DrawControl.displayName = "DrawControl";
 
