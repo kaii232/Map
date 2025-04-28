@@ -235,9 +235,9 @@ export type SlipFilters = {
 
 const slipFilters: FilterDefine<SlipFilters> = {
   modelEvent: {
-    dbCol: biblInInvest.biblTitle,
+    dbCol: slipModelInInvest.modelEvent,
     name: "Model Event",
-    nullCol: slipModelInInvest.modelSrcId,
+    nullCol: slipModelInInvest.modelEvent,
     type: "select",
   },
   slipRate: {

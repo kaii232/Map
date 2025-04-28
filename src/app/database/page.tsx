@@ -184,7 +184,7 @@ export default async function DatabasePage() {
       .select({
         modelEvent: sql<
           string[]
-        >`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
+        >`ARRAY_AGG(DISTINCT ${slipModelInInvest.modelEvent})`,
         slipRate: sql<
           [number, number]
         >`ARRAY[MIN(${slipModelInInvest.patchSlip}), MAX(${slipModelInInvest.patchSlip})]`,

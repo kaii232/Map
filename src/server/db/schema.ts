@@ -516,8 +516,8 @@ export const slipModelInInvest = invest.table(
   {
     modelId: integer("model_id").notNull(),
     patchId: integer("patch_id").notNull(),
-    patchLat: doublePrecision("patch_lat").notNull(),
-    patchLon: doublePrecision("patch_lon").notNull(),
+    patchLat: doublePrecision("patch_lat"),
+    patchLon: doublePrecision("patch_lon"),
     patchCorner1Lat: doublePrecision("patch_corner1_lat"),
     patchCorner1Lon: doublePrecision("patch_corner1_lon"),
     patchCorner2Lat: doublePrecision("patch_corner2_lat"),
@@ -545,6 +545,14 @@ export const slipModelInInvest = invest.table(
       .notNull(),
     modelSrcId: integer("model_src_id"),
     ccLoadId: smallint("cc_load_id").default(sql`'1'`),
+    patchRakeslip: doublePrecision("patch_rakeslip"),
+    patchCorner1Z: doublePrecision("patch_corner1_z"),
+    patchCorner2Z: doublePrecision("patch_corner2_z"),
+    patchCorner3Z: doublePrecision("patch_corner3_z"),
+    patchCorner4Z: doublePrecision("patch_corner4_z"),
+    modelEvent: text("model_event"),
+    patchEastslip: doublePrecision("patch_eastslip"),
+    patchNorthslip: doublePrecision("patch_northslip"),
   },
   (table) => [
     foreignKey({
