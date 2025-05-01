@@ -73,7 +73,7 @@ const TourRoot = ({
     setCompleted(true);
     setStep(0);
     if (shouldRememberCompletion)
-      localStorage.setItem(`tourComplete-${tourId}`, "true");
+      localStorage.setItem(`tour-complete-${tourId}`, "true");
   }, [setCompleted, setStep, shouldRememberCompletion, tourId]);
 
   // Start tour automatically if the user has not completed the tour yet
@@ -83,7 +83,7 @@ const TourRoot = ({
       setCompleted(false);
       return;
     }
-    const pastCompletion = localStorage.getItem(`tourComplete-${tourId}`);
+    const pastCompletion = localStorage.getItem(`tour-complete-${tourId}`);
     setCompleted(!!pastCompletion);
     if (!pastCompletion) {
       setStep(1);

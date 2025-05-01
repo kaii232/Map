@@ -293,6 +293,7 @@ const Controls = ({
             "absolute top-0 z-30 ml-4 mt-4 size-8 bg-neutral-900 transition-transform duration-700 ease-map sm:ml-2.5 sm:mt-2.5",
             open && "sm:translate-x-[320px]",
           )}
+          aria-label="Toggle map panel open or closed"
           onClick={() => {
             setOpen((prev) => !prev);
             if (map) {
