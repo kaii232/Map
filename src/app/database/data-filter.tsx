@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import Spinner from "@/components/ui/spinner";
 import {
-  ALL_FILTERS,
+  ALL_FILTERS_CLIENT,
   createDefaultValues,
   createZodSchema,
 } from "@/lib/filters";
-import { FilterDefine, GenericFiltersInfo } from "@/lib/types";
+import {
+  ClientFilterDefine,
+  FilterDefine,
+  GenericFiltersInfo,
+} from "@/lib/types";
 import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,7 +36,7 @@ const DataFormFilters = <T extends GenericFiltersInfo>({
   /** Data from database to populate filter controls */
   initialData: T;
   /** The key for the data type */
-  dataKey: keyof typeof ALL_FILTERS;
+  dataKey: keyof typeof ALL_FILTERS_CLIENT;
   /** Components to render below the Download button of each form */
   additionalActions?: ReactNode;
   /** Callback that is invoked when data is loaded successfully */
@@ -42,7 +46,9 @@ const DataFormFilters = <T extends GenericFiltersInfo>({
 }) => {
   const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
-  const filters = ALL_FILTERS[dataKey] as FilterDefine<T>;
+  const filters = ALL_FILTERS_CLIENT[dataKey] as ClientFilterDefine<
+    FilterDefine<T>
+  >;
   const [isPending, startTransition] = useTransition();
 
   const defaults = useMemo(

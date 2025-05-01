@@ -1,4 +1,4 @@
-import { ALL_FILTERS } from "@/lib/filters";
+import { ALL_FILTERS_CLIENT } from "@/lib/filters";
 import { BasemapNames, Range } from "@/lib/types";
 import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
@@ -21,17 +21,17 @@ export const panelOpenAtom = atom(true);
 
 const defaultVisibility = () => {
   const defaultVal: Record<string, true> = {};
-  Object.keys(ALL_FILTERS).forEach((val) => {
+  Object.keys(ALL_FILTERS_CLIENT).forEach((val) => {
     defaultVal[val] = true;
   });
   return defaultVal;
 };
 /** Keeps track of which data types are visible */
 export const dataVisibilityAtom =
-  atom<Record<keyof typeof ALL_FILTERS, boolean>>(defaultVisibility());
+  atom<Record<keyof typeof ALL_FILTERS_CLIENT, boolean>>(defaultVisibility());
 /** Contains the geojson for each data type */
 export const dataAtom = atom<
-  Partial<Record<keyof typeof ALL_FILTERS, FeatureCollection>>
+  Partial<Record<keyof typeof ALL_FILTERS_CLIENT, FeatureCollection>>
 >({});
 
 /** Contains the slip range of currently loaded slip data. Used for mapping the colour range to the slip range */

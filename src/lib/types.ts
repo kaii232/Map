@@ -62,3 +62,8 @@ export type FilterDefine<T extends GenericFiltersInfo> = {
               units?: string;
             };
 };
+
+// FilterDefine type but val has no drizzle schemas included. Just wrap normal filter define type with this
+export type ClientFilterDefine<T extends FilterDefine<GenericFiltersInfo>> = {
+  [P in keyof T]: Omit<T[P], "dbCol" | "nullCol">;
+};

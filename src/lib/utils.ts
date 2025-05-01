@@ -13,12 +13,13 @@ import { clsx, type ClassValue } from "clsx";
 import { MultiPolygon, Polygon } from "geojson";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
-import { ALL_FILTERS, createZodSchema } from "./filters";
+import type { ALL_FILTERS, createZodSchema } from "./filters";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Velocities for the plate movement vectors map layer */
 export const velocityStops = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
 /**
@@ -57,8 +58,10 @@ export const LOADERS: Record<
   | ((
       values: z.infer<z.ZodObject<ReturnType<typeof createZodSchema>>>,
       drawing?: MultiPolygon | Polygon,
-    ) => Promise<ActionReturn>)
-  | ((drawing?: MultiPolygon | Polygon) => Promise<ActionReturn>)
+    ) => Promise<ActionReturn> | Promise<ActionReturn<unknown>>)
+  | ((
+      drawing?: MultiPolygon | Polygon,
+    ) => Promise<ActionReturn> | Promise<ActionReturn<unknown>>)
 > = {
   smt: LoadSmt,
   vlc: LoadVlc,

@@ -14,6 +14,7 @@ import { sql, SQL } from "drizzle-orm";
 import { z } from "zod";
 import type {
   Categories,
+  ClientFilterDefine,
   DateFilter,
   FilterDefine,
   GenericFiltersInfo,
@@ -255,6 +256,7 @@ const slipFilters: FilterDefine<SlipFilters> = {
  * An object containing the filter types for all the different data types. The key of this object is used as the key for all other objects
  * dealing with the different data types, and its value
  * defines the filters. Value is `null` when there are no filters for that data type.
+ * Do not import this on the client!
  */
 export const ALL_FILTERS = {
   smt: smtFilters,
@@ -267,13 +269,41 @@ export const ALL_FILTERS = {
   slip: slipFilters,
 };
 
+function cleanObjectForClient() {
+  const out: Record<
+    string,
+    ClientFilterDefine<FilterDefine<GenericFiltersInfo>> | null
+  > = {};
+  Object.entries(ALL_FILTERS).map(([key, val]) => {
+    if (val === null) {
+      out[key] = null;
+      return;
+    }
+    const filterObj: (typeof out)[string] = {};
+    Object.entries(val).map(([clientKey, clientVal]) => {
+      const obj = { ...clientVal };
+      delete obj.dbCol;
+      delete obj.nullCol;
+      filterObj[clientKey] = obj;
+    });
+    out[key] = filterObj;
+  });
+  return out as {
+    [P in keyof typeof ALL_FILTERS]: (typeof ALL_FILTERS)[P] extends FilterDefine<GenericFiltersInfo>
+      ? ClientFilterDefine<(typeof ALL_FILTERS)[P]>
+      : null;
+  };
+}
+/** ALL_FILTERS object with drizzle schema columns removed for the client */
+export const ALL_FILTERS_CLIENT = cleanObjectForClient();
+
 /**
  * This function creates a zod schema for input validation for the given filters
  * @param filters An object describing the type of filters
  * @returns A zodSchema for input validation
  */
 export const createZodSchema = <T extends GenericFiltersInfo>(
-  filters: FilterDefine<T>,
+  filters: ClientFilterDefine<FilterDefine<T>>,
 ) => {
   const schema: Record<
     string,
@@ -311,7 +341,7 @@ export const createZodSchema = <T extends GenericFiltersInfo>(
  */
 export const createDefaultValues = <T extends GenericFiltersInfo>(
   initialData: T,
-  filters: FilterDefine<T>,
+  filters: ClientFilterDefine<FilterDefine<T>>,
 ) => {
   const values: {
     [key: string]: boolean | string | number[] | { from: Date; to: Date };

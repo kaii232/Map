@@ -1,7 +1,7 @@
 "use client";
 
 import { style } from "@/assets/map_style";
-import { ALL_FILTERS } from "@/lib/filters";
+import type { ALL_FILTERS } from "@/lib/filters";
 import { GenericFiltersInfo, Range } from "@/lib/types";
 import { velocityStops } from "@/lib/utils";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";

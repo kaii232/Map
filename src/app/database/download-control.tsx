@@ -2,7 +2,7 @@
 
 import { TourStep } from "@/components/tour";
 import Spinner from "@/components/ui/spinner";
-import { ALL_FILTERS } from "@/lib/filters";
+import type { ALL_FILTERS } from "@/lib/filters";
 import { velocityStops } from "@/lib/utils";
 import { downloadZip } from "client-zip";
 import { useAtomValue, useSetAtom } from "jotai";

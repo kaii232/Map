@@ -24,7 +24,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ALL_FILTERS } from "@/lib/filters";
+import { ALL_FILTERS_CLIENT } from "@/lib/filters";
 import { BasemapNames, GenericFiltersInfo, Range } from "@/lib/types";
 import { cn, DATA_LABELS } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
@@ -183,7 +183,7 @@ const Controls = ({
   initialData,
 }: {
   /** Data from database to populate filter controls */
-  initialData: Record<keyof typeof ALL_FILTERS, GenericFiltersInfo>;
+  initialData: Record<keyof typeof ALL_FILTERS_CLIENT, GenericFiltersInfo>;
 }) => {
   const [layers, setLayers] = useAtom(layersAtom);
   const [open, setOpen] = useAtom(panelOpenAtom);
@@ -196,7 +196,7 @@ const Controls = ({
   /** Specific actions and callbacks for each data type */
   const MAP_DATA_SPECIFICS: Partial<
     Record<
-      keyof typeof ALL_FILTERS,
+      keyof typeof ALL_FILTERS_CLIENT,
       {
         onLoad?: (
           data: Extract<ActionReturn<unknown>, { success: true }>,
@@ -466,7 +466,7 @@ const Controls = ({
                             }
                           />
                         </div>
-                        {ALL_FILTERS[key] ? (
+                        {ALL_FILTERS_CLIENT[key] ? (
                           <DataFormFilters
                             initialData={initialInfo}
                             dataKey={key}

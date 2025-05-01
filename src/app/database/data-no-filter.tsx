@@ -3,7 +3,7 @@
 import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
-import { ALL_FILTERS } from "@/lib/filters";
+import type { ALL_FILTERS } from "@/lib/filters";
 import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { MultiPolygon, Polygon } from "geojson";
