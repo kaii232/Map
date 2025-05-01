@@ -106,7 +106,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
     {
       name: "Seismic depth",
       colour:
-        "bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)11%,rgba(253,212,158,1)22%,rgba(253,187,132,1)33%,rgba(235,124,73,1)44%,rgba(219,82,53,1)55%,rgba(181,33,18,1)66%,rgba(117,6,6,1)77%,rgba(18,5,4,1)88%,rgba(0,0,0,1)100%)]",
+        "bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)0.4%,rgba(253,212,158,1)0.8%,rgba(253,187,132,1)1.6%,rgba(235,124,73,1)3.2%,rgba(219,82,53,1)6.4%,rgba(181,33,18,1)12.8%,rgba(117,6,6,1)25.6%,rgba(54,10,7,1)51.2%,rgba(0,0,0,1)100%)]",
       min: "<2m",
       max: ">1024m",
       visible:
