@@ -10,6 +10,7 @@ import {
   stnTypeInInvest,
   vlcInInvest,
 } from "@/server/db/schema";
+import { sql, SQL } from "drizzle-orm";
 import { z } from "zod";
 import type {
   Categories,
@@ -341,4 +342,25 @@ export const createDefaultValues = <T extends GenericFiltersInfo>(
     }
   });
   return values;
+};
+
+/**
+ * Convenience function to generate the SQL select statements needed to populate the filter
+ * @param filter An object describing the type of filters
+ * @returns An object containing the SQL select statements required for populating the filter
+ */
+export const generateSQLSelect = <T extends GenericFiltersInfo>(
+  filter: FilterDefine<T>,
+): { [P in keyof T]: SQL<T[P]> } => {
+  const res: Record<string, SQL> = {};
+  Object.entries(filter).map(([key, val]) => {
+    if (val.type === "range") {
+      res[key] = sql<Range>`ARRAY[MIN(${val.dbCol}), MAX(${val.dbCol})]`;
+    } else if (val.type === "select") {
+      res[key] = sql<Categories>`ARRAY_AGG(DISTINCT ${val.dbCol})`;
+    } else if (val.type === "date") {
+      res[key] = sql<DateFilter>`ARRAY[MIN(${val.dbCol}), MAX(${val.dbCol})]`;
+    }
+  });
+  return res as { [P in keyof T]: SQL<T[P]> };
 };

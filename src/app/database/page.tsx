@@ -1,5 +1,7 @@
 import {
+  ALL_FILTERS,
   FltFilters,
+  generateSQLSelect,
   GnssFilters,
   SeisFilters,
   Slab2Filters,
@@ -22,7 +24,7 @@ import {
   stnTypeInInvest,
   vlcInInvest,
 } from "@/server/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { Metadata } from "next";
 import { headers } from "next/headers";
 import DatabaseMap from "./database-map";
@@ -42,6 +44,7 @@ const safeFirstRow = <T extends GenericFiltersInfo>(data: T[]): T => {
 };
 
 export default async function DatabasePage() {
+  // If you want to add vlcCatSrc as a filter you would need this subquery
   // const sources = db.$with("sources").as(
   //   db
   //     .select({
@@ -82,14 +85,10 @@ export default async function DatabasePage() {
   ] = await Promise.all([
     db
       // .with(sources)
-      .select({
-        classes: sql<string[]>`ARRAY_AGG(DISTINCT ${vlcInInvest.vlcClass})`,
+      .select(
         // categorySources: sql<string[]>`ARRAY_AGG(DISTINCT sources)`,
-        countries: sql<
-          string[]
-        >`ARRAY_AGG(DISTINCT ${countryInInvest.countryName})`,
-        sources: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
-      })
+        generateSQLSelect(ALL_FILTERS.vlc),
+      )
       .from(vlcInInvest)
       .leftJoin(
         countryInInvest,
@@ -99,56 +98,17 @@ export default async function DatabasePage() {
       .where(restrict),
     // .leftJoin(sources, eq(sources.vlcId, vlcInInvest.vlcId)),
     db
-      .select({
-        depthRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${seisInInvest.seisDepth}), MAX(${seisInInvest.seisDepth})]`,
-        mwRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${seisInInvest.seisMw}), MAX(${seisInInvest.seisMw})]`,
-        dateRange: sql<
-          [string, string]
-        >`ARRAY[MIN(${seisInInvest.seisDate}), MAX(${seisInInvest.seisDate})]`,
-        catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
-      })
+      .select(generateSQLSelect(ALL_FILTERS.seis))
       .from(seisInInvest)
       .leftJoin(biblInInvest, eq(seisInInvest.seisCatId, biblInInvest.biblId))
       .where(restrict),
     db
-      .select({
-        elevRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${smtInInvest.smtElev}), MAX(${smtInInvest.smtElev})]`,
-        baseRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${smtInInvest.smtBase}), MAX(${smtInInvest.smtBase})]`,
-        summitRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${smtInInvest.smtSummit}), MAX(${smtInInvest.smtSummit})]`,
-        classes: sql<string[]>`ARRAY_AGG(DISTINCT ${smtInInvest.smtClass})`,
-        catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
-      })
+      .select(generateSQLSelect(ALL_FILTERS.smt))
       .from(smtInInvest)
       .leftJoin(biblInInvest, eq(smtInInvest.smtSrcId, biblInInvest.biblId))
       .where(restrict),
     db
-      .select({
-        elevRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${gnssStnInInvest.gnssElev}), MAX(${gnssStnInInvest.gnssElev})]`,
-        dateRange: sql<
-          [string, string]
-        >`ARRAY[MIN(${gnssStnInInvest.gnssInstDate}), MAX(${gnssStnInInvest.gnssInstDate})]`,
-        projects: sql<
-          string[]
-        >`ARRAY_AGG(DISTINCT ${gnssStnInInvest.gnssProj})`,
-        stations: sql<
-          string[]
-        >`ARRAY_AGG(DISTINCT ${stnTypeInInvest.stnTypeName})`,
-        countries: sql<
-          string[]
-        >`ARRAY_AGG(DISTINCT ${countryInInvest.countryName})`,
-      })
+      .select(generateSQLSelect(ALL_FILTERS.gnss))
       .from(gnssStnInInvest)
       .leftJoin(
         countryInInvest,
@@ -159,36 +119,13 @@ export default async function DatabasePage() {
         eq(gnssStnInInvest.stnTypeId, stnTypeInInvest.stnTypeId),
       ),
     db
-      .select({
-        lengthRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${fltInInvest.fltLen}), MAX(${fltInInvest.fltLen})]`,
-        sliprateRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${fltInInvest.fltSliprate}), MAX(${fltInInvest.fltSliprate})]`,
-        depthRange: sql<
-          [number, number]
-        >`ARRAY[MIN(${fltInInvest.fltLockDepth}), MAX(${fltInInvest.fltLockDepth})]`,
-        types: sql<string[]>`ARRAY_AGG(DISTINCT ${fltInInvest.fltType})`,
-        catalogs: sql<string[]>`ARRAY_AGG(DISTINCT ${biblInInvest.biblTitle})`,
-      })
+      .select(generateSQLSelect(ALL_FILTERS.flt))
       .from(fltInInvest)
       .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId))
       .where(restrict),
+    db.select(generateSQLSelect(ALL_FILTERS.slab2)).from(slab2InInvest),
     db
-      .select({
-        region: sql<string[]>`ARRAY_AGG(DISTINCT ${slab2InInvest.slabRegion})`,
-      })
-      .from(slab2InInvest),
-    db
-      .select({
-        modelEvent: sql<
-          string[]
-        >`ARRAY_AGG(DISTINCT ${slipModelInInvest.modelEvent})`,
-        slipRate: sql<
-          [number, number]
-        >`ARRAY[MIN(${slipModelInInvest.patchSlip}), MAX(${slipModelInInvest.patchSlip})]`,
-      })
+      .select(generateSQLSelect(ALL_FILTERS.slip))
       .from(slipModelInInvest)
       .leftJoin(
         biblInInvest,
