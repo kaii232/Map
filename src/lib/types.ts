@@ -10,10 +10,11 @@ export type BasemapNames =
 export type Range = [number, number];
 export type Categories = string[] | null;
 export type DateFilter = [string, string];
+export type GreaterThan = number[];
 // Generic type of the data that describes the filter values
 export type GenericFiltersInfo = Record<
   string,
-  Range | Categories | DateFilter
+  Range | Categories | DateFilter | GreaterThan
 >;
 
 // Information needed to generate the form depending on the type of filter it is
@@ -34,6 +35,13 @@ export type FiltersType =
       name: string;
       type: "date";
       dbCol: AnyPgColumn;
+    }
+  | {
+      name: string;
+      type: "greaterThan";
+      dbCol: AnyPgColumn;
+      maxVal: number;
+      units?: string;
     };
 // Type for the filters definition
 export type FilterDefine<T extends GenericFiltersInfo> = {
@@ -43,11 +51,14 @@ export type FilterDefine<T extends GenericFiltersInfo> = {
       ? Extract<FiltersType, { type: "date" }>
       : T[P] extends Categories
         ? Extract<FiltersType, { type: "select" }>
-        : {
-            name: string;
-            type: "select" | "range" | "date";
-            dbCol: AnyPgColumn;
-            nullCol?: AnyPgColumn;
-            units?: string;
-          };
+        : T[P] extends GreaterThan
+          ? Extract<FiltersType, { type: "greaterThan" }>
+          : {
+              name: string;
+              type: "select" | "range" | "date" | "greaterThan";
+              dbCol: AnyPgColumn;
+              nullCol?: AnyPgColumn;
+              maxVal?: number;
+              units?: string;
+            };
 };

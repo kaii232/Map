@@ -33,7 +33,7 @@ type FormGenerateProps = {
   /** The React Hook Form instance */
   form: UseFormReturn<
     {
-      [x: string]:
+      [key: string]:
         | string
         | boolean
         | number[]
@@ -50,7 +50,7 @@ type FormGenerateProps = {
     [key: string]:
       | string
       | boolean
-      | [number, number]
+      | number[]
       | {
           from: Date;
           to: Date;
@@ -159,6 +159,82 @@ export default function FormGenerate({
                       defaults[key][1] - defaults[key][0] < 10
                         ? 0.1
                         : 1
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name={`${key}AllowNull`}
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-1 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                    disabled={field.disabled}
+                    checked={!!field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel className="font-normal text-neutral-300">
+                  Allow null values
+                </FormLabel>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      );
+    }
+    if (filter.type === "greaterThan") {
+      return (
+        <div className="space-y-4" key={key}>
+          <FormField
+            control={form.control}
+            name={key}
+            render={({ field }) => (
+              <FormItem className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <FormLabel className="text-neutral-50">
+                    {filter.name}
+                  </FormLabel>
+                  <FormDescription className="space-x-2">
+                    {Array.isArray(field.value) && (
+                      <>
+                        {">"}
+                        {Number(field.value[0].toFixed(1))}
+                        {filter.units}
+                      </>
+                    )}
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Slider
+                    onValueChange={field.onChange}
+                    onBlur={field.onBlur}
+                    defaultValue={field.value as number[]}
+                    name={field.name}
+                    ref={field.ref}
+                    disabled={field.disabled}
+                    value={field.value as number[]}
+                    min={
+                      defaults[key] && Array.isArray(defaults[key])
+                        ? defaults[key][0]
+                        : 0
+                    }
+                    max={filter.maxVal}
+                    step={
+                      defaults[key] &&
+                      filter.maxVal &&
+                      Array.isArray(defaults[key]) &&
+                      filter.maxVal - defaults[key][0] < 1
+                        ? 0.1
+                        : 0.5
                     }
                   />
                 </FormControl>

@@ -17,6 +17,7 @@ import type {
   DateFilter,
   FilterDefine,
   GenericFiltersInfo,
+  GreaterThan,
   Range,
 } from "./types";
 
@@ -231,7 +232,7 @@ const slab2Filters: FilterDefine<Slab2Filters> = {
 
 export type SlipFilters = {
   modelEvent: Categories;
-  slipRate: Range;
+  slipRate: GreaterThan;
 };
 
 const slipFilters: FilterDefine<SlipFilters> = {
@@ -244,7 +245,8 @@ const slipFilters: FilterDefine<SlipFilters> = {
   slipRate: {
     dbCol: slipModelInInvest.patchSlip,
     name: "Slip Rate",
-    type: "range",
+    type: "greaterThan",
+    maxVal: 1,
     units: "m",
   },
 };
@@ -290,8 +292,11 @@ export const createZodSchema = <T extends GenericFiltersInfo>(
     } else if (filters[key].type === "range") {
       schema[key] = z.number().array().length(2);
       schema[`${key}AllowNull`] = z.boolean();
-    } else {
+    } else if (filters[key].type === "date") {
       schema[key] = z.object({ from: z.date(), to: z.date() }).required();
+      schema[`${key}AllowNull`] = z.boolean();
+    } else {
+      schema[key] = z.number().array().length(1);
       schema[`${key}AllowNull`] = z.boolean();
     }
   });
@@ -309,37 +314,39 @@ export const createDefaultValues = <T extends GenericFiltersInfo>(
   filters: FilterDefine<T>,
 ) => {
   const values: {
-    [key: string]:
-      | boolean
-      | string
-      | [number, number]
-      | { from: Date; to: Date };
+    [key: string]: boolean | string | number[] | { from: Date; to: Date };
   } = {};
   Object.keys(filters).forEach((key) => {
     if (filters[key].type === "select") {
       values[key] = "All";
-    } else if (filters[key].type === "range") {
+      return;
+    }
+    // Rest of the filters has allow null check box
+    values[`${key}AllowNull`] = false;
+    if (filters[key].type === "range") {
       values[key] = [
         (initialData[key] ? Number(initialData[key][0]) : 0) || 0,
         (initialData[key] ? Number(initialData[key][1]) : 0) || 0,
       ];
-      values[`${key}AllowNull`] = true;
-    } else {
-      const now = Date.now();
-      values[key] = {
-        from: new Date(
-          initialData[key] && initialData[key][0] !== "NULL"
-            ? initialData[key][0]
-            : now,
-        ),
-        to: new Date(
-          initialData[key] && initialData[key][1] !== "NULL"
-            ? initialData[key][1]
-            : now,
-        ),
-      };
-      values[`${key}AllowNull`] = true;
+      return;
     }
+    if (filters[key].type === "greaterThan") {
+      values[key] = [Number(initialData[key]) || 0];
+      return;
+    }
+    const now = Date.now();
+    values[key] = {
+      from: new Date(
+        initialData[key] && initialData[key][0] !== "NULL"
+          ? initialData[key][0]
+          : now,
+      ),
+      to: new Date(
+        initialData[key] && initialData[key][1] !== "NULL"
+          ? initialData[key][1]
+          : now,
+      ),
+    };
   });
   return values;
 };
@@ -360,6 +367,9 @@ export const generateSQLSelect = <T extends GenericFiltersInfo>(
       res[key] = sql<Categories>`ARRAY_AGG(DISTINCT ${val.dbCol})`;
     } else if (val.type === "date") {
       res[key] = sql<DateFilter>`ARRAY[MIN(${val.dbCol}), MAX(${val.dbCol})]`;
+    } else {
+      // Greather than filter
+      res[key] = sql<GreaterThan>`ARRAY[MIN(${val.dbCol})]`;
     }
   });
   return res as { [P in keyof T]: SQL<T[P]> };

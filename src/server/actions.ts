@@ -2,7 +2,7 @@
 
 import { ALL_FILTERS, createZodSchema } from "@/lib/filters";
 import { FilterDefine, GenericFiltersInfo, Range } from "@/lib/types";
-import { and, between, eq, isNull, or, type SQL, sql } from "drizzle-orm";
+import { and, between, eq, gte, isNull, or, type SQL, sql } from "drizzle-orm";
 import {
   Feature,
   FeatureCollection,
@@ -105,6 +105,15 @@ const generateFilters = (
         );
       } else {
         output.push(between(filter.dbCol, values[key][0], values[key][1]));
+      }
+    }
+    if (filter.type === "greaterThan" && Array.isArray(values[key])) {
+      if (values[`${key}AllowNull`]) {
+        output.push(
+          or(gte(filter.dbCol, values[key][0]), isNull(filter.dbCol)),
+        );
+      } else {
+        output.push(gte(filter.dbCol, values[key][0]));
       }
     }
     if (
