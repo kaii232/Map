@@ -1,17 +1,23 @@
 "use client";
 
+import { TourStep } from "@/components/tour";
 import Spinner from "@/components/ui/spinner";
 import { ALL_FILTERS } from "@/lib/filters";
 import { velocityStops } from "@/lib/utils";
 import { downloadZip } from "client-zip";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Download } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMap } from "react-map-gl/maplibre";
 import { toast } from "sonner";
-import { dataAtom, dataVisibilityAtom, layersAtom } from "./atoms";
+import {
+  dataAtom,
+  dataVisibilityAtom,
+  layersAtom,
+  panelOpenAtom,
+} from "./atoms";
 
 /** Layer IDs for each map layer for separating when downloading */
 const SOURCES_LAYERS: Record<string, string[]> = {
@@ -83,6 +89,7 @@ const DownloadControl = () => {
   );
   const { map } = useMap();
   const [isDrawing, setIsDrawing] = useState(false);
+  const setPanelOpen = useSetAtom(panelOpenAtom);
 
   const drawLayers = () => {
     if (!map) return;
@@ -211,16 +218,23 @@ const DownloadControl = () => {
   if (!controlContainer) return null;
 
   return createPortal(
-    <div className="maplibregl-ctrl maplibregl-ctrl-group">
-      <button
-        onClick={drawLayers}
-        className="text-neutral-700 disabled:pointer-events-none disabled:opacity-50"
-        disabled={isDrawing}
-        style={{ padding: "2.5px" }}
-      >
-        {isDrawing ? <Spinner className="size-6" /> : <Download />}
-      </button>
-    </div>,
+    <TourStep
+      step={7}
+      localBeforeStep={() => setPanelOpen(false)}
+      localAfterStep={() => setPanelOpen(true)}
+      localGoBackStep={() => setPanelOpen(true)}
+    >
+      <div className="maplibregl-ctrl maplibregl-ctrl-group">
+        <button
+          onClick={drawLayers}
+          className="text-neutral-700 disabled:pointer-events-none disabled:opacity-50"
+          disabled={isDrawing}
+          style={{ padding: "2.5px" }}
+        >
+          {isDrawing ? <Spinner className="size-6" /> : <Download />}
+        </button>
+      </div>
+    </TourStep>,
     controlContainer,
   );
 };

@@ -20,8 +20,10 @@ const SelectTabs = (props: ComponentProps<typeof Select>) => {
   const [value, setValue] = useState<string>();
 
   return (
-    <SelectTabsContext.Provider value={value}>
-      <Select {...props} value={value} onValueChange={setValue} />
+    <SelectTabsContext.Provider
+      value={props.value !== undefined ? props.value : value}
+    >
+      <Select value={value} onValueChange={setValue} {...props} />
     </SelectTabsContext.Provider>
   );
 };

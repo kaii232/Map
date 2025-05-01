@@ -39,8 +39,12 @@ export type Steps = {
   title: string;
   /** Description of the dialog or tooltip */
   description: string;
-  /** Callback to run when during the current step */
-  actions?: () => void;
+  /** Function to run when before the current step */
+  beforeStep?: () => void;
+  /** Function to run before moving on to the next step */
+  afterStep?: () => void;
+  /** Function to run when moving to the previous step */
+  goBackStep?: () => void;
 }[];
 
 const TourContext = createContext<{
@@ -59,6 +63,8 @@ const TourRoot = ({
   children: ReactNode;
   shouldRememberCompletion?: boolean;
 }) => {
+  // This uses 1 based indexing
+  // When step is 0 tour is not active
   const [step, setStep] = useAtom(stepAtom);
   const [completed, setCompleted] = useAtom(tourCompletedAtom);
   const dimensions = useAtomValue(tourHighlightDimsAtom);
@@ -118,17 +124,21 @@ const TourRoot = ({
               {step > 1 && (
                 <Button
                   variant="ghost"
-                  onClick={() => setStep((prev) => prev - 1)}
+                  onClick={() => {
+                    if (steps[step - 1].goBackStep)
+                      steps[step - 1].goBackStep!();
+                    setStep((prev) => prev - 1);
+                  }}
                 >
                   Back
                 </Button>
               )}
               <Button
-                onClick={
-                  step < steps.length
-                    ? () => setStep((prev) => prev + 1)
-                    : onComplete
-                }
+                onClick={() => {
+                  if (steps[step - 1].afterStep) steps[step - 1].afterStep!();
+                  if (step < steps.length) setStep((prev) => prev + 1);
+                  else if (onComplete) onComplete();
+                }}
               >
                 {step === steps.length ? "End Tour" : "Next"}
               </Button>
@@ -143,7 +153,7 @@ const TourRoot = ({
             style={
               dimensions && steps[step - 1].type === "tooltip"
                 ? {
-                    clipPath: `path("M ${window.innerWidth} ${window.innerHeight} H 0 V 0 H ${window.innerWidth} V ${window.innerHeight} Z M ${dimensions.left} ${dimensions.top - 4} a 4 4 0 0 0 -4 4 v ${dimensions.height} a 4 4 0 0 0 4 4 h ${dimensions.width} a 4 4 0 0 0 4 -4 v ${-dimensions.height} a 4 4 0 0 0 -4 -4 Z")`,
+                    clipPath: `path("M ${window.innerWidth} ${window.innerHeight} H 0 V 0 H ${window.innerWidth} V ${window.innerHeight} Z M ${dimensions.left} ${dimensions.top - 8} a 8 8 0 0 0 -8 8 v ${dimensions.height} a 8 8 0 0 0 8 8 h ${dimensions.width} a 8 8 0 0 0 8 -8 v ${-dimensions.height} a 8 8 0 0 0 -8 -8 Z")`,
                   }
                 : undefined
             }
@@ -154,24 +164,44 @@ const TourRoot = ({
   );
 };
 
+/** Displays a tooltip around a child element */
 const TourStep = ({
   children,
   step,
+  localBeforeStep,
+  localAfterStep,
+  localGoBackStep,
 }: {
+  /** Step of the tour to show tooltip */
   step: number;
+  /** Element to highlight for this step */
   children: ReactNode;
+  /** Function to run before the current step */
+  localBeforeStep?: () => void;
+  /** Function to run before the next step */
+  localAfterStep?: () => void;
+  /** Function to run when moving to the previous step */
+  localGoBackStep?: () => void;
 }) => {
   const [currentStep, setStep] = useAtom(stepAtom);
   const { steps, onComplete } = useContext(TourContext);
   const completed = useAtomValue(tourCompletedAtom);
   const setDimensions = useSetAtom(tourHighlightDimsAtom);
   const containerRef = useRef<HTMLDivElement>(null);
+  const ticking = useRef<boolean>(false);
+
   useEffect(() => {
     if (!containerRef.current) return;
     const onResize = () => {
+      if (ticking.current) return;
+      // Calling getBoundingClientRect on scroll is not very performant
+      // This throttles the event so less calls are fired
+      // See: https://developer.mozilla.org/en-US/docs/Web/API/Document/scroll_event#scroll_event_throttling
       if (!containerRef.current) return;
-      console.log("Setting");
       setDimensions(containerRef.current.getBoundingClientRect());
+      // About 60fps
+      setTimeout(() => (ticking.current = false), 16);
+      ticking.current = true;
     };
     if (currentStep === step) {
       containerRef.current.scrollIntoView({
@@ -180,13 +210,14 @@ const TourStep = ({
       });
       setDimensions(containerRef.current.getBoundingClientRect());
       window.addEventListener("resize", onResize);
-      window.addEventListener("scroll", onResize);
-      if (steps[step - 1].actions) steps[step - 1].actions!();
+      window.addEventListener("scroll", onResize, true);
+      if (steps[step - 1].beforeStep) steps[step - 1].beforeStep!();
+      if (localBeforeStep) localBeforeStep();
     }
 
     return () => {
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onResize);
+      window.removeEventListener("scroll", onResize, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
@@ -200,7 +231,13 @@ const TourStep = ({
       <PopoverAnchor asChild ref={containerRef}>
         {children}
       </PopoverAnchor>
-      <PopoverContent className="space-y-2" sideOffset={8} align="center">
+      <PopoverContent
+        className="space-y-2 data-[side=left]:-translate-x-[min(0px,var(--radix-popover-content-available-width)-18rem)] data-[side=right]:translate-x-[min(0px,var(--radix-popover-content-available-width)-18rem)]"
+        sideOffset={12}
+        side="right"
+        sticky="always"
+        avoidCollisions
+      >
         <span className="text-sm text-neutral-400">
           {step} of {steps.length}
         </span>
@@ -216,17 +253,25 @@ const TourStep = ({
         </p>
         <div className="flex flex-row justify-end pt-2 sm:space-x-2">
           {step > 1 && (
-            <Button variant="ghost" onClick={() => setStep((prev) => prev - 1)}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                if (steps[step - 1].goBackStep) steps[step - 1].goBackStep!();
+                if (localGoBackStep) localGoBackStep();
+                setStep((prev) => prev - 1);
+              }}
+            >
               Back
             </Button>
           )}
           <Button
             type="button"
-            onClick={
-              step < steps.length
-                ? () => setStep((prev) => prev + 1)
-                : onComplete
-            }
+            onClick={() => {
+              if (steps[step - 1].afterStep) steps[step - 1].afterStep!();
+              if (localAfterStep) localAfterStep();
+              if (step < steps.length) setStep((prev) => prev + 1);
+              else if (onComplete) onComplete();
+            }}
           >
             {step === steps.length ? "End Tour" : "Next"}
           </Button>

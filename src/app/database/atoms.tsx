@@ -16,6 +16,8 @@ export const layersAtom = atom({
 export const mapStyleAtom = atom<BasemapNames>("Openfreemap");
 /** Keeps track of the drawings the user currently has on the map */
 export const drawingAtom = atom<Polygon | MultiPolygon>();
+/** Open state of the side panel */
+export const panelOpenAtom = atom(true);
 
 const defaultVisibility = () => {
   const defaultVal: Record<string, true> = {};

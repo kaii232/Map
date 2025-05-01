@@ -9,6 +9,7 @@ import {
   SelectTabsTrigger,
   SelectTabsValue,
 } from "@/components/select-tabs";
+import { TourStep } from "@/components/tour";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,6 +38,7 @@ import {
   dataVisibilityAtom,
   layersAtom,
   mapStyleAtom,
+  panelOpenAtom,
   slipRangeAtom,
 } from "./atoms";
 import DataFormFilters from "./data-filter";
@@ -184,9 +186,10 @@ const Controls = ({
   initialData: Record<keyof typeof ALL_FILTERS, GenericFiltersInfo>;
 }) => {
   const [layers, setLayers] = useAtom(layersAtom);
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useAtom(panelOpenAtom);
   const [mapStyle, setMapStyle] = useAtom(mapStyleAtom);
   const [dataVisibility, setDataVisibility] = useAtom(dataVisibilityAtom);
+  const [dataSelectValue, setDataSelectValue] = useState<string>();
   const setSlipRange = useSetAtom(slipRangeAtom);
   const { map } = useMap();
 
@@ -282,38 +285,14 @@ const Controls = ({
 
   return (
     <>
-      <Button
-        size="icon"
-        variant="outline"
-        className="absolute top-0 z-30 ml-4 mt-4 size-8 bg-neutral-900 sm:hidden"
-        onClick={() => {
-          setOpen((prev) => !prev);
-          if (map) {
-            map.easeTo({
-              padding: { left: open ? 0 : 320 },
-              duration: 700, // In ms, CSS transition duration property for the sidebar matches this value
-            });
-          }
-        }}
-      >
-        <ChevronLeft
-          className={cn(
-            "transition-transform duration-300 ease-map",
-            !open && "rotate-180",
-          )}
-        />
-      </Button>
-      <ColourRamps className="left-0 z-10 flex sm:hidden" />
-      <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-20 max-h-screen w-full max-w-[320px] transition-transform duration-700 ease-map",
-          !open && "-translate-x-full",
-        )}
-      >
+      <TourStep step={2}>
         <Button
           size="icon"
           variant="outline"
-          className="absolute left-full top-0 z-10 ml-2.5 mt-2.5 hidden size-8 bg-neutral-900 sm:inline-flex"
+          className={cn(
+            "absolute top-0 z-30 ml-4 mt-4 size-8 bg-neutral-900 transition-transform duration-700 ease-map sm:ml-2.5 sm:mt-2.5",
+            open && "sm:translate-x-[320px]",
+          )}
           onClick={() => {
             setOpen((prev) => !prev);
             if (map) {
@@ -331,6 +310,14 @@ const Controls = ({
             )}
           />
         </Button>
+      </TourStep>
+      <ColourRamps className="left-0 z-10 flex sm:hidden" />
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-20 max-h-screen w-full max-w-[320px] transition-transform duration-700 ease-map",
+          !open && "-translate-x-full",
+        )}
+      >
         <ColourRamps className="left-full hidden sm:flex" />
         <div className="flex h-full max-h-full flex-col divide-y divide-neutral-600 overflow-auto bg-neutral-950 pt-12 text-neutral-300 sm:pt-0">
           <div className="flex flex-col gap-1 p-4">
@@ -372,60 +359,78 @@ const Controls = ({
             <span className="text-xs font-medium text-neutral-300">
               Map Options
             </span>
-            <Select
-              value={mapStyle}
-              onValueChange={(val) => setMapStyle(val as BasemapNames)}
-            >
-              <SelectTrigger>Basemap</SelectTrigger>
-              <SelectContent>
-                {MAP_STYLE.map((style) => {
-                  return (
-                    <SelectItem value={style.label} key={style.label}>
-                      <div className="flex h-8 items-center gap-2">
-                        <img
-                          src={style.img}
-                          className="h-full w-12 rounded-md"
-                          alt={style.label}
-                        />
-                        {style.label}
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm ring-offset-neutral-950 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                  Map Layers
-                  <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] rounded-2xl">
-                {Object.keys(layers).map((layer) => (
-                  <DropdownMenuCheckboxItem
-                    key={layer}
-                    className="flex items-center justify-between rounded-xl"
-                    onSelect={(e) => e.preventDefault()}
-                    checked={layers[layer as keyof typeof layers]}
-                    onCheckedChange={(e: boolean) =>
-                      setLayers((prev) => ({ ...prev, [layer]: e }))
-                    }
-                  >
-                    {LAYER_LABELS[layer]}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TourStep step={3}>
+              <div>
+                <Select
+                  value={mapStyle}
+                  onValueChange={(val) => setMapStyle(val as BasemapNames)}
+                >
+                  <SelectTrigger>Basemap</SelectTrigger>
+                  <SelectContent>
+                    {MAP_STYLE.map((style) => {
+                      return (
+                        <SelectItem value={style.label} key={style.label}>
+                          <div className="flex h-8 items-center gap-2">
+                            <img
+                              src={style.img}
+                              className="h-full w-12 rounded-md"
+                              alt={style.label}
+                            />
+                            {style.label}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </TourStep>
+            <TourStep step={4}>
+              <div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm ring-offset-neutral-950 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                      Map Layers
+                      <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] rounded-2xl">
+                    {Object.keys(layers).map((layer) => (
+                      <DropdownMenuCheckboxItem
+                        key={layer}
+                        className="flex items-center justify-between rounded-xl"
+                        onSelect={(e) => e.preventDefault()}
+                        checked={layers[layer as keyof typeof layers]}
+                        onCheckedChange={(e: boolean) =>
+                          setLayers((prev) => ({ ...prev, [layer]: e }))
+                        }
+                      >
+                        {LAYER_LABELS[layer]}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </TourStep>
           </div>
           <div className="grow p-4">
             <span className="mb-4 block text-xs font-medium text-neutral-300">
               Data
             </span>
-            <SelectTabs>
-              <SelectTabsTrigger>
-                <SelectTabsValue placeholder="Select data type" />
-              </SelectTabsTrigger>
+            <SelectTabs
+              value={dataSelectValue}
+              onValueChange={setDataSelectValue}
+            >
+              <TourStep
+                step={5}
+                localBeforeStep={() => setDataSelectValue("gnss")}
+              >
+                <div>
+                  <SelectTabsTrigger>
+                    <SelectTabsValue placeholder="Select data type" />
+                  </SelectTabsTrigger>
+                </div>
+              </TourStep>
               <SelectTabsContent>
                 {Object.keys(initialData).map((key) => (
                   <SelectTabsItem key={key} value={key}>
@@ -433,49 +438,56 @@ const Controls = ({
                   </SelectTabsItem>
                 ))}
               </SelectTabsContent>
-              {Object.entries(initialData).map(([keyRaw, initialInfo]) => {
-                const key = keyRaw as keyof typeof initialData;
+              <TourStep step={6}>
+                <div>
+                  {Object.entries(initialData).map(([keyRaw, initialInfo]) => {
+                    const key = keyRaw as keyof typeof initialData;
 
-                return (
-                  <SelectTabsTab value={key} key={key + "tab"}>
-                    <div className="my-6 flex items-center justify-between">
-                      <label
-                        htmlFor={key}
-                        className="w-full text-sm font-normal text-neutral-300"
-                      >
-                        Visibility
-                      </label>
-                      <Switch
-                        id={key}
-                        checked={
-                          dataVisibility[key as keyof typeof initialData]
-                        }
-                        onCheckedChange={(e: boolean) =>
-                          setDataVisibility((prev) => ({ ...prev, [key]: e }))
-                        }
-                      />
-                    </div>
-                    {ALL_FILTERS[key] ? (
-                      <DataFormFilters
-                        initialData={initialInfo}
-                        dataKey={key}
-                        onDataLoad={MAP_DATA_SPECIFICS[key]?.onLoad}
-                        additionalActions={
-                          MAP_DATA_SPECIFICS[key]?.additionalActions
-                        }
-                      />
-                    ) : (
-                      <DataNoFilter
-                        dataKey={key}
-                        onDataLoad={MAP_DATA_SPECIFICS[key]?.onLoad}
-                        additionalActions={
-                          MAP_DATA_SPECIFICS[key]?.additionalActions
-                        }
-                      />
-                    )}
-                  </SelectTabsTab>
-                );
-              })}
+                    return (
+                      <SelectTabsTab value={key} key={key + "tab"}>
+                        <div className="my-6 flex items-center justify-between">
+                          <label
+                            htmlFor={key}
+                            className="w-full text-sm font-normal text-neutral-300"
+                          >
+                            Visibility
+                          </label>
+                          <Switch
+                            id={key}
+                            checked={
+                              dataVisibility[key as keyof typeof initialData]
+                            }
+                            onCheckedChange={(e: boolean) =>
+                              setDataVisibility((prev) => ({
+                                ...prev,
+                                [key]: e,
+                              }))
+                            }
+                          />
+                        </div>
+                        {ALL_FILTERS[key] ? (
+                          <DataFormFilters
+                            initialData={initialInfo}
+                            dataKey={key}
+                            onDataLoad={MAP_DATA_SPECIFICS[key]?.onLoad}
+                            additionalActions={
+                              MAP_DATA_SPECIFICS[key]?.additionalActions
+                            }
+                          />
+                        ) : (
+                          <DataNoFilter
+                            dataKey={key}
+                            onDataLoad={MAP_DATA_SPECIFICS[key]?.onLoad}
+                            additionalActions={
+                              MAP_DATA_SPECIFICS[key]?.additionalActions
+                            }
+                          />
+                        )}
+                      </SelectTabsTab>
+                    );
+                  })}
+                </div>
+              </TourStep>
             </SelectTabs>
           </div>
           <div className="px-1 py-2">
