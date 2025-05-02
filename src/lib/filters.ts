@@ -22,6 +22,7 @@ import type {
   GreaterThan,
   InferFilterTypes,
   Range,
+  Simplify,
 } from "./types";
 
 // To add new data with filters follow these steps:
@@ -222,7 +223,7 @@ const slipFilters = createDataFilter({
  * An object containing the filter types for all the different data types. The key of this object is used as the key for all other objects
  * dealing with the different data types, and its value
  * defines the filters. Value is `null` when there are no filters for that data type.
- * Do not import this on the client!
+ * DO NOT import this on the client!
  */
 export const ALL_FILTERS = {
   smt: smtFilters,
@@ -238,7 +239,7 @@ export const ALL_FILTERS = {
 /** Type of the data required to populate all filters */
 export type PopulateFilters = {
   [P in keyof typeof ALL_FILTERS]: (typeof ALL_FILTERS)[P] extends GenericFilterDefine
-    ? InferFilterTypes<(typeof ALL_FILTERS)[P]>
+    ? Simplify<InferFilterTypes<(typeof ALL_FILTERS)[P]>>
     : null;
 };
 
@@ -263,7 +264,7 @@ function cleanObjectForClient() {
   });
   return out as {
     [P in keyof typeof ALL_FILTERS]: (typeof ALL_FILTERS)[P] extends GenericFilterDefine
-      ? ClientFilterDefine<(typeof ALL_FILTERS)[P]>
+      ? Simplify<ClientFilterDefine<(typeof ALL_FILTERS)[P]>>
       : null;
   };
 }
@@ -275,10 +276,12 @@ export const ALL_FILTERS_CLIENT = cleanObjectForClient();
  * @param filters An object describing the type of filters
  * @returns A zodSchema for input validation
  */
-export const createZodSchema = (
-  filters:
-    | NonNullable<(typeof ALL_FILTERS_CLIENT)[keyof typeof ALL_FILTERS]>
-    | NonNullable<(typeof ALL_FILTERS)[keyof typeof ALL_FILTERS]>,
+export const createZodSchema = <
+  T extends NonNullable<
+    (typeof ALL_FILTERS_CLIENT | typeof ALL_FILTERS)[keyof typeof ALL_FILTERS]
+  >,
+>(
+  filters: T,
 ) => {
   const schema: Record<
     string,
@@ -291,7 +294,7 @@ export const createZodSchema = (
       }>
   > = {};
 
-  Object.entries(filters).forEach(([key, val]) => {
+  Object.entries(filters).forEach(([key, val]: [string, FiltersType]) => {
     if (val.type === "select") {
       schema[key] = z.string();
     } else if (val.type === "range") {
@@ -306,6 +309,38 @@ export const createZodSchema = (
     }
   });
   return schema;
+  // Uncomment the type below to get the full static typing on the output when passed a static filters object
+  // However there isn't a huge upside to the static typing as we don't really need to access this object anywhere
+  // So the generic object is a bit easier to work with
+  //
+  // as Simplify<
+  //   {
+  //     [P in keyof T]: T[P] extends {
+  //       type: "select";
+  //     }
+  //       ? z.ZodString
+  //       : T[P] extends { type: "range" }
+  //         ? z.ZodArray<z.ZodNumber, "many">
+  //         : T[P] extends { type: "greaterThan" }
+  //           ? z.ZodArray<z.ZodNumber, "many">
+  //           : T[P] extends { type: "date" }
+  //             ? z.ZodObject<{
+  //                 from: z.ZodDate;
+  //                 to: z.ZodDate;
+  //               }>
+  //             : never;
+  //   } & {
+  //     [P in keyof T as T[P] extends {
+  //       type: "select";
+  //     }
+  //       ? never
+  //       : `${P & string}AllowNull`]: T[P] extends {
+  //       type: "select";
+  //     }
+  //       ? never
+  //       : z.ZodBoolean;
+  //   }
+  // >;
 };
 
 /**
@@ -314,9 +349,12 @@ export const createZodSchema = (
  * @param filters An object describing the type of filters
  * @returns An object containing the default values for each filter
  */
-export const createDefaultValues = <K extends keyof typeof ALL_FILTERS_CLIENT>(
+export const createDefaultValues = <
+  T extends NonNullable<(typeof ALL_FILTERS_CLIENT)[K]>,
+  K extends keyof typeof ALL_FILTERS_CLIENT,
+>(
   initialData: NonNullable<PopulateFilters[K]>,
-  filters: NonNullable<(typeof ALL_FILTERS_CLIENT)[K]>,
+  filters: T,
 ) => {
   const values: {
     [key: string]: boolean | string | number[] | { from: Date; to: Date };
@@ -354,6 +392,36 @@ export const createDefaultValues = <K extends keyof typeof ALL_FILTERS_CLIENT>(
     };
   });
   return values;
+  // Uncomment the type below to get accurate static typing on the output when passed a filters object
+  // However, the only time this function is called is in data-filter.tsx, where the ALL_FILTERS object key is dynamic
+  // So the final type will be a union of the static types, which isn't so useful
+  // It could be more useful to just leave it in the generic type
+  //
+  // as Simplify<
+  //   {
+  //     [P in keyof T]: T[P] extends {
+  //       type: "select";
+  //     }
+  //       ? "All"
+  //       : T[P] extends { type: "range" }
+  //         ? [number, number]
+  //         : T[P] extends { type: "greaterThan" }
+  //           ? [number]
+  //           : T[P] extends { type: "date" }
+  //             ? { from: Date; to: Date }
+  //             : never;
+  //   } & {
+  //     [P in keyof T as T[P] extends {
+  //       type: "select";
+  //     }
+  //       ? never
+  //       : `${P & string}AllowNull`]: T[P] extends {
+  //       type: "select";
+  //     }
+  //       ? never
+  //       : false;
+  //   }
+  // >;
 };
 
 /**
@@ -376,6 +444,6 @@ export const generateSQLSelect = <T extends GenericFilterDefine>(filter: T) => {
     }
   });
   return res as {
-    [P in keyof InferFilterTypes<T>]: SQL<InferFilterTypes<T>[P]>;
+    [P in keyof T]: SQL<InferFilterTypes<T>[P]>;
   };
 };

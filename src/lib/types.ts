@@ -1,5 +1,9 @@
 import { AnyPgColumn } from "drizzle-orm/pg-core";
 
+// This type collapses the type and makes it nicer to look at in the editor typehints
+// E.g. ComplexType<{someKey: AnotherType; someKey2: AnotherType2}> will become => {finalKey: finalVal; finalKey2: finalVal2}
+export type Simplify<T> = { [K in keyof T]: T[K] } & {};
+
 export type BasemapNames =
   | "Openstreetmap"
   | "Opentopomap"
@@ -66,5 +70,5 @@ export type ClientFilterType<T extends FiltersType> = {
 };
 
 export type ClientFilterDefine<T extends GenericFilterDefine> = {
-  [P in keyof T]: ClientFilterType<T[P]>;
+  [P in keyof T]: Simplify<ClientFilterType<T[P]>>;
 };
