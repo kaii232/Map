@@ -22,7 +22,6 @@ export default async function AdminDashboard({
   const session = await auth.api.getSession({
     headers: requestHeaders,
     query: {
-      //@ts-expect-error Better auth bug
       disableRefresh: true,
     },
   });

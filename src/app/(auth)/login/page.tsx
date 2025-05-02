@@ -15,7 +15,6 @@ export default async function LoginPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
     query: {
-      //@ts-expect-error Better auth bug
       disableRefresh: true,
     },
   });
