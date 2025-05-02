@@ -1,7 +1,7 @@
 "use server";
 
 import { ALL_FILTERS, createZodSchema } from "@/lib/filters";
-import { FilterDefine, GenericFiltersInfo, Range } from "@/lib/types";
+import { GenericFilterDefine, Range } from "@/lib/types";
 import { and, between, eq, gte, isNull, or, type SQL, sql } from "drizzle-orm";
 import {
   Feature,
@@ -72,7 +72,7 @@ export type ActionReturn<T = undefined> =
   | { success: false; error: string };
 
 const generateFilters = (
-  filters: FilterDefine<GenericFiltersInfo>,
+  filters: GenericFilterDefine,
   values: {
     [x: string]:
       | string

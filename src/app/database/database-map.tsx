@@ -1,8 +1,8 @@
 "use client";
 
 import { style } from "@/assets/map_style";
-import type { ALL_FILTERS } from "@/lib/filters";
-import { GenericFiltersInfo, Range } from "@/lib/types";
+import type { ALL_FILTERS, PopulateFilters } from "@/lib/filters";
+import { Range } from "@/lib/types";
 import { velocityStops } from "@/lib/utils";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Position } from "geojson";
@@ -135,7 +135,7 @@ export default function DatabaseMap({
   initialData,
 }: {
   /** Data from database to populate filter controls */
-  initialData: Record<keyof typeof ALL_FILTERS, GenericFiltersInfo>;
+  initialData: PopulateFilters;
 }) {
   const { map } = useMap();
   const mapData = useAtomValue(dataAtom);

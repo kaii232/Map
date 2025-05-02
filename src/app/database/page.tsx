@@ -1,15 +1,5 @@
 import { Steps, TourRoot } from "@/components/tour";
-import {
-  ALL_FILTERS,
-  FltFilters,
-  generateSQLSelect,
-  GnssFilters,
-  SeisFilters,
-  Slab2Filters,
-  SlipFilters,
-  SmtFilters,
-  VlcFilters,
-} from "@/lib/filters";
+import { ALL_FILTERS, generateSQLSelect } from "@/lib/filters";
 import { GenericFiltersInfo } from "@/lib/types";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
@@ -38,7 +28,7 @@ export const metadata: Metadata = {
   description: "View and download data from EOS or global datasets",
 };
 
-const safeFirstRow = <T extends GenericFiltersInfo>(data: T[]): T => {
+const safeFirstRow = <T extends GenericFiltersInfo>(data: T[]) => {
   if (data.length) return data[0];
 
   return {} as T;
@@ -118,14 +108,6 @@ export default async function DatabasePage() {
     fltFilters,
     slab2Filters,
     slipFilters,
-  ]: [
-    VlcFilters[],
-    SeisFilters[],
-    SmtFilters[],
-    GnssFilters[],
-    FltFilters[],
-    Slab2Filters[],
-    SlipFilters[],
   ] = await Promise.all([
     db
       // .with(sources)
@@ -188,7 +170,7 @@ export default async function DatabasePage() {
             smt: safeFirstRow(smtFilters),
             vlc: safeFirstRow(vlcFilters),
             seis: safeFirstRow(seisFilters),
-            hf: {},
+            hf: null,
             slab2: safeFirstRow(slab2Filters),
             slip: safeFirstRow(slipFilters),
           }}

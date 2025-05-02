@@ -11,8 +11,8 @@ import {
 } from "@/lib/filters";
 import {
   ClientFilterDefine,
-  FilterDefine,
-  GenericFiltersInfo,
+  GenericFilterDefine,
+  InferFilterTypes,
 } from "@/lib/types";
 import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
@@ -27,14 +27,14 @@ import { dataAtom, drawingAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
 /** This component renders out the given filters for the data type */
-const DataFormFilters = <T extends GenericFiltersInfo>({
+const DataFormFilters = <T extends GenericFilterDefine>({
   initialData,
   dataKey,
   additionalActions,
   onDataLoad,
 }: {
   /** Data from database to populate filter controls */
-  initialData: T;
+  initialData: InferFilterTypes<T>;
   /** The key for the data type */
   dataKey: keyof typeof ALL_FILTERS_CLIENT;
   /** Components to render below the Download button of each form */
@@ -46,9 +46,7 @@ const DataFormFilters = <T extends GenericFiltersInfo>({
 }) => {
   const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
-  const filters = ALL_FILTERS_CLIENT[dataKey] as ClientFilterDefine<
-    FilterDefine<T>
-  >;
+  const filters = ALL_FILTERS_CLIENT[dataKey] as ClientFilterDefine<T>;
   const [isPending, startTransition] = useTransition();
 
   const defaults = useMemo(

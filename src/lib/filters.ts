@@ -15,38 +15,42 @@ import { z } from "zod";
 import type {
   Categories,
   ClientFilterDefine,
+  ClientFilterType,
   DateFilter,
-  FilterDefine,
-  GenericFiltersInfo,
+  FiltersType,
+  GenericFilterDefine,
   GreaterThan,
+  InferFilterTypes,
   Range,
 } from "./types";
 
 // To add new data with filters follow these steps:
-// 1. Define the filter types for each filter of either catagory type (select), range (slider), dateRange (calendar)
-// 2. Create the filterDefine object, this object will denote
+// 1. Define the filter using the createDataFilter helper function this object will denote
 //    name: The label of the filter
 //    type: The the type of filter it is
 //    dbCol: The drizzle column that the filter will be applied on
 //    nullCol: For select filters, if NULL is selected, the column that the IS NULL filter should be applied on
-// 3. Create server action to load the data
+// 2. Update the ALL_FILTERS object with the new data
+// 3. Create server action to load the data in actions.ts
 // 4. Update the labels and loaders in utils.ts
-// 5. Update database/page.tsx to fetch the data needed to populate the filter.
+// 5. Update database/page.tsx to fetch the data needed to populate the filter using the generateSQLSelect function.
 // 6. Update database-map.tsx mapDataLayers to specify the layer styles
 // 7. Update controls.tsx ColourRamps legends object if a legend is needed to display the data
 
-// To add additional filters:
-// 1. Update the filter type
-// 2. Update the filterDefine object
-// 3. Update database/page.tsx to fetch the data needed to populate the filter
+// To add additional filters for data that already exists:
+// 2. Update the filter object of that data
 
-export type VlcFilters = {
-  classes: Categories;
-  countries: Categories;
-  sources: Categories;
-};
+// To add new types of filter:
+// 1. Define the type of the data needed to populate the filter
+// 2. Update GenericFiltersInfo, FiltersType and InferFilterTypes to reflect this new filter
+// 3. Update createZodSchema and createDefaultValues in this file to deal with the new filter
+// 4. Update generateFilters in actions.ts to handle the SQL filters for the new filter
+// 5. Update form-generate.tsx to render the UI needed for your filter
 
-const vlcFilters: FilterDefine<VlcFilters> = {
+/** Helper function to enable type safety when defining new filters */
+const createDataFilter = <T extends GenericFilterDefine>(obj: T) => obj;
+
+const vlcFilters = createDataFilter({
   classes: {
     name: "Class",
     type: "select",
@@ -65,16 +69,9 @@ const vlcFilters: FilterDefine<VlcFilters> = {
     dbCol: biblInInvest.biblTitle,
     nullCol: vlcInInvest.vlcSrcId,
   },
-};
+});
 
-export type SeisFilters = {
-  depthRange: Range;
-  mwRange: Range;
-  dateRange: DateFilter;
-  catalogs: Categories;
-};
-
-const seisFilters: FilterDefine<SeisFilters> = {
+const seisFilters = createDataFilter({
   depthRange: {
     dbCol: seisInInvest.seisDepth,
     name: "Depth",
@@ -97,16 +94,9 @@ const seisFilters: FilterDefine<SeisFilters> = {
     name: "Catalog",
     type: "select",
   },
-};
+});
 
-export type SmtFilters = {
-  elevRange: Range;
-  baseRange: Range;
-  summitRange: Range;
-  classes: Categories;
-  catalogs: Categories;
-};
-const smtFilters: FilterDefine<SmtFilters> = {
+const smtFilters = createDataFilter({
   elevRange: {
     dbCol: smtInInvest.smtElev,
     name: "Elevation",
@@ -137,16 +127,9 @@ const smtFilters: FilterDefine<SmtFilters> = {
     name: "Catalog",
     type: "select",
   },
-};
+});
 
-export type GnssFilters = {
-  elevRange: Range;
-  dateRange: DateFilter;
-  projects: Categories;
-  stations: Categories;
-  countries: Categories;
-};
-const gnssFilters: FilterDefine<GnssFilters> = {
+const gnssFilters = createDataFilter({
   elevRange: {
     dbCol: gnssStnInInvest.gnssElev,
     name: "Elevation",
@@ -176,17 +159,9 @@ const gnssFilters: FilterDefine<GnssFilters> = {
     type: "select",
     name: "Station Type",
   },
-};
+});
 
-export type FltFilters = {
-  lengthRange: Range;
-  sliprateRange: Range;
-  depthRange: Range;
-  types: Categories;
-  catalogs: Categories;
-};
-
-const fltFilters: FilterDefine<FltFilters> = {
+const fltFilters = createDataFilter({
   lengthRange: {
     dbCol: fltInInvest.fltLen,
     name: "Length",
@@ -216,27 +191,18 @@ const fltFilters: FilterDefine<FltFilters> = {
     name: "Catalog",
     type: "select",
   },
-};
+});
 
-export type Slab2Filters = {
-  region: Categories;
-};
-
-const slab2Filters: FilterDefine<Slab2Filters> = {
+const slab2Filters = createDataFilter({
   region: {
     dbCol: slab2InInvest.slabRegion,
     nullCol: slab2InInvest.slabRegion,
     name: "Region",
     type: "select",
   },
-};
+});
 
-export type SlipFilters = {
-  modelEvent: Categories;
-  slipRate: GreaterThan;
-};
-
-const slipFilters: FilterDefine<SlipFilters> = {
+const slipFilters = createDataFilter({
   modelEvent: {
     dbCol: slipModelInInvest.modelEvent,
     name: "Model Event",
@@ -250,7 +216,7 @@ const slipFilters: FilterDefine<SlipFilters> = {
     maxVal: 1,
     units: "m",
   },
-};
+});
 
 /**
  * An object containing the filter types for all the different data types. The key of this object is used as the key for all other objects
@@ -269,10 +235,17 @@ export const ALL_FILTERS = {
   slip: slipFilters,
 };
 
+/** Type of the data required to populate all filters */
+export type PopulateFilters = {
+  [P in keyof typeof ALL_FILTERS]: (typeof ALL_FILTERS)[P] extends GenericFilterDefine
+    ? InferFilterTypes<(typeof ALL_FILTERS)[P]>
+    : null;
+};
+
 function cleanObjectForClient() {
   const out: Record<
     string,
-    ClientFilterDefine<FilterDefine<GenericFiltersInfo>> | null
+    Record<string, ClientFilterType<FiltersType>> | null
   > = {};
   Object.entries(ALL_FILTERS).map(([key, val]) => {
     if (val === null) {
@@ -289,7 +262,7 @@ function cleanObjectForClient() {
     out[key] = filterObj;
   });
   return out as {
-    [P in keyof typeof ALL_FILTERS]: (typeof ALL_FILTERS)[P] extends FilterDefine<GenericFiltersInfo>
+    [P in keyof typeof ALL_FILTERS]: (typeof ALL_FILTERS)[P] extends GenericFilterDefine
       ? ClientFilterDefine<(typeof ALL_FILTERS)[P]>
       : null;
   };
@@ -302,8 +275,8 @@ export const ALL_FILTERS_CLIENT = cleanObjectForClient();
  * @param filters An object describing the type of filters
  * @returns A zodSchema for input validation
  */
-export const createZodSchema = <T extends GenericFiltersInfo>(
-  filters: ClientFilterDefine<FilterDefine<T>>,
+export const createZodSchema = <T extends GenericFilterDefine>(
+  filters: ClientFilterDefine<T> | T,
 ) => {
   const schema: Record<
     string,
@@ -339,9 +312,9 @@ export const createZodSchema = <T extends GenericFiltersInfo>(
  * @param filters An object describing the type of filters
  * @returns An object containing the default values for each filter
  */
-export const createDefaultValues = <T extends GenericFiltersInfo>(
-  initialData: T,
-  filters: ClientFilterDefine<FilterDefine<T>>,
+export const createDefaultValues = <T extends GenericFilterDefine>(
+  initialData: InferFilterTypes<T>,
+  filters: ClientFilterDefine<T>,
 ) => {
   const values: {
     [key: string]: boolean | string | number[] | { from: Date; to: Date };
@@ -372,8 +345,8 @@ export const createDefaultValues = <T extends GenericFiltersInfo>(
           : now,
       ),
       to: new Date(
-        initialData[key] && initialData[key][1] !== "NULL"
-          ? initialData[key][1]
+        initialData[key] && initialData[key][1]! !== "NULL"
+          ? initialData[key][1]!
           : now,
       ),
     };
@@ -386,9 +359,7 @@ export const createDefaultValues = <T extends GenericFiltersInfo>(
  * @param filter An object describing the type of filters
  * @returns An object containing the SQL select statements required for populating the filter
  */
-export const generateSQLSelect = <T extends GenericFiltersInfo>(
-  filter: FilterDefine<T>,
-): { [P in keyof T]: SQL<T[P]> } => {
+export const generateSQLSelect = <T extends GenericFilterDefine>(filter: T) => {
   const res: Record<string, SQL> = {};
   Object.entries(filter).map(([key, val]) => {
     if (val.type === "range") {
@@ -402,5 +373,7 @@ export const generateSQLSelect = <T extends GenericFiltersInfo>(
       res[key] = sql<GreaterThan>`ARRAY[MIN(${val.dbCol})]`;
     }
   });
-  return res as { [P in keyof T]: SQL<T[P]> };
+  return res as {
+    [P in keyof InferFilterTypes<T>]: SQL<InferFilterTypes<T>[P]>;
+  };
 };

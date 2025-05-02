@@ -26,14 +26,14 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import {
   ClientFilterDefine,
-  FilterDefine,
-  GenericFiltersInfo,
+  GenericFilterDefine,
+  InferFilterTypes,
 } from "@/lib/types";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { CalendarDays } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
-type FormGenerateProps<T extends GenericFiltersInfo> = {
+type FormGenerateProps<T extends ClientFilterDefine<GenericFilterDefine>> = {
   /** The React Hook Form instance */
   form: UseFormReturn<
     {
@@ -61,20 +61,17 @@ type FormGenerateProps<T extends GenericFiltersInfo> = {
         };
   };
   /** Data from database to populate controls */
-  initialData: T;
+  initialData: InferFilterTypes<T>;
   /** The filters for the data type */
-  filters: ClientFilterDefine<FilterDefine<T>>;
+  filters: T;
 };
 
 /**
  * Component for automatically rendering the correct controls for each filter
  */
-export default function FormGenerate<T extends GenericFiltersInfo>({
-  form,
-  defaults,
-  initialData,
-  filters,
-}: FormGenerateProps<T>) {
+export default function FormGenerate<
+  T extends ClientFilterDefine<GenericFilterDefine>,
+>({ form, defaults, initialData, filters }: FormGenerateProps<T>) {
   const isLarge = useMediaQuery("(min-width:640px)");
 
   return Object.entries(filters).map(([key, filter]) => {

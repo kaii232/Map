@@ -3,12 +3,6 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   webpack: (config) => {
     // Add custom Webpack loaders for .geojson, .csv, and .xlsx files
     config.module.rules.push(

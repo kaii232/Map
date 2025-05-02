@@ -10,7 +10,7 @@ export type BasemapNames =
 export type Range = [number, number];
 export type Categories = string[] | null;
 export type DateFilter = [string, string];
-export type GreaterThan = number[];
+export type GreaterThan = [number];
 // Generic type of the data that describes the filter values
 export type GenericFiltersInfo = Record<
   string,
@@ -43,27 +43,28 @@ export type FiltersType =
       maxVal: number;
       units?: string;
     };
-// Type for the filters definition
-export type FilterDefine<T extends GenericFiltersInfo> = {
-  [P in keyof T]: T[P] extends Range
-    ? Extract<FiltersType, { type: "range" }>
-    : T[P] extends DateFilter
-      ? Extract<FiltersType, { type: "date" }>
-      : T[P] extends Categories
-        ? Extract<FiltersType, { type: "select" }>
-        : T[P] extends GreaterThan
-          ? Extract<FiltersType, { type: "greaterThan" }>
-          : {
-              name: string;
-              type: "select" | "range" | "date" | "greaterThan";
-              dbCol: AnyPgColumn;
-              nullCol?: AnyPgColumn;
-              maxVal?: number;
-              units?: string;
-            };
+
+export type GenericFilterDefine = Record<string, FiltersType>;
+
+export type InferFilterTypes<
+  T extends ClientFilterDefine<GenericFilterDefine>,
+> = {
+  [P in keyof T]: T[P]["type"] extends "select"
+    ? Categories
+    : T[P]["type"] extends "range"
+      ? Range
+      : T[P]["type"] extends "date"
+        ? DateFilter
+        : T[P]["type"] extends "greaterThan"
+          ? GreaterThan
+          : never;
 };
 
-// FilterDefine type but val has no drizzle schemas included. Just wrap normal filter define type with this
-export type ClientFilterDefine<T extends FilterDefine<GenericFiltersInfo>> = {
-  [P in keyof T]: Omit<T[P], "dbCol" | "nullCol">;
+// Exclude the dbCol and nullCol keys
+export type ClientFilterType<T extends FiltersType> = {
+  [P in keyof T as Exclude<P, "dbCol" | "nullCol">]: T[P];
+};
+
+export type ClientFilterDefine<T extends GenericFilterDefine> = {
+  [P in keyof T]: ClientFilterType<T[P]>;
 };

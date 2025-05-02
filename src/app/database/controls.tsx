@@ -24,8 +24,8 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ALL_FILTERS_CLIENT } from "@/lib/filters";
-import { BasemapNames, GenericFiltersInfo, Range } from "@/lib/types";
+import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/filters";
+import { BasemapNames, Range } from "@/lib/types";
 import { cn, DATA_LABELS } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -183,7 +183,7 @@ const Controls = ({
   initialData,
 }: {
   /** Data from database to populate filter controls */
-  initialData: Record<keyof typeof ALL_FILTERS_CLIENT, GenericFiltersInfo>;
+  initialData: PopulateFilters;
 }) => {
   const [layers, setLayers] = useAtom(layersAtom);
   const [open, setOpen] = useAtom(panelOpenAtom);
@@ -455,9 +455,7 @@ const Controls = ({
                           </label>
                           <Switch
                             id={key}
-                            checked={
-                              dataVisibility[key as keyof typeof initialData]
-                            }
+                            checked={dataVisibility[key]}
                             onCheckedChange={(e: boolean) =>
                               setDataVisibility((prev) => ({
                                 ...prev,
@@ -466,7 +464,7 @@ const Controls = ({
                             }
                           />
                         </div>
-                        {ALL_FILTERS_CLIENT[key] ? (
+                        {ALL_FILTERS_CLIENT[key] && initialInfo ? (
                           <DataFormFilters
                             initialData={initialInfo}
                             dataKey={key}
