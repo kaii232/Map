@@ -275,8 +275,10 @@ export const ALL_FILTERS_CLIENT = cleanObjectForClient();
  * @param filters An object describing the type of filters
  * @returns A zodSchema for input validation
  */
-export const createZodSchema = <T extends GenericFilterDefine>(
-  filters: ClientFilterDefine<T> | T,
+export const createZodSchema = (
+  filters:
+    | NonNullable<(typeof ALL_FILTERS_CLIENT)[keyof typeof ALL_FILTERS]>
+    | NonNullable<(typeof ALL_FILTERS)[keyof typeof ALL_FILTERS]>,
 ) => {
   const schema: Record<
     string,
@@ -289,13 +291,13 @@ export const createZodSchema = <T extends GenericFilterDefine>(
       }>
   > = {};
 
-  Object.keys(filters).forEach((key) => {
-    if (filters[key].type === "select") {
+  Object.entries(filters).forEach(([key, val]) => {
+    if (val.type === "select") {
       schema[key] = z.string();
-    } else if (filters[key].type === "range") {
+    } else if (val.type === "range") {
       schema[key] = z.number().array().length(2);
       schema[`${key}AllowNull`] = z.boolean();
-    } else if (filters[key].type === "date") {
+    } else if (val.type === "date") {
       schema[key] = z.object({ from: z.date(), to: z.date() }).required();
       schema[`${key}AllowNull`] = z.boolean();
     } else {
@@ -312,9 +314,9 @@ export const createZodSchema = <T extends GenericFilterDefine>(
  * @param filters An object describing the type of filters
  * @returns An object containing the default values for each filter
  */
-export const createDefaultValues = <T extends GenericFilterDefine>(
-  initialData: InferFilterTypes<T>,
-  filters: ClientFilterDefine<T>,
+export const createDefaultValues = <K extends keyof typeof ALL_FILTERS_CLIENT>(
+  initialData: NonNullable<PopulateFilters[K]>,
+  filters: NonNullable<(typeof ALL_FILTERS_CLIENT)[K]>,
 ) => {
   const values: {
     [key: string]: boolean | string | number[] | { from: Date; to: Date };

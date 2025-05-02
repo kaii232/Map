@@ -8,12 +8,8 @@ import {
   ALL_FILTERS_CLIENT,
   createDefaultValues,
   createZodSchema,
+  PopulateFilters,
 } from "@/lib/filters";
-import {
-  ClientFilterDefine,
-  GenericFilterDefine,
-  InferFilterTypes,
-} from "@/lib/types";
 import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,14 +23,14 @@ import { dataAtom, drawingAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
 /** This component renders out the given filters for the data type */
-const DataFormFilters = <T extends GenericFilterDefine>({
+const DataFormFilters = ({
   initialData,
   dataKey,
   additionalActions,
   onDataLoad,
 }: {
   /** Data from database to populate filter controls */
-  initialData: InferFilterTypes<T>;
+  initialData: NonNullable<PopulateFilters[typeof dataKey]>;
   /** The key for the data type */
   dataKey: keyof typeof ALL_FILTERS_CLIENT;
   /** Components to render below the Download button of each form */
@@ -46,7 +42,7 @@ const DataFormFilters = <T extends GenericFilterDefine>({
 }) => {
   const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
-  const filters = ALL_FILTERS_CLIENT[dataKey] as ClientFilterDefine<T>;
+  const filters = ALL_FILTERS_CLIENT[dataKey]!;
   const [isPending, startTransition] = useTransition();
 
   const defaults = useMemo(
