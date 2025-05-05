@@ -102,9 +102,11 @@ const columnHelper = createColumnHelper<UserWithRole>();
 export default function DataTable({
   data,
   rowCount,
+  pageSize,
 }: {
   data: UserWithRole[];
   rowCount: number;
+  pageSize: number;
 }) {
   const [editNameOpen, setEditNameOpen] = useState<
     { id: string; currentName: string } | undefined
@@ -256,7 +258,7 @@ export default function DataTable({
     manualPagination: true,
     initialState: {
       pagination: {
-        pageSize: 50,
+        pageSize: pageSize,
       },
     },
     rowCount,

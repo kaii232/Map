@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "View and edit user accounts",
 };
 
+const PAGE_SIZE = 50;
+
 export default async function AdminDashboard({
   searchParams,
 }: {
@@ -30,9 +32,6 @@ export default async function AdminDashboard({
 
   const queryParams = await searchParams;
 
-  const pageNum = Number.isNaN(Number(queryParams.page))
-    ? 0
-    : Number(queryParams.page);
   const pageNum = Number(queryParams.page) || 0;
 
   const [accounts, total] = await Promise.all([
@@ -44,12 +43,12 @@ export default async function AdminDashboard({
           ? and(
               or(
                 like(
-                  sql.raw(`lower(${user.email.name})`),
-                  `%${queryParams.search.toLowerCase()}%`,
+                  sql.raw(`lower(${user.email.name})`), // This is safe because it just references the column name
+                  `%${queryParams.search.toLowerCase()}%`, // This is not safe, DO NOT PUT THIS IN SQL RAW
                 ),
                 like(
                   sql.raw(`lower(${user.name.name})`),
-                  `%${queryParams.search.toLowerCase()}%`,
+                  `%${queryParams.search.toLowerCase()}%`, // DO NOT PUT THIS IN SQL RAW
                 ),
               ),
               ne(user.email, "admin@ntu.com"),
@@ -57,8 +56,8 @@ export default async function AdminDashboard({
           : ne(user.email, "admin@ntu.com"),
       )
       .orderBy(desc(user.createdAt))
-      .limit(50)
-      .offset(50 * pageNum),
+      .limit(PAGE_SIZE)
+      .offset(PAGE_SIZE * pageNum),
     db
       .select({ count: count() })
       .from(user)
@@ -92,7 +91,11 @@ export default async function AdminDashboard({
             </h1>
             <p>Manage user accounts</p>
           </div>
-          <DataTable data={accounts} rowCount={total[0].count} />
+          <DataTable
+            data={accounts}
+            rowCount={total[0].count}
+            pageSize={PAGE_SIZE}
+          />
         </div>
       </main>
     </>
