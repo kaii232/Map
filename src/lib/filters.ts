@@ -365,7 +365,7 @@ export const createDefaultValues = <
       return;
     }
     // Rest of the filters has allow null check box
-    values[`${key}AllowNull`] = false;
+    values[`${key}AllowNull`] = true;
     if (filters[key].type === "range") {
       values[key] = [
         (initialData[key] ? Number(initialData[key][0]) : 0) || 0,
@@ -419,7 +419,7 @@ export const createDefaultValues = <
   //       type: "select";
   //     }
   //       ? never
-  //       : false;
+  //       : true;
   //   }
   // >;
 };
