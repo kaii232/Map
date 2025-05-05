@@ -3,6 +3,7 @@
 import { ALL_FILTERS, createZodSchema } from "@/lib/filters";
 import { GenericFilterDefine, Range } from "@/lib/types";
 import { and, between, eq, gte, isNull, or, type SQL, sql } from "drizzle-orm";
+import { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   Feature,
   FeatureCollection,
@@ -27,6 +28,14 @@ import {
   stnTypeInInvest,
   vlcInInvest,
 } from "./db/schema";
+
+type ActionSuccess<T = undefined> = T extends undefined
+  ? { success: true; data: FeatureCollection }
+  : { success: true; data: FeatureCollection; metadata: T };
+
+export type ActionReturn<T = undefined> =
+  | ActionSuccess<T>
+  | { success: false; error: string };
 
 const sqlToGeojson = (
   input: {
@@ -55,24 +64,19 @@ const sqlToGeojson = (
   };
 };
 
-/** Mutates `filters` array in place and adds filter that restricts data if the user is not logged in */
-const restrictData = async (filters: (SQL | undefined)[]) => {
+/** Restricts data if the user is not logged in */
+const isLoggedIn = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  if (!session) filters.push(eq(biblInInvest.biblIsRestricted, false));
+  return !!session;
 };
 
-type ActionSuccess<T = undefined> = T extends undefined
-  ? { success: true; data: FeatureCollection }
-  : { success: true; data: FeatureCollection; metadata: T };
-
-export type ActionReturn<T = undefined> =
-  | ActionSuccess<T>
-  | { success: false; error: string };
-
-const generateFilters = (
-  filters: GenericFilterDefine,
+/** Generates the drizzle sql filters based on the values and filters */
+const generateFilters = async (
+  /** Object containing the filters for the data */
+  filters: GenericFilterDefine | null,
+  /** Values to filter the data with */
   values: {
     [x: string]:
       | string
@@ -83,8 +87,23 @@ const generateFilters = (
           to: Date;
         };
   },
+  /** Set to `true` if there is sensitive data to restrict from users who are not logged in */
+  shouldRestrict: boolean,
+  /** Geometry column of the data for filtering by location */
+  geomCol: AnyPgColumn,
+  /** Geojson geometry of the polygon to filter data by location */
+  drawing: MultiPolygon | Polygon | undefined,
 ) => {
   const output: (SQL | undefined)[] = [];
+  if (shouldRestrict && !(await isLoggedIn())) {
+    output.push(eq(biblInInvest.biblIsRestricted, false));
+  }
+  if (drawing) {
+    output.push(
+      sql`ST_INTERSECTS(${geomCol},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
+    );
+  }
+  if (!filters) return output;
   Object.entries(filters).map(([key, filter]) => {
     if (filter.type === "select") {
       if (values[key] !== "All") {
@@ -143,6 +162,7 @@ const generateFilters = (
       }
     }
   });
+
   return output;
 };
 
@@ -154,13 +174,13 @@ export const LoadSmt = async (
 ): Promise<ActionReturn> => {
   const { success } = smtFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(ALL_FILTERS.smt, values);
-  if (drawing) {
-    filters.push(
-      sql`ST_INTERSECTS(${smtInInvest.smtGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
-    );
-  }
-  await restrictData(filters);
+  const filters = await generateFilters(
+    ALL_FILTERS.smt,
+    values,
+    true,
+    smtInInvest.smtGeom,
+    drawing,
+  );
 
   const data = await db
     .select({
@@ -193,13 +213,13 @@ export const LoadVlc = async (
 ): Promise<ActionReturn> => {
   const { success } = vlcFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(ALL_FILTERS.vlc, values);
-  if (drawing) {
-    filters.push(
-      sql`ST_INTERSECTS(${vlcInInvest.vlcGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
-    );
-  }
-  await restrictData(filters);
+  const filters = await generateFilters(
+    ALL_FILTERS.vlc,
+    values,
+    true,
+    vlcInInvest.vlcGeom,
+    drawing,
+  );
 
   const data = await db
     .select({
@@ -235,12 +255,13 @@ export const LoadGNSS = async (
 ): Promise<ActionReturn> => {
   const { success } = gnssFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(ALL_FILTERS.gnss, values);
-  if (drawing) {
-    filters.push(
-      sql`ST_INTERSECTS(${gnssStnInInvest.gnssGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
-    );
-  }
+  const filters = await generateFilters(
+    ALL_FILTERS.gnss,
+    values,
+    false,
+    gnssStnInInvest.gnssGeom,
+    drawing,
+  );
 
   const data = await db
     .select({
@@ -279,15 +300,13 @@ export const LoadFlt = async (
   const { success } = fltFormSchema.safeParse(values);
   console.log(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(ALL_FILTERS.flt, values);
-
-  if (drawing) {
-    filters.push(
-      sql`ST_INTERSECTS(${fltInInvest.fltGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
-    );
-  }
-
-  await restrictData(filters);
+  const filters = await generateFilters(
+    ALL_FILTERS.flt,
+    values,
+    true,
+    fltInInvest.fltGeom,
+    drawing,
+  );
 
   const data = await db
     .select({
@@ -323,15 +342,13 @@ export const LoadSeis = async (
 ): Promise<ActionReturn> => {
   const { success } = seisFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(ALL_FILTERS.seis, values);
-
-  if (drawing) {
-    filters.push(
-      sql`ST_INTERSECTS(${seisInInvest.seisGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
-    );
-  }
-
-  await restrictData(filters);
+  const filters = await generateFilters(
+    ALL_FILTERS.seis,
+    values,
+    true,
+    seisInInvest.seisGeom,
+    drawing,
+  );
 
   const data = await db
     .select({
@@ -357,13 +374,13 @@ export const LoadSeis = async (
 export const LoadHf = async (
   drawing?: MultiPolygon | Polygon,
 ): Promise<ActionReturn> => {
-  const filters = [];
-  if (drawing) {
-    filters.push(
-      sql`ST_INTERSECTS(${heatflowInInvest.hfGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
-    );
-  }
-  await restrictData(filters);
+  const filters = await generateFilters(
+    ALL_FILTERS.hf,
+    {},
+    true,
+    heatflowInInvest.hfGeom,
+    drawing,
+  );
 
   const data = await db
     .select({
@@ -391,13 +408,13 @@ export const LoadSlab2 = async (
 ): Promise<ActionReturn> => {
   const { success } = slab2FormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(ALL_FILTERS.slab2, values);
-
-  if (drawing) {
-    filters.push(
-      sql`ST_INTERSECTS(${slab2InInvest.slabGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
-    );
-  }
+  const filters = await generateFilters(
+    ALL_FILTERS.slab2,
+    values,
+    false,
+    slab2InInvest.slabGeom,
+    drawing,
+  );
 
   const data = await db
     .select({
@@ -426,15 +443,13 @@ export const LoadSlip = async (
 ): Promise<ActionReturn<Range>> => {
   const { success } = slipFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
-  const filters = generateFilters(ALL_FILTERS.slip, values);
-
-  if (drawing) {
-    filters.push(
-      sql`ST_INTERSECTS(${slipModelInInvest.patchGeom},ST_GeomFromGeoJSON(${JSON.stringify(drawing)}))`,
-    );
-  }
-
-  await restrictData(filters);
+  const filters = await generateFilters(
+    ALL_FILTERS.slip,
+    values,
+    true,
+    slipModelInInvest.patchGeom,
+    drawing,
+  );
 
   const data = await db
     .select({
