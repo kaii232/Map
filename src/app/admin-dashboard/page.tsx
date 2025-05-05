@@ -43,12 +43,12 @@ export default async function AdminDashboard({
           ? and(
               or(
                 like(
-                  sql.raw(`lower(${user.email.name})`), // This is safe because it just references the column name
-                  `%${queryParams.search.toLowerCase()}%`, // This is not safe, DO NOT PUT THIS IN SQL RAW
+                  sql`lower(${user.email})`,
+                  `%${queryParams.search.toLowerCase()}%`,
                 ),
                 like(
-                  sql.raw(`lower(${user.name.name})`),
-                  `%${queryParams.search.toLowerCase()}%`, // DO NOT PUT THIS IN SQL RAW
+                  sql`lower(${user.name})`,
+                  `%${queryParams.search.toLowerCase()}%`,
                 ),
               ),
               ne(user.email, "admin@ntu.com"),
