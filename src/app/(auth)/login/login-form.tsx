@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import Spinner from "@/components/ui/spinner";
 import { signIn } from "@/server/auth-actions";
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 export default function LoginForm() {
@@ -28,7 +29,15 @@ export default function LoginForm() {
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              href="forget-password"
+              className="text-sm leading-none hover:underline"
+            >
+              Forget Password?
+            </Link>
+          </div>
           <Input
             id="password"
             name="password"
