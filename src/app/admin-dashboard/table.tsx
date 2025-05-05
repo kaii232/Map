@@ -290,7 +290,7 @@ export default function DataTable({
   };
   const currentSearch = searchParams.get("search");
   const currentPage = searchParams.get("page");
-  const pageNum = Number.isNaN(Number(currentPage)) ? 0 : Number(currentPage);
+  const pageNum = Number(currentPage) || 0;
 
   return (
     <div className="space-y-4">

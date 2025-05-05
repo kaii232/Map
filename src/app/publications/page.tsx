@@ -67,7 +67,7 @@ export default async function Publications({
   });
   const { query, page } = await searchParams;
 
-  const pageNum = Number.isNaN(Number(page)) ? 0 : Number(page);
+  const pageNum = Number(page) || 0;
 
   const searchVector = query
     ?.replaceAll(/[^A-Za-z0-9 &]/g, "")

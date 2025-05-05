@@ -33,6 +33,7 @@ export default async function AdminDashboard({
   const pageNum = Number.isNaN(Number(queryParams.page))
     ? 0
     : Number(queryParams.page);
+  const pageNum = Number(queryParams.page) || 0;
 
   const [accounts, total] = await Promise.all([
     db
