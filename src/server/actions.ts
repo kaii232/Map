@@ -43,14 +43,14 @@ const sqlToGeojson = (
     geojson: string;
     [key: string]: unknown;
   }[],
-  excludeKey?: string,
+  excludeKey?: string[],
 ): FeatureCollection => {
   const features: Feature[] = [];
   for (let i = 0; i < input.length; i++) {
     const properties: GeoJsonProperties = { ...input[i] };
     delete properties.geojson;
     delete properties.id;
-    if (excludeKey) delete properties[excludeKey];
+    if (excludeKey) excludeKey.map((key) => delete properties[key]);
     features.push({
       type: "Feature",
       id: input[i].id,
@@ -473,7 +473,7 @@ export const LoadSlip = async (
     )
     .where(and(...filters));
   const range: Range = data.length ? data[0].range : [0, 0];
-  const dataReturn = sqlToGeojson(data, "range");
+  const dataReturn = sqlToGeojson(data, ["range"]);
 
   return { success: true, data: dataReturn, metadata: range };
 };
