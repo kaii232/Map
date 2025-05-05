@@ -273,12 +273,12 @@ export default function DataTable({
     const params = new URLSearchParams(searchParams);
     if (search.trim()) {
       params.set("search", search.trim());
-      params.delete("page");
       table.setPageIndex(0);
     } else {
       params.delete("search");
       if (inputRef.current) inputRef.current.value = "";
     }
+    params.delete("page");
     replace(`${path}?${params.toString()}`);
   };
   const changePage = (page: number) => {

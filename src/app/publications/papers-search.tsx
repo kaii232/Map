@@ -14,10 +14,10 @@ export default function PapersSearch() {
     const params = new URLSearchParams(searchParams);
     if (search.trim()) {
       params.set("query", search.trim());
-      params.delete("page");
     } else {
       params.delete("query");
     }
+    params.delete("page");
     replace(`${path}?${params.toString()}`);
   };
 
