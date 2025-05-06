@@ -28,7 +28,7 @@ export default async function AccountPage() {
   return (
     <>
       <Header />
-      <main className="px-4">
+      <main className="px-4 pt-[53px]">
         <div className="mx-auto w-full max-w-4xl space-y-8 pb-4 pt-16">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div>

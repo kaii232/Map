@@ -133,7 +133,7 @@ export default async function Publications({
   return (
     <>
       <Header />
-      <main className="px-4">
+      <main className="px-4 pt-[53px]">
         <div className="mx-auto max-w-7xl space-y-4 pb-4 pt-12">
           <h1 className="text-2xl font-semibold text-neutral-50">
             Publications

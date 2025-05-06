@@ -47,6 +47,7 @@ export default function LoginForm() {
                 size="icon"
                 variant="ghost"
                 type="button"
+                className="hover:bg-neutral-200"
                 onClick={() => setShowPassword((prev) => !prev)}
               >
                 {showPassword ? <EyeOff /> : <Eye />}

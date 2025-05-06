@@ -17,14 +17,14 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "ring-offset-background flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "ring-offset-background text-earth flex h-10 w-full items-center justify-between rounded-full bg-neutral-800 px-3 py-2 pl-4 text-left text-sm font-bold placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:rounded-b-none data-[state=open]:rounded-t-2xl data-[state=open]:bg-neutral-950 [&>span]:line-clamp-1",
       className,
     )}
     {...props}
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+      <ChevronDown className="size-4 shrink-0" strokeWidth="3px" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -42,7 +42,7 @@ const SelectScrollUpButton = React.forwardRef<
     )}
     {...props}
   >
-    <ChevronUp className="h-4 w-4" />
+    <ChevronUp className="size-4" strokeWidth="3px" />
   </SelectPrimitive.ScrollUpButton>
 ));
 SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
@@ -59,7 +59,7 @@ const SelectScrollDownButton = React.forwardRef<
     )}
     {...props}
   >
-    <ChevronDown className="h-4 w-4" />
+    <ChevronDown className="size-4" strokeWidth="3px" />
   </SelectPrimitive.ScrollDownButton>
 ));
 SelectScrollDownButton.displayName =
@@ -74,7 +74,7 @@ const SelectContent = React.forwardRef<
       className,
       children,
       position = "popper",
-      sideOffset = 4,
+      sideOffset = 0,
       align = "center",
       ...props
     },
@@ -86,7 +86,7 @@ const SelectContent = React.forwardRef<
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          "bg-background relative z-50 max-h-96 w-[var(--radix-select-trigger-width)] min-w-[8rem] origin-[--radix-select-content-transform-origin] overflow-hidden rounded-2xl border border-neutral-600 p-1 text-neutral-200 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "relative z-50 max-h-96 w-[var(--radix-select-trigger-width)] min-w-[8rem] origin-[--radix-select-content-transform-origin] overflow-hidden rounded-b-2xl bg-neutral-950 p-1 text-neutral-400 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
         )}
         position={position}
@@ -120,14 +120,14 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-xl py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-neutral-800 focus:text-neutral-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "data-[state=checked]:text-earth relative flex w-full cursor-default select-none items-center rounded-xl py-1.5 pl-8 pr-2 text-sm font-bold outline-none focus:bg-neutral-50/10 focus:text-neutral-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-60",
       className,
     )}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
+        <Check className="text-earth size-4" strokeWidth="3px" />
       </SelectPrimitive.ItemIndicator>
     </span>
 
@@ -142,7 +142,7 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-neutral-700", className)}
+    className={cn("-mx-1 my-1 h-px bg-neutral-600", className)}
     {...props}
   />
 ));

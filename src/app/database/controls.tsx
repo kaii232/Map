@@ -290,7 +290,7 @@ const Controls = ({
           size="icon"
           variant="outline"
           className={cn(
-            "absolute top-0 z-30 ml-4 mt-4 size-8 bg-neutral-800 transition-transform duration-700 ease-map sm:ml-2.5 sm:mt-2.5",
+            "bg-background absolute top-0 z-30 ml-4 mt-4 size-8 transition-transform duration-700 ease-map sm:ml-2.5 sm:mt-2.5",
             open && "sm:translate-x-[320px]",
           )}
           aria-label="Toggle map panel open or closed"
@@ -327,7 +327,7 @@ const Controls = ({
             </span>
             <Button
               variant="ghost"
-              className="justify-start hover:text-yellow-500"
+              className="hover:text-earth justify-start text-white"
               asChild
             >
               <Link href="/">
@@ -338,7 +338,7 @@ const Controls = ({
             <Button
               variant="ghost"
               asChild
-              className="justify-start text-amber-400 hover:text-yellow-500"
+              className="text-earth justify-start"
             >
               <Link href="/database">
                 <Map />
@@ -347,7 +347,7 @@ const Controls = ({
             </Button>
             <Button
               variant="ghost"
-              className="justify-start hover:text-yellow-500"
+              className="hover:text-earth justify-start text-white"
               asChild
             >
               <Link href="/publications">
@@ -390,16 +390,29 @@ const Controls = ({
               <div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="ring-offset-background flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                    <button
+                      className={cn(
+                        "ring-offset-background flex h-10 w-full items-center justify-between rounded-full bg-neutral-800 px-3 py-2 pl-4 text-left text-sm font-bold placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:rounded-b-none data-[state=open]:rounded-t-2xl data-[state=open]:bg-neutral-950",
+                        Object.values(layers).some((val) => val)
+                          ? "text-earth"
+                          : "text-white",
+                      )}
+                    >
                       Map Layers
-                      <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                      <ChevronDown
+                        className="h-4 w-4 shrink-0"
+                        strokeWidth="3px"
+                      />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] rounded-2xl">
+                  <DropdownMenuContent
+                    sideOffset={0}
+                    className="w-[--radix-dropdown-menu-trigger-width] rounded-b-2xl border-0 bg-neutral-950 text-neutral-400"
+                  >
                     {Object.keys(layers).map((layer) => (
                       <DropdownMenuCheckboxItem
                         key={layer}
-                        className="flex items-center justify-between rounded-xl"
+                        className="data-[state=checked]:text-earth flex items-center justify-between rounded-xl font-bold"
                         onSelect={(e) => e.preventDefault()}
                         checked={layers[layer as keyof typeof layers]}
                         onCheckedChange={(e: boolean) =>

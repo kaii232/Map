@@ -227,7 +227,7 @@ const DownloadControl = () => {
       <div className="maplibregl-ctrl maplibregl-ctrl-group">
         <button
           onClick={drawLayers}
-          className="text-neutral-700 disabled:pointer-events-none disabled:opacity-50"
+          className="text-neutral-700 disabled:pointer-events-none disabled:opacity-60"
           disabled={isDrawing}
           style={{ padding: "2.5px" }}
         >

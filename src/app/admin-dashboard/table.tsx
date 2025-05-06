@@ -318,7 +318,7 @@ export default function DataTable({
           {table.getSelectedRowModel().rows.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary">
+                <Button variant="outline">
                   <CirclePlus />
                   Actions
                 </Button>
@@ -425,7 +425,7 @@ export default function DataTable({
         </div>
         <div className="flex items-center space-x-2">
           <Button
-            variant="outline"
+            variant="ghost"
             className="hidden h-8 w-8 p-0 lg:flex"
             onClick={() => {
               table.setPageIndex(0);
@@ -434,10 +434,10 @@ export default function DataTable({
             disabled={!table.getCanPreviousPage()}
           >
             <span className="sr-only">Go to first page</span>
-            <ChevronsLeft />
+            <ChevronsLeft className="size-4" strokeWidth="3px" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             className="h-8 w-8 p-0"
             onClick={() => {
               table.previousPage();
@@ -446,10 +446,10 @@ export default function DataTable({
             disabled={!table.getCanPreviousPage()}
           >
             <span className="sr-only">Go to previous page</span>
-            <ChevronLeft />
+            <ChevronLeft className="size-4" strokeWidth="3px" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             className="h-8 w-8 p-0"
             onClick={() => {
               table.nextPage();
@@ -458,10 +458,10 @@ export default function DataTable({
             disabled={!table.getCanNextPage()}
           >
             <span className="sr-only">Go to next page</span>
-            <ChevronRight />
+            <ChevronRight className="size-4" strokeWidth="3px" />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             className="hidden h-8 w-8 p-0 lg:flex"
             onClick={() => {
               table.setPageIndex(table.getPageCount() - 1);
@@ -470,7 +470,7 @@ export default function DataTable({
             disabled={!table.getCanNextPage()}
           >
             <span className="sr-only">Go to last page</span>
-            <ChevronsRight />
+            <ChevronsRight className="size-4" strokeWidth="3px" />
           </Button>
         </div>
       </div>
@@ -1021,6 +1021,7 @@ const CreateUserDialog = () => {
                             <Button
                               size="icon"
                               variant="ghost"
+                              className="hover:bg-neutral-200"
                               type="button"
                               onClick={() => setShowPassword((prev) => !prev)}
                               aria-label="Toggle password visibility"
@@ -1049,6 +1050,7 @@ const CreateUserDialog = () => {
                               size="icon"
                               variant="ghost"
                               type="button"
+                              className="hover:bg-neutral-200"
                               onClick={() => setShowPassword((prev) => !prev)}
                               aria-label="Toggle password visibility"
                             >

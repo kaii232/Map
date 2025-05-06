@@ -171,7 +171,7 @@ export default function FormGenerate<
             control={form.control}
             name={`${key}AllowNull`}
             render={({ field }) => (
-              <FormItem className="flex items-center gap-1 space-y-0">
+              <FormItem className="flex items-center gap-2 space-y-0">
                 <FormControl>
                   <Checkbox
                     onBlur={field.onBlur}
@@ -247,7 +247,7 @@ export default function FormGenerate<
             control={form.control}
             name={`${key}AllowNull`}
             render={({ field }) => (
-              <FormItem className="flex items-center gap-1 space-y-0">
+              <FormItem className="flex items-center gap-2 space-y-0">
                 <FormControl>
                   <Checkbox
                     onBlur={field.onBlur}
@@ -297,7 +297,7 @@ export default function FormGenerate<
                       <PopoverTrigger asChild>
                         <button
                           className={
-                            "bg-background flex h-10 w-full items-center gap-2 rounded-md border border-neutral-600 px-4 py-2 text-sm font-normal hover:bg-neutral-800 [&_svg]:size-5"
+                            "flex h-10 w-full items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-normal data-[state=open]:bg-neutral-950 [&_svg]:size-5"
                           }
                         >
                           <CalendarDays className="shrink-0 text-neutral-400" />
@@ -318,7 +318,7 @@ export default function FormGenerate<
                           </div>
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto border-0 p-0">
                         <Calendar
                           captionLayout="dropdown"
                           disabled={{
@@ -373,7 +373,7 @@ export default function FormGenerate<
             control={form.control}
             name={`${key}AllowNull`}
             render={({ field }) => (
-              <FormItem className="flex items-center gap-1 space-y-0">
+              <FormItem className="flex items-center gap-2 space-y-0">
                 <FormControl>
                   <Checkbox
                     onBlur={field.onBlur}

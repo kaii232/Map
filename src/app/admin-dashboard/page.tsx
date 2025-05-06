@@ -83,7 +83,7 @@ export default async function AdminDashboard({
   return (
     <>
       <Header />
-      <main className="px-4">
+      <main className="px-4 pt-[53px]">
         <div className="mx-auto w-full max-w-[1400px] space-y-8 pb-4 pt-16">
           <div>
             <h1 className="mb-1 text-4xl font-semibold text-neutral-50">
