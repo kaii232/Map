@@ -143,7 +143,7 @@ export default async function Publications({
             {publications.map((pub) => {
               return (
                 <li key={pub.id}>
-                  <div className="relative block rounded-lg border border-neutral-800 bg-neutral-900/70 p-4 text-neutral-300 transition hover:border-neutral-600">
+                  <div className="relative block rounded-lg border border-neutral-800 bg-neutral-800/70 p-4 text-neutral-300 transition hover:border-neutral-600">
                     <div className="mb-4">
                       <p className="text-sm text-neutral-400">
                         {pub.journal}

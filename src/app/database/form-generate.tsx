@@ -297,7 +297,7 @@ export default function FormGenerate<
                       <PopoverTrigger asChild>
                         <button
                           className={
-                            "flex h-10 w-full items-center gap-2 rounded-md border border-neutral-600 bg-neutral-950 px-4 py-2 text-sm font-normal hover:bg-neutral-900 [&_svg]:size-5"
+                            "bg-background flex h-10 w-full items-center gap-2 rounded-md border border-neutral-600 px-4 py-2 text-sm font-normal hover:bg-neutral-800 [&_svg]:size-5"
                           }
                         >
                           <CalendarDays className="shrink-0 text-neutral-400" />

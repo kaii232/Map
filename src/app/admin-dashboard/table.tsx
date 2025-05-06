@@ -816,16 +816,16 @@ const CreateUserDialog = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="sticky top-0 bg-neutral-950">
+                    <TableHead className="bg-background sticky top-0">
                       Email
                     </TableHead>
-                    <TableHead className="sticky top-0 bg-neutral-950">
+                    <TableHead className="bg-background sticky top-0">
                       Name
                     </TableHead>
-                    <TableHead className="sticky top-0 bg-neutral-950">
+                    <TableHead className="bg-background sticky top-0">
                       Password
                     </TableHead>
-                    <TableHead className="sticky top-0 bg-neutral-950">
+                    <TableHead className="bg-background sticky top-0">
                       Role
                     </TableHead>
                   </TableRow>

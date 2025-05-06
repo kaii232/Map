@@ -2,7 +2,7 @@
 
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,8 +22,8 @@ const HeaderLink = ({
     <Link
       href={href}
       className={cn(
-        "block px-3 py-2 text-sm transition-colors hover:text-yellow-500 hover:underline",
-        active && "text-amber-400 hover:text-yellow-500",
+        "hover:text-earth block px-3 py-2 text-sm font-bold text-white transition-colors hover:underline",
+        active && "text-earth",
         className,
       )}
       {...rest}
@@ -84,8 +84,13 @@ export default function Header() {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-600 bg-neutral-950 px-4 py-2 text-neutral-50">
-      <div className="mx-auto flex max-w-[1400px] items-center justify-between">
+    <header
+      className={cn(
+        "bg-background fixed inset-x-0 top-0 z-50 flex flex-col border-b border-neutral-600 px-4 py-2 text-neutral-50",
+        expanded && "h-screen sm:h-auto",
+      )}
+    >
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
         <Link href="/">
           <Image
             alt="Earth Observatory of Singapore"
@@ -97,11 +102,11 @@ export default function Header() {
         </Link>
         <Button
           variant="ghost"
-          className="size-8 justify-center p-0 sm:hidden"
+          className="size-8 justify-center p-0 sm:hidden [&_svg]:size-6"
           aria-label="Menu"
           onClick={() => setExpanded((prev) => !prev)}
         >
-          <Menu />
+          {expanded ? <X /> : <Menu />}
         </Button>
         <nav className="hidden sm:block">
           <ul className="flex items-center gap-4 text-sm">
@@ -118,7 +123,7 @@ export default function Header() {
         </nav>
       </div>
       {expanded && (
-        <nav className="mx-auto max-w-[1400px] py-8 sm:hidden">
+        <nav className="mx-auto w-full max-w-[1400px] grow py-8 sm:hidden">
           <ul className="flex flex-col gap-2">
             {links.map((link) => (
               <li key={link.href}>

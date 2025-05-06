@@ -17,7 +17,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm ring-offset-neutral-950 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "ring-offset-background flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
       className,
     )}
     {...props}
@@ -86,7 +86,7 @@ const SelectContent = React.forwardRef<
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          "relative z-50 max-h-96 w-[var(--radix-select-trigger-width)] min-w-[8rem] origin-[--radix-select-content-transform-origin] overflow-hidden rounded-2xl border border-neutral-600 bg-neutral-950 p-1 text-neutral-200 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "bg-background relative z-50 max-h-96 w-[var(--radix-select-trigger-width)] min-w-[8rem] origin-[--radix-select-content-transform-origin] overflow-hidden rounded-2xl border border-neutral-600 p-1 text-neutral-200 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className,
         )}
         position={position}

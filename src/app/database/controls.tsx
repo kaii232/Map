@@ -154,7 +154,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        "absolute bottom-2.5 mb-8 ml-2.5 flex w-32 flex-col gap-2 bg-neutral-950 p-1 text-xs text-neutral-300",
+        "bg-background absolute bottom-2.5 mb-8 ml-2.5 flex w-32 flex-col gap-2 p-1 text-xs text-neutral-300",
         className,
       )}
     >
@@ -290,7 +290,7 @@ const Controls = ({
           size="icon"
           variant="outline"
           className={cn(
-            "absolute top-0 z-30 ml-4 mt-4 size-8 bg-neutral-900 transition-transform duration-700 ease-map sm:ml-2.5 sm:mt-2.5",
+            "absolute top-0 z-30 ml-4 mt-4 size-8 bg-neutral-800 transition-transform duration-700 ease-map sm:ml-2.5 sm:mt-2.5",
             open && "sm:translate-x-[320px]",
           )}
           aria-label="Toggle map panel open or closed"
@@ -320,7 +320,7 @@ const Controls = ({
         )}
       >
         <ColourRamps className="left-full hidden sm:flex" />
-        <div className="flex h-full max-h-full flex-col divide-y divide-neutral-600 overflow-auto bg-neutral-950 pt-12 text-neutral-300 sm:pt-0">
+        <div className="bg-background flex h-full max-h-full flex-col divide-y divide-neutral-600 overflow-auto pt-12 text-neutral-300 sm:pt-0">
           <div className="flex flex-col gap-1 p-4">
             <span className="mb-3 text-xs font-medium text-neutral-300">
               Navigation
@@ -390,7 +390,7 @@ const Controls = ({
               <div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm ring-offset-neutral-950 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                    <button className="ring-offset-background flex h-10 w-full items-center justify-between rounded-full border border-neutral-600 px-3 py-2 pl-4 text-left text-sm placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                       Map Layers
                       <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
                     </button>
