@@ -49,7 +49,9 @@ import type {
 // 5. Update form-generate.tsx to render the UI needed for your filter
 
 /** Helper function to enable type safety when defining new filters */
-const createDataFilter = <T extends GenericFilterDefine>(obj: T) => obj;
+const createDataFilter = <T extends GenericFilterDefine>(obj: {
+  [P in keyof T]: T[P];
+}) => obj;
 
 const vlcFilters = createDataFilter({
   classes: {
