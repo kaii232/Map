@@ -355,7 +355,7 @@ const Controls = ({
               asChild
             >
               <Link href="/">
-                <Home />
+                <Home strokeWidth="3px" />
                 Home
               </Link>
             </Button>
@@ -365,7 +365,7 @@ const Controls = ({
               className="justify-start text-earth"
             >
               <Link href="/database">
-                <Map />
+                <Map strokeWidth="3px" />
                 Map
               </Link>
             </Button>
@@ -375,7 +375,7 @@ const Controls = ({
               asChild
             >
               <Link href="/publications">
-                <Book />
+                <Book strokeWidth="3px" />
                 Publications
               </Link>
             </Button>
@@ -474,9 +474,10 @@ const Controls = ({
                         aria-label="Reset all filters"
                         variant="ghost"
                         size="icon"
+                        className="shrink-0"
                         onClick={resetFilters}
                       >
-                        <RotateCcw />
+                        <RotateCcw strokeWidth="3px" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Reset all filters</TooltipContent>
@@ -487,9 +488,10 @@ const Controls = ({
                         aria-label="Clear all data"
                         variant="ghost"
                         size="icon"
+                        className="shrink-0"
                         onClick={clearData}
                       >
-                        <Trash />
+                        <Trash strokeWidth="3px" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Clear all data</TooltipContent>
