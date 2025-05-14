@@ -24,12 +24,13 @@ export const velocityStops = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
 /**
  * Used for displaying the message on the toast when loading data
+ * On successful load of data, a message of: "Successfully loaded `length` `TOAST_MESSAGE`" is shown
  */
 export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS, string> = {
   flt: "faults",
   gnss: "GNSS stations",
   hf: "heatflow data",
-  seis: "seismic data",
+  seis: "seismicity data",
   slab2: "slab data",
   smt: "seamounts",
   vlc: "volcanoes",
@@ -44,7 +45,7 @@ export const DATA_LABELS: Record<keyof typeof ALL_FILTERS, string> = {
   vlc: "Volcanoes",
   gnss: "GNSS Stations",
   flt: "Faults",
-  seis: "Seismic",
+  seis: "Seismicity",
   hf: "Heatflow",
   slab2: "Slab",
   slip: "Slip Models",
