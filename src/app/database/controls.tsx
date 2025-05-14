@@ -12,6 +12,15 @@ import {
 import { TourStep } from "@/components/tour";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -482,20 +491,36 @@ const Controls = ({
                     </TooltipTrigger>
                     <TooltipContent>Reset all filters</TooltipContent>
                   </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        aria-label="Clear all data"
-                        variant="ghost"
-                        size="icon"
-                        className="shrink-0"
-                        onClick={clearData}
-                      >
-                        <Trash strokeWidth="3px" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Clear all data</TooltipContent>
-                  </Tooltip>
+                  <Dialog>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DialogTrigger asChild>
+                          <Button
+                            aria-label="Clear all data"
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0"
+                          >
+                            <Trash strokeWidth="3px" />
+                          </Button>
+                        </DialogTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>Clear all data</TooltipContent>
+                    </Tooltip>
+                    <DialogContent>
+                      <DialogTitle>Clear all data?</DialogTitle>
+                      <DialogDescription>
+                        This action will clear all the currently loaded data.
+                      </DialogDescription>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button onClick={clearData} className="bg-red-700">
+                            Clear
+                          </Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </TourStep>
               <SelectTabsContent>
