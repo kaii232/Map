@@ -47,7 +47,7 @@ export default function MapLayers() {
         id="seafloorAgeSource"
         type="raster"
         tiles={[
-          `https://api.mapbox.com/v4/lance-ntu.b559fikp/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+          `https://api.mapbox.com/v4/investdbsg.capgordv/{z}/{x}/{y}.webp?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
         ]}
         maxzoom={5}
         tileSize={256}

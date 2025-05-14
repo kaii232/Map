@@ -114,7 +114,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
       colour:
         "bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]",
       min: "0",
-      max: "279Mya",
+      max: "194Mya",
       visible: layers.seafloorAge,
     },
     {
