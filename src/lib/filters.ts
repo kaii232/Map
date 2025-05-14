@@ -435,7 +435,8 @@ export const generateSQLSelect = <T extends GenericFilterDefine>(filter: T) => {
   const res: Record<string, SQL> = {};
   Object.entries(filter).map(([key, val]) => {
     if (val.type === "range") {
-      res[key] = sql<Range>`ARRAY[MIN(${val.dbCol}), MAX(${val.dbCol})]`;
+      res[key] =
+        sql<Range>`ARRAY[FLOOR(MIN(${val.dbCol})), CEIL(MAX(${val.dbCol}))]`;
     } else if (val.type === "select") {
       res[key] = sql<Categories>`ARRAY_AGG(DISTINCT ${val.dbCol})`;
     } else if (val.type === "date") {
