@@ -19,7 +19,7 @@ export const drawingAtom = atom<Polygon | MultiPolygon>();
 /** Open state of the side panel */
 export const panelOpenAtom = atom(true);
 
-const defaultVisibility = () => {
+export const defaultVisibility = () => {
   const defaultVal: Record<string, true> = {};
   Object.keys(ALL_FILTERS_CLIENT).forEach((val) => {
     defaultVal[val] = true;

@@ -24,18 +24,32 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/filters";
 import { BasemapNames, Range } from "@/lib/types";
 import { cn, DATA_LABELS } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Book, ChevronDown, ChevronLeft, Home, Map } from "lucide-react";
+import {
+  Book,
+  ChevronDown,
+  ChevronLeft,
+  Home,
+  Map,
+  RotateCcw,
+  Trash,
+} from "lucide-react";
 import Link from "next/link";
-import { memo, ReactNode, useMemo, useState } from "react";
+import { memo, ReactNode, useCallback, useMemo, useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import {
   dataAtom,
   dataVisibilityAtom,
+  defaultVisibility,
   layersAtom,
   mapStyleAtom,
   panelOpenAtom,
@@ -154,7 +168,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        "bg-background absolute bottom-2.5 mb-8 ml-2.5 flex w-32 flex-col gap-2 p-1 text-xs text-neutral-300",
+        "absolute bottom-2.5 mb-8 ml-2.5 flex w-32 flex-col gap-2 bg-background p-1 text-xs text-neutral-300",
         className,
       )}
     >
@@ -189,9 +203,19 @@ const Controls = ({
   const [open, setOpen] = useAtom(panelOpenAtom);
   const [mapStyle, setMapStyle] = useAtom(mapStyleAtom);
   const [dataVisibility, setDataVisibility] = useAtom(dataVisibilityAtom);
+  const setLoadedData = useSetAtom(dataAtom);
   const [dataSelectValue, setDataSelectValue] = useState<string>();
   const setSlipRange = useSetAtom(slipRangeAtom);
   const { map } = useMap();
+
+  const [filtersKey, setFiltersKey] = useState(Math.random().toString()); // Used to reset filters
+  const resetFilters = useCallback(() => {
+    setFiltersKey(Math.random().toString());
+    setDataVisibility(defaultVisibility);
+  }, [setDataVisibility]);
+  const clearData = useCallback(() => {
+    setLoadedData({});
+  }, [setLoadedData]);
 
   /** Specific actions and callbacks for each data type */
   const MAP_DATA_SPECIFICS: Partial<
@@ -290,7 +314,7 @@ const Controls = ({
           size="icon"
           variant="outline"
           className={cn(
-            "bg-background absolute top-0 z-30 ml-4 mt-4 size-8 transition-transform duration-700 ease-map sm:ml-2.5 sm:mt-2.5",
+            "absolute top-0 z-30 ml-4 mt-4 size-8 bg-background transition-transform duration-700 ease-map sm:ml-2.5 sm:mt-2.5",
             open && "sm:translate-x-[320px]",
           )}
           aria-label="Toggle map panel open or closed"
@@ -320,14 +344,14 @@ const Controls = ({
         )}
       >
         <ColourRamps className="left-full hidden sm:flex" />
-        <div className="bg-background flex h-full max-h-full flex-col divide-y divide-neutral-600 overflow-auto pt-12 text-neutral-300 sm:pt-0">
+        <div className="flex h-full max-h-full flex-col divide-y divide-neutral-600 overflow-auto bg-background pt-12 text-neutral-300 sm:pt-0">
           <div className="flex flex-col gap-1 p-4">
             <span className="mb-3 text-xs font-medium text-neutral-300">
               Navigation
             </span>
             <Button
               variant="ghost"
-              className="hover:text-earth justify-start text-white"
+              className="justify-start text-white hover:text-earth"
               asChild
             >
               <Link href="/">
@@ -338,7 +362,7 @@ const Controls = ({
             <Button
               variant="ghost"
               asChild
-              className="text-earth justify-start"
+              className="justify-start text-earth"
             >
               <Link href="/database">
                 <Map />
@@ -347,7 +371,7 @@ const Controls = ({
             </Button>
             <Button
               variant="ghost"
-              className="hover:text-earth justify-start text-white"
+              className="justify-start text-white hover:text-earth"
               asChild
             >
               <Link href="/publications">
@@ -392,7 +416,7 @@ const Controls = ({
                   <DropdownMenuTrigger asChild>
                     <button
                       className={cn(
-                        "ring-offset-background flex h-10 w-full items-center justify-between rounded-full bg-neutral-800 px-3 py-2 pl-4 text-left text-sm font-bold placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:rounded-b-none data-[state=open]:rounded-t-2xl data-[state=open]:bg-neutral-950",
+                        "flex h-10 w-full items-center justify-between rounded-full bg-neutral-800 px-3 py-2 pl-4 text-left text-sm font-bold ring-offset-background placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:rounded-b-none data-[state=open]:rounded-t-2xl data-[state=open]:bg-neutral-950",
                         Object.values(layers).some((val) => val)
                           ? "text-earth"
                           : "text-white",
@@ -412,7 +436,7 @@ const Controls = ({
                     {Object.keys(layers).map((layer) => (
                       <DropdownMenuCheckboxItem
                         key={layer}
-                        className="data-[state=checked]:text-earth flex items-center justify-between rounded-xl font-bold"
+                        className="flex items-center justify-between rounded-xl font-bold data-[state=checked]:text-earth"
                         onSelect={(e) => e.preventDefault()}
                         checked={layers[layer as keyof typeof layers]}
                         onCheckedChange={(e: boolean) =>
@@ -434,15 +458,42 @@ const Controls = ({
             <SelectTabs
               value={dataSelectValue}
               onValueChange={setDataSelectValue}
+              key={filtersKey}
             >
               <TourStep
                 step={5}
                 localBeforeStep={() => setDataSelectValue("gnss")}
               >
-                <div>
+                <div className="flex gap-2">
                   <SelectTabsTrigger>
                     <SelectTabsValue placeholder="Select data type" />
                   </SelectTabsTrigger>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        aria-label="Reset all filters"
+                        variant="ghost"
+                        size="icon"
+                        onClick={resetFilters}
+                      >
+                        <RotateCcw />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Reset all filters</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        aria-label="Clear all data"
+                        variant="ghost"
+                        size="icon"
+                        onClick={clearData}
+                      >
+                        <Trash />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Clear all data</TooltipContent>
+                  </Tooltip>
                 </div>
               </TourStep>
               <SelectTabsContent>
