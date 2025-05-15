@@ -373,7 +373,7 @@ const Controls = ({
               asChild
               className="justify-start text-earth"
             >
-              <Link href="/database">
+              <Link href="/map">
                 <Map strokeWidth="3px" />
                 Map
               </Link>

@@ -65,14 +65,14 @@ export const AccountLink = ({ className }: { className?: string }) => {
   );
 };
 
-const links = [
+const LINKS = [
   {
     label: "Home",
     href: "/",
   },
   {
     label: "Map",
-    href: "/database",
+    href: "/map",
   },
   {
     label: "Publications",
@@ -110,7 +110,7 @@ export default function Header() {
         </Button>
         <nav className="hidden sm:block">
           <ul className="flex items-center gap-4 text-sm">
-            {links.map((link) => (
+            {LINKS.map((link) => (
               <li key={link.href}>
                 <HeaderLink href={link.href}>{link.label}</HeaderLink>
               </li>
@@ -125,7 +125,7 @@ export default function Header() {
       {expanded && (
         <nav className="bg-background-secondary w-full grow px-4 py-8 sm:hidden">
           <ul className="flex flex-col gap-2">
-            {links.map((link) => (
+            {LINKS.map((link) => (
               <li key={link.href}>
                 <HeaderLink href={link.href}>{link.label}</HeaderLink>
               </li>
