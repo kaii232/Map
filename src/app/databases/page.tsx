@@ -13,8 +13,14 @@ import {
   vlcInInvest,
 } from "@/server/db/schema";
 import { eq, sql } from "drizzle-orm";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Databases",
+  description: "View the sources of data for each of the data types.",
+};
 
 const select = {
   id: sql<number>`DISTINCT ${biblInInvest.biblId}`,
