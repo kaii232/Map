@@ -24,6 +24,7 @@ export default {
         water: "#005596",
         fire: "#a9302e",
         background: "#171717",
+        "background-secondary": "#3b3b3b",
       },
     },
   },

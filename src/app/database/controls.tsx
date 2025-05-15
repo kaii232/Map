@@ -440,7 +440,7 @@ const Controls = ({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     sideOffset={0}
-                    className="w-[--radix-dropdown-menu-trigger-width] rounded-b-2xl border-0 bg-neutral-950 text-neutral-400"
+                    className="w-[--radix-dropdown-menu-trigger-width] rounded-t-none border-0 bg-neutral-950 text-neutral-400"
                   >
                     {Object.keys(layers).map((layer) => (
                       <DropdownMenuCheckboxItem

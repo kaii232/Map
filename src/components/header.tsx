@@ -22,7 +22,7 @@ const HeaderLink = ({
     <Link
       href={href}
       className={cn(
-        "hover:text-earth block px-3 py-2 text-sm font-bold text-white transition-colors hover:underline",
+        "block px-3 py-2 text-sm font-bold text-white transition-colors hover:text-earth hover:underline",
         active && "text-earth",
         className,
       )}
@@ -86,11 +86,11 @@ export default function Header() {
   return (
     <header
       className={cn(
-        "bg-background fixed inset-x-0 top-0 z-50 flex flex-col border-b border-neutral-600 px-4 py-2 text-neutral-50",
+        "fixed inset-x-0 top-0 z-50 flex flex-col border-b border-neutral-600 bg-background text-neutral-50",
         expanded && "h-screen sm:h-auto",
       )}
     >
-      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-4 py-2">
         <Link href="/">
           <Image
             alt="Earth Observatory of Singapore"
@@ -123,7 +123,7 @@ export default function Header() {
         </nav>
       </div>
       {expanded && (
-        <nav className="mx-auto w-full max-w-[1400px] grow py-8 sm:hidden">
+        <nav className="bg-background-secondary w-full grow px-4 py-8 sm:hidden">
           <ul className="flex flex-col gap-2">
             {links.map((link) => (
               <li key={link.href}>
