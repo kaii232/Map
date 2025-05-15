@@ -1,5 +1,6 @@
 import Header from "@/components/header";
 import { DATA_LABELS } from "@/lib/utils";
+import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import {
   biblInInvest,
@@ -12,6 +13,7 @@ import {
   vlcInInvest,
 } from "@/server/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { headers } from "next/headers";
 import Link from "next/link";
 
 const select = {
@@ -56,14 +58,23 @@ const TO_SELECT = {
 };
 
 export default async function Databases() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    query: {
+      disableRefresh: true,
+    },
+  });
+
   const sources = await Promise.all(
     Object.values(TO_SELECT).map((val) =>
       db
         .select(select)
         .from(biblInInvest)
-        .innerJoin(val.from, eq(val.biblCol, biblInInvest.biblId)),
+        .innerJoin(val.from, eq(val.biblCol, biblInInvest.biblId))
+        .where(!session ? eq(biblInInvest.biblIsRestricted, false) : undefined),
     ),
   );
+
   return (
     <>
       <Header />
