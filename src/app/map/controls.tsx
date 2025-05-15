@@ -47,6 +47,7 @@ import {
   Book,
   ChevronDown,
   ChevronLeft,
+  Database,
   Home,
   Map,
   RotateCcw,
@@ -376,6 +377,16 @@ const Controls = ({
               <Link href="/map">
                 <Map strokeWidth="3px" />
                 Map
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              asChild
+              className="justify-start text-white hover:text-earth"
+            >
+              <Link href="/databases">
+                <Database strokeWidth="3px" />
+                Databases
               </Link>
             </Button>
             <Button

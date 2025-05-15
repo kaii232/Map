@@ -75,6 +75,10 @@ const LINKS = [
     href: "/map",
   },
   {
+    label: "Databases",
+    href: "/databases",
+  },
+  {
     label: "Publications",
     href: "/publications",
   },
