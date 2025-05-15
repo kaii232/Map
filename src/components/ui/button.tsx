@@ -15,7 +15,7 @@ const buttonVariants = cva(
         outline:
           "border border-earth hover:bg-earth text-earth hover:text-white hover:border-white ",
         secondary: "bg-amber-300 text-neutral-700 hover:bg-amber-300/80 ",
-        ghost: "text-earth hover:bg-neutral-800 hover:text-white",
+        ghost: "text-white hover:bg-neutral-800 hover:text-earth",
         link: "text-earth underline-offset-4 underline hover:text-white",
       },
       size: {

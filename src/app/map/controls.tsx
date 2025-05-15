@@ -436,7 +436,7 @@ const Controls = ({
                   <DropdownMenuTrigger asChild>
                     <button
                       className={cn(
-                        "flex h-10 w-full items-center justify-between rounded-full bg-neutral-800 px-3 py-2 pl-4 text-left text-sm font-bold ring-offset-background placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:rounded-b-none data-[state=open]:rounded-t-2xl data-[state=open]:bg-neutral-950",
+                        "group flex h-10 w-full items-center justify-between rounded-full bg-neutral-800 px-3 py-2 pl-4 text-left text-sm font-bold ring-offset-background placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:rounded-b-none data-[state=open]:rounded-t-2xl data-[state=open]:bg-neutral-950",
                         Object.values(layers).some((val) => val)
                           ? "text-earth"
                           : "text-white",
@@ -444,7 +444,7 @@ const Controls = ({
                     >
                       Map Layers
                       <ChevronDown
-                        className="h-4 w-4 shrink-0"
+                        className="size-4 shrink-0 text-earth transition-transform group-data-[state=open]:rotate-180"
                         strokeWidth="3px"
                       />
                     </button>
