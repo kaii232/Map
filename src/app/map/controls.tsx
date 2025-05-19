@@ -42,6 +42,7 @@ import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/filters";
 import { BasemapNames, Range } from "@/lib/types";
 import { cn, DATA_LABELS } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
+import { bbox } from "@turf/bbox";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   Book,
@@ -102,6 +103,45 @@ const LAYER_LABELS: Record<string, string> = {
   plates: "Tectonic Plates (Bird, 2003)",
   platesNew: "Tectonic Plates (Hasterok, 2022)",
   seafloorAge: "Seafloor Age",
+};
+
+const FitDataToScreen = ({
+  dataKey,
+}: {
+  dataKey: keyof typeof ALL_FILTERS_CLIENT;
+}) => {
+  const { map } = useMap();
+  const loadedData = useAtomValue(dataAtom);
+  if (!map || !loadedData[dataKey] || loadedData[dataKey].features.length === 0)
+    return (
+      <Button variant="outline" className="w-full" disabled>
+        Fit Data to Screen
+      </Button>
+    );
+  return (
+    <Button
+      variant="outline"
+      className="w-full"
+      onClick={() => {
+        map.fitBounds(
+          bbox(loadedData[dataKey]!) as [number, number, number, number],
+          {
+            maxZoom: 15,
+            duration: 3000,
+            curve: 1,
+            padding: {
+              bottom: 128,
+              top: 96,
+              left: 48,
+              right: 48,
+            },
+          },
+        );
+      }}
+    >
+      Fit Data to Screen
+    </Button>
+  );
 };
 
 /** Displays the colour ramp legends for currently visible data on the map */
@@ -312,6 +352,7 @@ const Controls = ({
         onLoad(data) {
           if (data.metadata) setSlipRange(data.metadata as Range);
         },
+        additionalActions: <FitDataToScreen dataKey={"slip"} />,
       },
     }),
     [setSlipRange],

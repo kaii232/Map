@@ -86,29 +86,31 @@ const DataFormFilters = ({
   };
 
   return (
-    <Form {...form}>
-      <form className="space-y-6" onSubmit={form.handleSubmit(submitAction)}>
-        <FormGenerate
-          defaults={defaults}
-          filters={filters}
-          form={form}
-          initialData={initialData}
-        />
-        <div>
-          <Button type="submit" disabled={isPending} className="mb-2 w-full">
+    <>
+      <Form {...form}>
+        <form className="space-y-6" onSubmit={form.handleSubmit(submitAction)}>
+          <FormGenerate
+            defaults={defaults}
+            filters={filters}
+            form={form}
+            initialData={initialData}
+          />
+          <Button type="submit" disabled={isPending} className="w-full">
             {isPending ? "Loading" : drawing ? "Load data within area" : "Load"}
           </Button>
-          <DownloadButton
-            className="w-full"
-            data={mapData[dataKey]}
-            fileName={`${dataKey}_invest.csv`}
-          />
-          {additionalActions && (
-            <div className="mt-2 space-y-2">{additionalActions}</div>
-          )}
-        </div>
-      </form>
-    </Form>
+        </form>
+      </Form>
+      <div className="mt-2">
+        <DownloadButton
+          className="w-full"
+          data={mapData[dataKey]}
+          fileName={`${dataKey}_invest.csv`}
+        />
+        {additionalActions && (
+          <div className="mt-2 space-y-2">{additionalActions}</div>
+        )}
+      </div>
+    </>
   );
 };
 
