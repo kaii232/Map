@@ -472,7 +472,7 @@ export const LoadSlip = async (
       eq(slipModelInInvest.modelSrcId, biblInInvest.biblId),
     )
     .where(and(...filters));
-  const range: Range = data.length ? data[0].range : [0, 0];
+  const range: Range = data.length ? data[0].range : [0, 1]; // Range needs to be strictly ascending or error is thrown
   const dataReturn = sqlToGeojson(data, ["range"]);
 
   return { success: true, data: dataReturn, metadata: range };
