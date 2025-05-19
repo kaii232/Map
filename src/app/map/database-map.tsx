@@ -178,67 +178,69 @@ export default function DatabaseMap({
 
   const onHover = useCallback(
     (event: MapLayerMouseEvent) => {
+      if (!map) return;
       const {
         features,
         lngLat: { lng, lat },
       } = event;
       const hoveredFeature = features && features[0];
-      if (hoveredFeature && map) {
-        if (hoverInfo) {
-          map.setFeatureState(
-            {
-              source: hoverInfo.feature.layer.source,
-              id: hoverInfo.feature.id,
-            },
-            { hover: false },
-          );
-        }
-        if (
-          hoveredFeature.source === "platesSource" ||
-          hoveredFeature.source === "platesBoundariesSource" ||
-          hoveredFeature.source === "platesNewSource" ||
-          hoveredFeature.source === "platesNewBoundariesSource"
-        ) {
-          setHoverInfo(undefined);
-          return;
-        }
-        if (
-          !selectedFeature ||
-          (selectedFeature && selectedFeature.feature.id !== hoveredFeature.id)
-        ) {
-          const popupLon =
-            hoveredFeature.geometry.type === "Point"
-              ? hoveredFeature.geometry.coordinates[0]
-              : lng;
-          const popupLat =
-            hoveredFeature.geometry.type === "Point"
-              ? hoveredFeature.geometry.coordinates[1]
-              : lat;
-          setHoverInfo({
-            feature: hoveredFeature,
-            lng: popupLon,
-            lat: popupLat,
-          });
-          map.setFeatureState(
-            { source: hoveredFeature.layer.source, id: hoveredFeature.id },
-            { hover: true },
-          );
-        }
-      } else if (map) {
-        if (hoverInfo) {
-          map.setFeatureState(
-            {
-              source: hoverInfo.feature.layer.source,
-              id: hoverInfo.feature.id,
-            },
-            { hover: false },
-          );
-          setHoverInfo(undefined);
-        }
+      if (hoverInfo) {
+        // Old hover info
+        map.setFeatureState(
+          {
+            source: hoverInfo.feature.layer.source,
+            id: hoverInfo.feature.id,
+          },
+          { hover: false },
+        );
+      }
+      if (
+        !hoveredFeature ||
+        hoveredFeature.source === "platesSource" ||
+        hoveredFeature.source === "platesBoundariesSource" ||
+        hoveredFeature.source === "platesNewSource" ||
+        hoveredFeature.source === "platesNewBoundariesSource"
+      ) {
+        setHoverInfo(undefined);
+        return;
+      }
+      if (
+        !selectedFeature ||
+        (selectedFeature && selectedFeature.feature.id !== hoveredFeature.id)
+      ) {
+        const popupLon =
+          hoveredFeature.geometry.type === "Point"
+            ? hoveredFeature.geometry.coordinates[0]
+            : lng;
+        const popupLat =
+          hoveredFeature.geometry.type === "Point"
+            ? hoveredFeature.geometry.coordinates[1]
+            : lat;
+        setHoverInfo({
+          feature: hoveredFeature,
+          lng: popupLon,
+          lat: popupLat,
+        });
+        map.setFeatureState(
+          { source: hoveredFeature.layer.source, id: hoveredFeature.id },
+          { hover: true },
+        );
       }
     },
     [hoverInfo, map, selectedFeature],
   );
+
+  const clearHover = useCallback(() => {
+    if (!map || !hoverInfo) return;
+    map.setFeatureState(
+      {
+        source: hoverInfo.feature.layer.source,
+        id: hoverInfo.feature.id,
+      },
+      { hover: false },
+    );
+    setHoverInfo(undefined);
+  }, [map, hoverInfo]);
 
   const onClick = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -257,9 +259,10 @@ export default function DatabaseMap({
             ? clicked.geometry.coordinates[1]
             : lat;
         setselectedFeature({ feature: clicked, lng: popupLon, lat: popupLat });
+        clearHover();
       }
     },
-    [map],
+    [clearHover, map],
   );
 
   /** Defines the styles for each data type. Layout visibility, Source ID and Layer ID will be set automatically to
@@ -640,50 +643,52 @@ export default function DatabaseMap({
             onClose={() => setselectedFeature(undefined)}
             closeOnClick={false}
             className={
-              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
+              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:p-0 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
           >
-            {selectedFeature.feature.properties.name && (
-              <div className="mb-2 text-lg font-semibold text-neutral-50">
-                {selectedFeature.feature.properties.name}
-              </div>
-            )}
-            {Object.entries(selectedFeature.feature.properties).map(
-              ([key, value]) => {
-                if (key === "name") return;
-                if (typeof value === "string" && value.includes("https://"))
+            <div className="px-4 py-3" onMouseEnter={clearHover}>
+              {selectedFeature.feature.properties.name && (
+                <div className="mb-2 text-lg font-semibold text-neutral-50">
+                  {selectedFeature.feature.properties.name}
+                </div>
+              )}
+              {Object.entries(selectedFeature.feature.properties).map(
+                ([key, value]) => {
+                  if (key === "name") return;
+                  if (typeof value === "string" && value.includes("https://"))
+                    return (
+                      <div className="text-sm text-neutral-300" key={key}>
+                        <span className="font-semibold">{key}:</span>{" "}
+                        <Link
+                          href={value}
+                          target="_blank"
+                          className="text-blue-400 hover:underline"
+                        >
+                          {value}
+                        </Link>
+                      </div>
+                    );
+                  if (typeof value === "string" && value.includes("doi:"))
+                    return (
+                      <div className="text-sm text-neutral-300" key={key}>
+                        <span className="font-semibold">{key}:</span>{" "}
+                        <Link
+                          href={value.replace("doi:", "https://doi.org/")}
+                          target="_blank"
+                          className="text-blue-400 hover:underline"
+                        >
+                          {value}
+                        </Link>
+                      </div>
+                    );
                   return (
                     <div className="text-sm text-neutral-300" key={key}>
-                      <span className="font-semibold">{key}:</span>{" "}
-                      <Link
-                        href={value}
-                        target="_blank"
-                        className="text-blue-400 hover:underline"
-                      >
-                        {value}
-                      </Link>
+                      <span className="font-semibold">{key}:</span> {value}
                     </div>
                   );
-                if (typeof value === "string" && value.includes("doi:"))
-                  return (
-                    <div className="text-sm text-neutral-300" key={key}>
-                      <span className="font-semibold">{key}:</span>{" "}
-                      <Link
-                        href={value.replace("doi:", "https://doi.org/")}
-                        target="_blank"
-                        className="text-blue-400 hover:underline"
-                      >
-                        {value}
-                      </Link>
-                    </div>
-                  );
-                return (
-                  <div className="text-sm text-neutral-300" key={key}>
-                    <span className="font-semibold">{key}:</span> {value}
-                  </div>
-                );
-              },
-            )}
+                },
+              )}
+            </div>
           </Popup>
         )}
       </Map>
