@@ -453,7 +453,7 @@ export const generateSQLSelect = <T extends GenericFilterDefine>(filter: T) => {
       res[key] = sql<DateFilter>`ARRAY[MIN(${val.dbCol}), MAX(${val.dbCol})]`;
     } else if (val.type === "greaterThan") {
       // Greather than filter
-      res[key] = sql<GreaterThan>`ARRAY[MIN(${val.dbCol})]`;
+      res[key] = sql<GreaterThan>`ARRAY[FLOOR(MIN(${val.dbCol}))]`;
     } else {
       console.error(
         "No SQL generate method defined for filter of type",
