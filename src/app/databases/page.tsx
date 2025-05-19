@@ -63,6 +63,45 @@ const TO_SELECT = {
   },
 };
 
+const GNSS_SOURCES: { title: string; url: string }[] = [
+  {
+    title: "Indian National Centre for Ocean Information Services",
+    url: "https://incois.gov.in/",
+  },
+  {
+    title: "Geo-Informatics and Space Technology Development Agency",
+    url: "https://www.gistda.or.th/",
+  },
+  {
+    title: "Badan Informasi Geospasial",
+    url: "https://www.big.go.id/",
+  },
+  {
+    title: "Royal Thai Survey Department",
+    url: "https://www.rtsd.mi.th/main/language/en/",
+  },
+  {
+    title: "Malaysia Real-Time Kinematic GNSS Network",
+    url: "https://www.fig.net/resources/proceedings/fig_proceedings/fig2010/papers/ts08f/ts08f_hasan_azhari_et_al_4742.pdf",
+  },
+  {
+    title: "King Mongkut's Institute of Technology Ladkrabang",
+    url: "https://www.itrector.kmitl.ac.th/kmitl_eng/page10.html",
+  },
+  {
+    title: "Department of Lands",
+    url: "https://www.dol.go.th/Pages/en/interneteng.aspx",
+  },
+  {
+    title: "Chulalongkorn University",
+    url: "https://www.chula.ac.th/en/",
+  },
+  {
+    title: "EOS Centre for Geohazard Observations",
+    url: "https://earthobservatory.sg/research/centres-labs/centre-for-geohazard-observations",
+  },
+];
+
 export default async function Databases() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -135,18 +174,21 @@ export default async function Databases() {
           <div className="rounded-2xl bg-neutral-950 p-4">
             <span className="mb-4 block text-neutral-50">GNSS</span>
             <ul className="space-y-2">
-              <li className="relative block rounded-lg border border-neutral-800 bg-neutral-800/70 p-4 text-neutral-300 transition hover:border-neutral-600">
-                <Link
-                  href={
-                    "https://earthobservatory.sg/research/centres-labs/centre-for-geohazard-observations"
-                  }
-                  target="_blank"
-                  className="text-lg font-medium text-neutral-50"
+              {GNSS_SOURCES.map((src) => (
+                <li
+                  key={src.title}
+                  className="relative block rounded-lg border border-neutral-800 bg-neutral-800/70 p-4 text-neutral-300 transition hover:border-neutral-600"
                 >
-                  <span className="absolute inset-0 rounded-lg"></span>
-                  EOS Centre for Geohazard Observations
-                </Link>
-              </li>
+                  <Link
+                    href={src.url}
+                    target="_blank"
+                    className="text-lg font-medium text-neutral-50"
+                  >
+                    <span className="absolute inset-0 rounded-lg"></span>
+                    {src.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
