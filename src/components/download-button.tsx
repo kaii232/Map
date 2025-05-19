@@ -31,7 +31,10 @@ export default function DownloadButton({
   const [url, setUrl] = useState<string>();
 
   useEffect(() => {
-    if (!data || !fileName) return;
+    if (!data || !fileName) {
+      setUrl(undefined);
+      return;
+    }
     const csv = flattenGeoJsonToCSV(data);
     const downloadData = new Blob([csv], { type: "text/csv" });
     const downloadUrl = window.URL.createObjectURL(downloadData);
@@ -54,7 +57,10 @@ export default function DownloadButton({
           variant="outline"
           {...rest}
           disabled
-          className={cn("disabled:pointer-events-auto", className)}
+          className={cn(
+            "hover:border-earth hover:bg-transparent hover:text-earth disabled:pointer-events-auto",
+            className,
+          )}
         >
           Download Selected Data
         </Button>
