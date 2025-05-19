@@ -535,7 +535,7 @@ const Controls = ({
                 </div>
               </TourStep>
               <SelectTabsContent>
-                {Object.keys(initialData).map((key) => (
+                {Object.keys(ALL_FILTERS_CLIENT).map((key) => (
                   <SelectTabsItem key={key} value={key}>
                     {DATA_LABELS[key as keyof typeof initialData]}
                   </SelectTabsItem>
@@ -543,8 +543,8 @@ const Controls = ({
               </SelectTabsContent>
               <TourStep step={6}>
                 <div>
-                  {Object.entries(initialData).map(([keyRaw, initialInfo]) => {
-                    const key = keyRaw as keyof typeof initialData;
+                  {Object.keys(ALL_FILTERS_CLIENT).map((keyRaw) => {
+                    const key = keyRaw as keyof typeof ALL_FILTERS_CLIENT;
 
                     return (
                       <SelectTabsTab value={key} key={key + "tab"}>
@@ -566,10 +566,13 @@ const Controls = ({
                             }
                           />
                         </div>
-                        {ALL_FILTERS_CLIENT[key] && initialInfo ? (
+                        {ALL_FILTERS_CLIENT[key] &&
+                        initialData[key as keyof PopulateFilters] ? (
                           <DataFormFilters
-                            initialData={initialInfo}
-                            dataKey={key}
+                            initialData={
+                              initialData[key as keyof PopulateFilters]
+                            }
+                            dataKey={key as keyof PopulateFilters}
                             onDataLoad={MAP_DATA_SPECIFICS[key]?.onLoad}
                             additionalActions={
                               MAP_DATA_SPECIFICS[key]?.additionalActions

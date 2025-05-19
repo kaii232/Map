@@ -170,7 +170,6 @@ export default async function DatabasePage() {
             smt: safeFirstRow(smtFilters),
             vlc: safeFirstRow(vlcFilters),
             seis: safeFirstRow(seisFilters),
-            hf: null,
             slab2: safeFirstRow(slab2Filters),
             slip: safeFirstRow(slipFilters),
           }}

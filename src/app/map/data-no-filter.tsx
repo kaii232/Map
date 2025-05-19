@@ -3,7 +3,7 @@
 import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
-import type { ALL_FILTERS } from "@/lib/filters";
+import type { ALL_FILTERS_CLIENT } from "@/lib/filters";
 import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { MultiPolygon, Polygon } from "geojson";
@@ -19,7 +19,7 @@ const DataNoFilter = ({
   onDataLoad,
 }: {
   /** The key for the data type */
-  dataKey: keyof typeof ALL_FILTERS;
+  dataKey: keyof typeof ALL_FILTERS_CLIENT;
   /** Components to render below the Download button of each form */
   additionalActions?: ReactNode;
   /** Callback that is invoked when data is loaded successfully */

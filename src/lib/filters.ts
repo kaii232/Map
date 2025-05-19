@@ -240,9 +240,11 @@ export const ALL_FILTERS = {
 
 /** Type of the data required to populate all filters */
 export type PopulateFilters = {
-  [P in keyof typeof ALL_FILTERS]: (typeof ALL_FILTERS)[P] extends GenericFilterDefine
+  [P in keyof typeof ALL_FILTERS as (typeof ALL_FILTERS)[P] extends GenericFilterDefine
+    ? P
+    : never]: (typeof ALL_FILTERS)[P] extends GenericFilterDefine
     ? Simplify<InferFilterTypes<(typeof ALL_FILTERS)[P]>>
-    : null;
+    : never;
 };
 
 function cleanObjectForClient() {
@@ -278,12 +280,10 @@ export const ALL_FILTERS_CLIENT = cleanObjectForClient();
  * @param filters An object describing the type of filters
  * @returns A zodSchema for input validation
  */
-export const createZodSchema = <
-  T extends NonNullable<
+export const createZodSchema = (
+  filters: NonNullable<
     (typeof ALL_FILTERS_CLIENT | typeof ALL_FILTERS)[keyof typeof ALL_FILTERS]
   >,
->(
-  filters: T,
 ) => {
   const schema: Record<
     string,
@@ -299,19 +299,25 @@ export const createZodSchema = <
   Object.entries(filters).forEach(([key, val]: [string, FiltersType]) => {
     if (val.type === "select") {
       schema[key] = z.string();
-    } else if (val.type === "range") {
+      return;
+    }
+    if (val.type === "range") {
       schema[key] = z.number().array().length(2);
       schema[`${key}AllowNull`] = z.boolean();
-    } else if (val.type === "date") {
+      return;
+    }
+    if (val.type === "date") {
       schema[key] = z.object({ from: z.date(), to: z.date() }).required();
       schema[`${key}AllowNull`] = z.boolean();
-    } else if (val.type === "greaterThan") {
+      return;
+    }
+    if (val.type === "greaterThan") {
       schema[key] = z.number().array().length(1);
       schema[`${key}AllowNull`] = z.boolean();
-    } else {
-      //@ts-expect-error Nicer console error when missing zod schema for new filter type
-      console.error("No zod schema defined for filter of type", val.type);
+      return;
     }
+    //@ts-expect-error Nicer console error when missing zod schema for new filter type
+    console.error("No zod schema defined for filter of type", val.type);
   });
   return schema;
   // Uncomment the type below to get the full static typing on the output when passed a static filters object
@@ -354,13 +360,10 @@ export const createZodSchema = <
  * @param filters An object describing the type of filters
  * @returns An object containing the default values for each filter
  */
-export const createDefaultValues = <
-  T extends NonNullable<(typeof ALL_FILTERS_CLIENT)[K]>,
-  K extends keyof typeof ALL_FILTERS_CLIENT,
->(
-  initialData: NonNullable<PopulateFilters[K]>,
-  filters: T,
-) => {
+export function createDefaultValues<T extends keyof PopulateFilters>( // This generic doesn't actually do anything but it helps prevent some errors so it's here
+  initialData: PopulateFilters[T],
+  filters: NonNullable<(typeof ALL_FILTERS_CLIENT)[T]>,
+) {
   const values: {
     [key: string]: boolean | string | number[] | { from: Date; to: Date };
   } = {};
@@ -372,29 +375,24 @@ export const createDefaultValues = <
     // Rest of the filters has allow null check box
     values[`${key}AllowNull`] = true;
     if (filters[key].type === "range") {
+      const range = initialData[key as keyof typeof initialData] as Range; // Unfortunately you have to do this type casting as the types can't be properly discriminated
       values[key] = [
-        (initialData[key] ? Number(initialData[key][0]) : 0) || 0,
-        (initialData[key] ? Number(initialData[key][1]) : 0) || 0,
+        (range ? Number(range[0]) : 0) || 0,
+        (range ? Number(range[1]) : 0) || 0,
       ];
       return;
     }
     if (filters[key].type === "greaterThan") {
-      values[key] = [Number(initialData[key]) || 0];
+      const min = initialData[key as keyof typeof initialData] as GreaterThan;
+      values[key] = [Number(min[0]) || 0];
       return;
     }
     if (filters[key].type === "date") {
       const now = Date.now();
+      const dates = initialData[key as keyof typeof initialData] as DateFilter;
       values[key] = {
-        from: new Date(
-          initialData[key] && initialData[key][0] !== "NULL"
-            ? initialData[key][0]
-            : now,
-        ),
-        to: new Date(
-          initialData[key] && initialData[key][1]! !== "NULL"
-            ? initialData[key][1]!
-            : now,
-        ),
+        from: new Date(dates && dates[0] !== "NULL" ? dates[0] : now),
+        to: new Date(dates && dates[1]! !== "NULL" ? dates[1]! : now),
       };
       return;
     }
@@ -434,7 +432,7 @@ export const createDefaultValues = <
   //       : true;
   //   }
   // >;
-};
+}
 
 /**
  * Convenience function to generate the SQL select statements needed to populate the filter
@@ -447,20 +445,26 @@ export const generateSQLSelect = <T extends GenericFilterDefine>(filter: T) => {
     if (val.type === "range") {
       res[key] =
         sql<Range>`ARRAY[FLOOR(MIN(${val.dbCol})), CEIL(MAX(${val.dbCol}))]`;
-    } else if (val.type === "select") {
+      return;
+    }
+    if (val.type === "select") {
       res[key] = sql<Categories>`ARRAY_AGG(DISTINCT ${val.dbCol})`;
-    } else if (val.type === "date") {
+      return;
+    }
+    if (val.type === "date") {
       res[key] = sql<DateFilter>`ARRAY[MIN(${val.dbCol}), MAX(${val.dbCol})]`;
-    } else if (val.type === "greaterThan") {
+      return;
+    }
+    if (val.type === "greaterThan") {
       // Greather than filter
       res[key] = sql<GreaterThan>`ARRAY[FLOOR(MIN(${val.dbCol}))]`;
-    } else {
-      console.error(
-        "No SQL generate method defined for filter of type",
-        //@ts-expect-error Nicer error message when no SQL select defined
-        val.type,
-      );
+      return;
     }
+    console.error(
+      "No SQL generate method defined for filter of type",
+      //@ts-expect-error Nicer error message when no SQL select defined
+      val.type,
+    );
   });
   return res as {
     [P in keyof T]: SQL<InferFilterTypes<T>[P]>;

@@ -32,7 +32,7 @@ const DataFormFilters = ({
   /** Data from database to populate filter controls */
   initialData: NonNullable<PopulateFilters[typeof dataKey]>;
   /** The key for the data type */
-  dataKey: keyof typeof ALL_FILTERS_CLIENT;
+  dataKey: keyof PopulateFilters;
   /** Components to render below the Download button of each form */
   additionalActions?: ReactNode;
   /** Callback that is invoked when data is loaded successfully */
