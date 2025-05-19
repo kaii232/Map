@@ -139,7 +139,6 @@ export default function FormGenerate<
                   <Slider
                     onValueChange={field.onChange}
                     onBlur={field.onBlur}
-                    defaultValue={field.value as number[]}
                     name={field.name}
                     ref={field.ref}
                     disabled={field.disabled}
@@ -218,7 +217,6 @@ export default function FormGenerate<
                   <Slider
                     onValueChange={field.onChange}
                     onBlur={field.onBlur}
-                    defaultValue={field.value as number[]}
                     name={field.name}
                     ref={field.ref}
                     disabled={field.disabled}
