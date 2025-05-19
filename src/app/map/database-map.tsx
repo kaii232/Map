@@ -400,18 +400,10 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "depth"],
-            0,
-            "#ffffa4",
-            200,
-            "#fca309",
-            400,
-            "#db503b",
-            600,
-            "#922568",
-            800,
-            "#400a67",
-            1000,
-            "#fff",
+            ...getInterpolateRange(
+              [0, 1000],
+              ["#ffffa4", "#fca309", "#db503b", "#922568", "#400a67", "#fff"],
+            ),
           ],
           "line-width": [
             "interpolate",
@@ -462,16 +454,10 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "qval"],
-            -400,
-            "#0c4a6e",
-            -200,
-            "#0284c7",
-            0,
-            "#eeeeee",
-            200,
-            "#e11d48",
-            400,
-            "#4c0519",
+            ...getInterpolateRange(
+              [-400, 400],
+              ["#0c4a6e", "#0284c7", "#eeeeee", "#e11d48", "#4c0519"],
+            ),
           ],
         },
       },
@@ -653,7 +639,7 @@ export default function DatabaseMap({
             onClose={() => setselectedFeature(undefined)}
             closeOnClick={false}
             className={
-              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
+              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
             }
           >
             {selectedFeature.feature.properties.name && (

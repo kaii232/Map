@@ -13,7 +13,7 @@ import { clsx, type ClassValue } from "clsx";
 import { MultiPolygon, Polygon } from "geojson";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
-import type { ALL_FILTERS, createZodSchema } from "./filters";
+import type { ALL_FILTERS_CLIENT, createZodSchema } from "./filters";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -26,7 +26,7 @@ export const velocityStops = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
  * Used for displaying the message on the toast when loading data
  * On successful load of data, a message of: "Successfully loaded `length` `TOAST_MESSAGE`" is shown
  */
-export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS, string> = {
+export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS_CLIENT, string> = {
   flt: "faults",
   gnss: "GNSS stations",
   hf: "heatflow data",
@@ -40,7 +40,7 @@ export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS, string> = {
 /**
  * Labels used for the data select component
  */
-export const DATA_LABELS: Record<keyof typeof ALL_FILTERS, string> = {
+export const DATA_LABELS: Record<keyof typeof ALL_FILTERS_CLIENT, string> = {
   smt: "Seamounts",
   vlc: "Volcanoes",
   gnss: "GNSS Stations",
@@ -55,7 +55,7 @@ export const DATA_LABELS: Record<keyof typeof ALL_FILTERS, string> = {
  * This object contains the server actions used to load each data type
  */
 export const LOADERS: Record<
-  keyof typeof ALL_FILTERS,
+  keyof typeof ALL_FILTERS_CLIENT,
   | ((
       values: z.infer<z.ZodObject<ReturnType<typeof createZodSchema>>>,
       drawing?: MultiPolygon | Polygon,

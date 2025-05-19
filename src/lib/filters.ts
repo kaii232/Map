@@ -222,10 +222,10 @@ const slipFilters = createDataFilter({
 });
 
 /**
- * An object containing the filter types for all the different data types. The key of this object is used as the key for all other objects
- * dealing with the different data types, and its value
- * defines the filters. Value is `null` when there are no filters for that data type.
- * DO NOT import this on the client!
+ * An object containing the filter types for all the different data types. The keys of this object is used as the keys for all other objects
+ * dealing with the different data types, and its respective value defines the filters for that data type.
+ * Value is `null` when there are no filters for that data type.
+ * # DO NOT import this on the client!
  */
 export const ALL_FILTERS = {
   smt: smtFilters,
@@ -250,7 +250,7 @@ function cleanObjectForClient() {
     string,
     Record<string, ClientFilterType<FiltersType>> | null
   > = {};
-  Object.entries(ALL_FILTERS).map(([key, val]) => {
+  Object.entries(ALL_FILTERS).forEach(([key, val]) => {
     if (val === null) {
       out[key] = null;
       return;
@@ -270,7 +270,7 @@ function cleanObjectForClient() {
       : null;
   };
 }
-/** ALL_FILTERS object with drizzle schema columns removed for the client */
+/** `ALL_FILTERS` object with drizzle schema columns removed for the client */
 export const ALL_FILTERS_CLIENT = cleanObjectForClient();
 
 /**
@@ -305,9 +305,12 @@ export const createZodSchema = <
     } else if (val.type === "date") {
       schema[key] = z.object({ from: z.date(), to: z.date() }).required();
       schema[`${key}AllowNull`] = z.boolean();
-    } else {
+    } else if (val.type === "greaterThan") {
       schema[key] = z.number().array().length(1);
       schema[`${key}AllowNull`] = z.boolean();
+    } else {
+      //@ts-expect-error Nicer console error when missing zod schema for new filter type
+      console.error("No zod schema defined for filter of type", val.type);
     }
   });
   return schema;
@@ -379,19 +382,26 @@ export const createDefaultValues = <
       values[key] = [Number(initialData[key]) || 0];
       return;
     }
-    const now = Date.now();
-    values[key] = {
-      from: new Date(
-        initialData[key] && initialData[key][0] !== "NULL"
-          ? initialData[key][0]
-          : now,
-      ),
-      to: new Date(
-        initialData[key] && initialData[key][1]! !== "NULL"
-          ? initialData[key][1]!
-          : now,
-      ),
-    };
+    if (filters[key].type === "date") {
+      const now = Date.now();
+      values[key] = {
+        from: new Date(
+          initialData[key] && initialData[key][0] !== "NULL"
+            ? initialData[key][0]
+            : now,
+        ),
+        to: new Date(
+          initialData[key] && initialData[key][1]! !== "NULL"
+            ? initialData[key][1]!
+            : now,
+        ),
+      };
+      return;
+    }
+    console.error(
+      "No default values defined for filter of type",
+      filters[key].type,
+    );
   });
   return values;
   // Uncomment the type below to get accurate static typing on the output when passed a filters object
@@ -441,9 +451,15 @@ export const generateSQLSelect = <T extends GenericFilterDefine>(filter: T) => {
       res[key] = sql<Categories>`ARRAY_AGG(DISTINCT ${val.dbCol})`;
     } else if (val.type === "date") {
       res[key] = sql<DateFilter>`ARRAY[MIN(${val.dbCol}), MAX(${val.dbCol})]`;
-    } else {
+    } else if (val.type === "greaterThan") {
       // Greather than filter
       res[key] = sql<GreaterThan>`ARRAY[MIN(${val.dbCol})]`;
+    } else {
+      console.error(
+        "No SQL generate method defined for filter of type",
+        //@ts-expect-error Nicer error message when no SQL select defined
+        val.type,
+      );
     }
   });
   return res as {

@@ -394,5 +394,10 @@ export default function FormGenerate<
         </div>
       );
     }
+    console.error(
+      "No filter control render method defined for filter of type",
+      //@ts-expect-error Nicer error message when no render method defined
+      filter.type,
+    );
   });
 }

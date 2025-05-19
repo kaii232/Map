@@ -1,4 +1,5 @@
 import Header from "@/components/header";
+import { ALL_FILTERS_CLIENT } from "@/lib/filters";
 import { DATA_LABELS } from "@/lib/utils";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
@@ -13,6 +14,7 @@ import {
   vlcInInvest,
 } from "@/server/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { AnyPgColumn, AnyPgTable } from "drizzle-orm/pg-core";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -32,7 +34,10 @@ const select = {
   author: biblInInvest.biblAuth,
 };
 
-const TO_SELECT = {
+const TO_SELECT: Record<
+  Exclude<keyof typeof ALL_FILTERS_CLIENT, "gnss">,
+  { from: AnyPgTable; biblCol: AnyPgColumn }
+> = {
   smt: {
     from: smtInInvest,
     biblCol: smtInInvest.smtSrcId,
