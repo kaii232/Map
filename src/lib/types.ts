@@ -46,6 +46,12 @@ export type FiltersType =
       dbCol: AnyPgColumn;
       maxVal: number;
       units?: string;
+    }
+  | {
+      name: string;
+      type: "search";
+      dbCol: AnyPgColumn;
+      placeholder: string;
     };
 
 export type GenericFilterDefine = Record<string, FiltersType>;
@@ -58,12 +64,18 @@ export type NarrowFilterType<T extends FiltersType["type"]> = T extends "select"
       ? DateFilter
       : T extends "greaterThan"
         ? GreaterThan
-        : never;
+        : never; // Search filter does not need data from server and will be inferred as never
+
+/** Type to remove the keys from a mapped type for filters that don't need to get initial data from the server */
+export type FilterSeverPopulated<
+  T extends ClientFilterDefine<GenericFilterDefine>,
+  P extends keyof T,
+> = T[P]["type"] extends "search" ? never : P;
 
 export type InferFilterTypes<
   T extends ClientFilterDefine<GenericFilterDefine>,
 > = {
-  [P in keyof T]: NarrowFilterType<T[P]["type"]>;
+  [P in keyof T as FilterSeverPopulated<T, P>]: NarrowFilterType<T[P]["type"]>;
 };
 
 // Exclude the dbCol and nullCol keys

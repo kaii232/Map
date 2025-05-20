@@ -10,7 +10,7 @@ import {
   stnTypeInInvest,
   vlcInInvest,
 } from "@/server/db/schema";
-import { between, eq, gte, isNull, or, sql, SQL } from "drizzle-orm";
+import { between, eq, gte, isNull, like, or, sql, SQL } from "drizzle-orm";
 import { AnyPgColumn } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import type {
@@ -72,6 +72,12 @@ const vlcFilters = createDataFilter({
     type: "select",
     dbCol: biblInInvest.biblTitle,
     nullCol: vlcInInvest.vlcSrcId,
+  },
+  search: {
+    name: "Volcano Name",
+    type: "search",
+    dbCol: vlcInInvest.vlcName,
+    placeholder: "Search for volcanoes",
   },
 });
 
@@ -281,7 +287,7 @@ export const SELECT_DEFAULT = "All";
 
 type FilterStrategy<T extends FiltersType["type"]> = {
   /** Zod type used for data validation when submitting data to be loaded */
-  getZodSchema: T extends "select"
+  getZodSchema: T extends "select" | "search"
     ? z.ZodString
     : T extends "range"
       ? z.ZodArray<z.ZodNumber, "many">
@@ -304,11 +310,13 @@ type FilterStrategy<T extends FiltersType["type"]> = {
         ? GreaterThan
         : T extends "date"
           ? { from: Date; to: Date }
-          : never;
+          : T extends "search"
+            ? ""
+            : never;
   /** Indicates whether an allow null checkbox should be shown for this filter type */
   getAllowNull: boolean;
   /** Returns the drizzle SQL `SELECT` statements needed to retrieve values to populate this filter */
-  getSQLSelect: (dbCol: AnyPgColumn) => SQL<NarrowFilterType<T>>;
+  getSQLSelect: (dbCol: AnyPgColumn) => SQL<NarrowFilterType<T>> | undefined;
   /** Returns the drizzle SQL `WHERE` statements to filter the data when loading */
   getSQLFilter: (
     key: string,
@@ -409,6 +417,29 @@ export const FILTER_STRATEGIES: {
       }
     },
   },
+  search: {
+    getZodSchema: z.string(),
+    getDefaultVal() {
+      return "";
+    },
+    getAllowNull: false,
+    getSQLSelect() {
+      return undefined;
+    },
+    getSQLFilter(key, vals, dbCol) {
+      const input = vals[key];
+      if (typeof input !== "string") return;
+      if (!input.trim()) return;
+      if (vals[`${key}AllowNull`]) {
+        return or(
+          like(sql`lower(${dbCol})`, `%${input.trim().toLowerCase()}%`),
+          isNull(dbCol),
+        );
+      } else {
+        return like(sql`lower(${dbCol})`, `%${input.trim().toLowerCase()}%`);
+      }
+    },
+  },
 };
 
 /**
@@ -472,9 +503,10 @@ export function createDefaultValues<T extends keyof PopulateFilters>( // This ge
 export const generateSQLSelect = <T extends GenericFilterDefine>(filter: T) => {
   const res: Record<string, SQL> = {};
   Object.entries(filter).forEach(([key, val]) => {
-    res[key] = FILTER_STRATEGIES[val.type].getSQLSelect(val.dbCol);
+    const statement = FILTER_STRATEGIES[val.type].getSQLSelect(val.dbCol);
+    if (statement) res[key] = statement;
   });
   return res as {
-    [P in keyof T]: SQL<InferFilterTypes<T>[P]>;
+    [P in keyof InferFilterTypes<T>]: SQL<InferFilterTypes<T>[P]>;
   };
 };

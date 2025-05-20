@@ -10,6 +10,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -31,7 +32,7 @@ import {
   InferFilterTypes,
 } from "@/lib/types";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Search } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
 type FormGenerateProps<T extends ClientFilterDefine<GenericFilterDefine>> = {
@@ -315,6 +316,27 @@ export default function FormGenerate<
                 <></>
               );
             }}
+          />
+        )}
+        {filter.type === "search" && (
+          <FormField
+            key={key}
+            control={form.control}
+            name={key}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-neutral-50">{filter.name}</FormLabel>
+                <FormControl>
+                  <Input
+                    left={<Search />}
+                    placeholder={filter.placeholder}
+                    {...field}
+                    value={field.value as string}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         )}
         {FILTER_STRATEGIES[filter.type].getAllowNull && (
