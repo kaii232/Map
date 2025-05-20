@@ -332,6 +332,8 @@ export default function FormGenerate<
                     placeholder={filter.placeholder}
                     {...field}
                     value={field.value as string}
+                    autoComplete="off"
+                    autoCorrect="off"
                   />
                 </FormControl>
                 <FormMessage />
