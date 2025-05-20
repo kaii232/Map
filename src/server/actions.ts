@@ -1,8 +1,8 @@
 "use server";
 
-import { ALL_FILTERS, createZodSchema } from "@/lib/filters";
+import { ALL_FILTERS, createZodSchema, FILTER_STRATEGIES } from "@/lib/filters";
 import { GenericFilterDefine, Range } from "@/lib/types";
-import { and, between, eq, gte, isNull, or, type SQL, sql } from "drizzle-orm";
+import { and, eq, type SQL, sql } from "drizzle-orm";
 import { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   Feature,
@@ -105,62 +105,14 @@ const generateFilters = async (
   }
   if (!filters) return output;
   Object.entries(filters).map(([key, filter]) => {
-    if (filter.type === "select") {
-      if (values[key] !== "All") {
-        if (values[key] === "NULL" && filter.nullCol) {
-          output.push(isNull(filter.nullCol));
-        } else {
-          output.push(eq(filter.dbCol, values[key]));
-        }
-      }
-    }
-    if (filter.type === "range" && Array.isArray(values[key])) {
-      if (values[`${key}AllowNull`]) {
-        output.push(
-          or(
-            between(filter.dbCol, values[key][0], values[key][1]),
-            isNull(filter.dbCol),
-          ),
-        );
-      } else {
-        output.push(between(filter.dbCol, values[key][0], values[key][1]));
-      }
-    }
-    if (filter.type === "greaterThan" && Array.isArray(values[key])) {
-      if (values[`${key}AllowNull`]) {
-        output.push(
-          or(gte(filter.dbCol, values[key][0]), isNull(filter.dbCol)),
-        );
-      } else {
-        output.push(gte(filter.dbCol, values[key][0]));
-      }
-    }
-    if (
-      filter.type === "date" &&
-      typeof values[key] === "object" &&
-      !Array.isArray(values[key])
-    ) {
-      if (values[`${key}AllowNull`]) {
-        output.push(
-          or(
-            between(
-              filter.dbCol,
-              values[key].from.toISOString(),
-              values[key].to.toISOString(),
-            ),
-            isNull(filter.dbCol),
-          ),
-        );
-      } else {
-        output.push(
-          between(
-            filter.dbCol,
-            values[key].from.toISOString(),
-            values[key].to.toISOString(),
-          ),
-        );
-      }
-    }
+    output.push(
+      FILTER_STRATEGIES[filter.type].getSQLFilter(
+        key,
+        values,
+        filter.dbCol,
+        filter.type === "select" ? filter.nullCol : undefined,
+      ),
+    );
   });
 
   return output;

@@ -10,7 +10,8 @@ import {
   stnTypeInInvest,
   vlcInInvest,
 } from "@/server/db/schema";
-import { sql, SQL } from "drizzle-orm";
+import { between, eq, gte, isNull, or, sql, SQL } from "drizzle-orm";
+import { AnyPgColumn } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import type {
   Categories,
@@ -21,32 +22,32 @@ import type {
   GenericFilterDefine,
   GreaterThan,
   InferFilterTypes,
+  NarrowFilterType,
   Range,
   Simplify,
 } from "./types";
 
-// To add new data with filters follow these steps:
-// 1. Define the filter using the createDataFilter helper function this object will denote
+// To add new data with and without filters follow these steps:
+// 1. Define the filter using the createDataFilter helper function this object will denote (skip this step if no filter)
 //    name: The label of the filter
 //    type: The the type of filter it is
 //    dbCol: The drizzle column that the filter will be applied on
 //    nullCol: For select filters, if NULL is selected, the column that the IS NULL filter should be applied on
-// 2. Update the ALL_FILTERS object with the new data
+// 2. Update the ALL_FILTERS object with the filter defined in 1. or null if no filter
 // 3. Create server action to load the data in actions.ts
 // 4. Update the labels and loaders in utils.ts
-// 5. Update database/page.tsx to fetch the data needed to populate the filter using the generateSQLSelect function.
-// 6. Update database-map.tsx mapDataLayers to specify the layer styles
-// 7. Update controls.tsx ColourRamps legends object if a legend is needed to display the data
+// 5. Update map/page.tsx to fetch the data needed to populate the filter using the generateSQLSelect function. (skip this step if no filter)
+// 6. Update map/database-map.tsx mapDataLayers to specify the layer styles
+// 7. Update map/controls.tsx ColourRamps legends object if a legend is needed to display the data
 
 // To add additional filters for data that already exists:
 // 2. Update the filter object of that data
 
 // To add new types of filter:
-// 1. Define the type of the data needed to populate the filter
-// 2. Update GenericFiltersInfo, FiltersType and InferFilterTypes to reflect this new filter
-// 3. Update createZodSchema and createDefaultValues in this file to deal with the new filter
-// 4. Update generateFilters in actions.ts to handle the SQL filters for the new filter
-// 5. Update form-generate.tsx to render the UI needed for your filter
+// 1. Define the type of the data needed to populate the filter in types.ts
+// 2. Update GenericFiltersInfo, FiltersType and NarrowFilterType to reflect this new filter
+// 3. Update FILTER_STRATEGIES in this file to deal with the new filter
+// 4. Update form-generate.tsx to render the UI needed for your filter
 
 /** Helper function to enable type safety when defining new filters */
 const createDataFilter = <T extends GenericFilterDefine>(obj: {
@@ -275,16 +276,151 @@ function cleanObjectForClient() {
 /** `ALL_FILTERS` object with drizzle schema columns removed for the client */
 export const ALL_FILTERS_CLIENT = cleanObjectForClient();
 
+/** Default value for select filter */
+export const SELECT_DEFAULT = "All";
+
+type FilterStrategy<T extends FiltersType["type"]> = {
+  /** Zod type used for data validation when submitting data to be loaded */
+  getZodSchema: T extends "select"
+    ? z.ZodString
+    : T extends "range"
+      ? z.ZodArray<z.ZodNumber, "many">
+      : T extends "greaterThan"
+        ? z.ZodArray<z.ZodNumber, "many">
+        : T extends "date"
+          ? z.ZodObject<{
+              from: z.ZodDate;
+              to: z.ZodDate;
+            }>
+          : never;
+  /** Returns the default value for the filter controls */
+  getDefaultVal: (
+    initialData: NarrowFilterType<T>,
+  ) => T extends "select"
+    ? typeof SELECT_DEFAULT
+    : T extends "range"
+      ? Range
+      : T extends "greaterThan"
+        ? GreaterThan
+        : T extends "date"
+          ? { from: Date; to: Date }
+          : never;
+  /** Indicates whether an allow null checkbox should be shown for this filter type */
+  getAllowNull: boolean;
+  /** Returns the drizzle SQL `SELECT` statements needed to retrieve values to populate this filter */
+  getSQLSelect: (dbCol: AnyPgColumn) => SQL<NarrowFilterType<T>>;
+  /** Returns the drizzle SQL `WHERE` statements to filter the data when loading */
+  getSQLFilter: (
+    key: string,
+    vals: Record<
+      string,
+      z.infer<FilterStrategy<FiltersType["type"]>["getZodSchema"]> | boolean
+    >,
+    dbCol: AnyPgColumn,
+    nullCol?: AnyPgColumn,
+  ) => SQL | undefined;
+};
+
+/** This object defines the methods needed for each of the filter types */
+export const FILTER_STRATEGIES: {
+  [P in FiltersType["type"]]: FilterStrategy<P>;
+} = {
+  date: {
+    getZodSchema: z.object({ from: z.date(), to: z.date() }).required(),
+    getDefaultVal(initialData) {
+      const now = Date.now();
+      return {
+        from: new Date(initialData[0] !== "NULL" ? initialData[0] : now),
+        to: new Date(initialData[1] !== "NULL" ? initialData[1] : now),
+      };
+    },
+    getAllowNull: true,
+    getSQLSelect(dbCol) {
+      return sql<DateFilter>`ARRAY[MIN(${dbCol}), MAX(${dbCol})]`;
+    },
+    getSQLFilter(key, vals, dbCol) {
+      const input = vals[key];
+      if (typeof input !== "object" || Array.isArray(input)) return;
+      if (vals[`${key}AllowNull`]) {
+        return or(
+          between(dbCol, input.from.toISOString(), input.to.toISOString()),
+          isNull(dbCol),
+        );
+      } else {
+        return between(dbCol, input.from.toISOString(), input.to.toISOString());
+      }
+    },
+  },
+  select: {
+    getZodSchema: z.string(),
+    getDefaultVal() {
+      return SELECT_DEFAULT;
+    },
+    getAllowNull: false,
+    getSQLSelect(dbCol) {
+      return sql<Categories>`ARRAY_AGG(DISTINCT ${dbCol})`;
+    },
+    getSQLFilter(key, vals, dbCol, nullCol) {
+      const input = vals[key];
+      if (typeof input !== "string") return;
+      if (input === SELECT_DEFAULT) return;
+      if (input === "NULL" && nullCol) {
+        return isNull(nullCol);
+      } else {
+        return eq(dbCol, input);
+      }
+    },
+  },
+  range: {
+    getZodSchema: z.number().array().length(2),
+    getDefaultVal(initialData) {
+      return [Number(initialData[0]) || 0, Number(initialData[1]) || 0];
+    },
+    getAllowNull: true,
+    getSQLSelect(dbCol) {
+      return sql<Range>`ARRAY[FLOOR(MIN(${dbCol})), CEIL(MAX(${dbCol}))]`;
+    },
+    getSQLFilter(key, vals, dbCol) {
+      const input = vals[key];
+      if (!Array.isArray(input)) return;
+      if (vals[`${key}AllowNull`]) {
+        return or(between(dbCol, input[0], input[1]), isNull(dbCol));
+      } else {
+        return between(dbCol, input[0], input[1]);
+      }
+    },
+  },
+  greaterThan: {
+    getZodSchema: z.number().array().length(1),
+    getDefaultVal(initialData) {
+      return initialData.length === 1 ? initialData : [0];
+    },
+    getAllowNull: true,
+    getSQLSelect(dbCol) {
+      return sql<GreaterThan>`ARRAY[FLOOR(MIN(${dbCol}))]`;
+    },
+    getSQLFilter(key, vals, dbCol) {
+      const input = vals[key];
+      if (!Array.isArray(input)) return;
+      if (vals[`${key}AllowNull`]) {
+        return or(gte(dbCol, input[0]), isNull(dbCol));
+      } else {
+        return gte(dbCol, input[0]);
+      }
+    },
+  },
+};
+
 /**
  * This function creates a zod schema for input validation for the given filters
  * @param filters An object describing the type of filters
  * @returns A zodSchema for input validation
  */
-export const createZodSchema = (
+export function createZodSchema(
   filters: NonNullable<
-    (typeof ALL_FILTERS_CLIENT | typeof ALL_FILTERS)[keyof typeof ALL_FILTERS]
+    (typeof ALL_FILTERS | typeof ALL_FILTERS_CLIENT)[keyof typeof ALL_FILTERS]
   >,
-) => {
+) {
   const schema: Record<
     string,
     | z.ZodArray<z.ZodNumber, "many">
@@ -297,62 +433,12 @@ export const createZodSchema = (
   > = {};
 
   Object.entries(filters).forEach(([key, val]: [string, FiltersType]) => {
-    if (val.type === "select") {
-      schema[key] = z.string();
-      return;
-    }
-    if (val.type === "range") {
-      schema[key] = z.number().array().length(2);
+    schema[key] = FILTER_STRATEGIES[val.type].getZodSchema;
+    if (FILTER_STRATEGIES[val.type].getAllowNull)
       schema[`${key}AllowNull`] = z.boolean();
-      return;
-    }
-    if (val.type === "date") {
-      schema[key] = z.object({ from: z.date(), to: z.date() }).required();
-      schema[`${key}AllowNull`] = z.boolean();
-      return;
-    }
-    if (val.type === "greaterThan") {
-      schema[key] = z.number().array().length(1);
-      schema[`${key}AllowNull`] = z.boolean();
-      return;
-    }
-    //@ts-expect-error Nicer console error when missing zod schema for new filter type
-    console.error("No zod schema defined for filter of type", val.type);
   });
   return schema;
-  // Uncomment the type below to get the full static typing on the output when passed a static filters object
-  // However there isn't a huge upside to the static typing as we don't really need to access this object anywhere
-  // So the generic object is a bit easier to work with
-  //
-  // as Simplify<
-  //   {
-  //     [P in keyof T]: T[P] extends {
-  //       type: "select";
-  //     }
-  //       ? z.ZodString
-  //       : T[P] extends { type: "range" }
-  //         ? z.ZodArray<z.ZodNumber, "many">
-  //         : T[P] extends { type: "greaterThan" }
-  //           ? z.ZodArray<z.ZodNumber, "many">
-  //           : T[P] extends { type: "date" }
-  //             ? z.ZodObject<{
-  //                 from: z.ZodDate;
-  //                 to: z.ZodDate;
-  //               }>
-  //             : never;
-  //   } & {
-  //     [P in keyof T as T[P] extends {
-  //       type: "select";
-  //     }
-  //       ? never
-  //       : `${P & string}AllowNull`]: T[P] extends {
-  //       type: "select";
-  //     }
-  //       ? never
-  //       : z.ZodBoolean;
-  //   }
-  // >;
-};
+}
 
 /**
  * A function that creates an object containing the default values for the given filters
@@ -368,70 +454,14 @@ export function createDefaultValues<T extends keyof PopulateFilters>( // This ge
     [key: string]: boolean | string | number[] | { from: Date; to: Date };
   } = {};
   Object.keys(filters).forEach((key) => {
-    if (filters[key].type === "select") {
-      values[key] = "All";
-      return;
-    }
-    // Rest of the filters has allow null check box
-    values[`${key}AllowNull`] = true;
-    if (filters[key].type === "range") {
-      const range = initialData[key as keyof typeof initialData] as Range; // Unfortunately you have to do this type casting as the types can't be properly discriminated
-      values[key] = [
-        (range ? Number(range[0]) : 0) || 0,
-        (range ? Number(range[1]) : 0) || 0,
-      ];
-      return;
-    }
-    if (filters[key].type === "greaterThan") {
-      const min = initialData[key as keyof typeof initialData] as GreaterThan;
-      values[key] = [Number(min[0]) || 0];
-      return;
-    }
-    if (filters[key].type === "date") {
-      const now = Date.now();
-      const dates = initialData[key as keyof typeof initialData] as DateFilter;
-      values[key] = {
-        from: new Date(dates && dates[0] !== "NULL" ? dates[0] : now),
-        to: new Date(dates && dates[1]! !== "NULL" ? dates[1]! : now),
-      };
-      return;
-    }
-    console.error(
-      "No default values defined for filter of type",
-      filters[key].type,
+    values[key] = FILTER_STRATEGIES[filters[key].type].getDefaultVal(
+      //@ts-expect-error Types can't be properly differentiated
+      initialData[key],
     );
+    if (FILTER_STRATEGIES[filters[key].type].getAllowNull)
+      values[`${key}AllowNull`] = true;
   });
   return values;
-  // Uncomment the type below to get accurate static typing on the output when passed a filters object
-  // However, the only time this function is called is in data-filter.tsx, where the ALL_FILTERS object key is dynamic
-  // So the final type will be a union of the static types, which isn't so useful
-  // It could be more useful to just leave it in the generic type
-  //
-  // as Simplify<
-  //   {
-  //     [P in keyof T]: T[P] extends {
-  //       type: "select";
-  //     }
-  //       ? "All"
-  //       : T[P] extends { type: "range" }
-  //         ? [number, number]
-  //         : T[P] extends { type: "greaterThan" }
-  //           ? [number]
-  //           : T[P] extends { type: "date" }
-  //             ? { from: Date; to: Date }
-  //             : never;
-  //   } & {
-  //     [P in keyof T as T[P] extends {
-  //       type: "select";
-  //     }
-  //       ? never
-  //       : `${P & string}AllowNull`]: T[P] extends {
-  //       type: "select";
-  //     }
-  //       ? never
-  //       : true;
-  //   }
-  // >;
 }
 
 /**
@@ -442,29 +472,7 @@ export function createDefaultValues<T extends keyof PopulateFilters>( // This ge
 export const generateSQLSelect = <T extends GenericFilterDefine>(filter: T) => {
   const res: Record<string, SQL> = {};
   Object.entries(filter).forEach(([key, val]) => {
-    if (val.type === "range") {
-      res[key] =
-        sql<Range>`ARRAY[FLOOR(MIN(${val.dbCol})), CEIL(MAX(${val.dbCol}))]`;
-      return;
-    }
-    if (val.type === "select") {
-      res[key] = sql<Categories>`ARRAY_AGG(DISTINCT ${val.dbCol})`;
-      return;
-    }
-    if (val.type === "date") {
-      res[key] = sql<DateFilter>`ARRAY[MIN(${val.dbCol}), MAX(${val.dbCol})]`;
-      return;
-    }
-    if (val.type === "greaterThan") {
-      // Greather than filter
-      res[key] = sql<GreaterThan>`ARRAY[FLOOR(MIN(${val.dbCol}))]`;
-      return;
-    }
-    console.error(
-      "No SQL generate method defined for filter of type",
-      //@ts-expect-error Nicer error message when no SQL select defined
-      val.type,
-    );
+    res[key] = FILTER_STRATEGIES[val.type].getSQLSelect(val.dbCol);
   });
   return res as {
     [P in keyof T]: SQL<InferFilterTypes<T>[P]>;

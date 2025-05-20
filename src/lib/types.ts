@@ -50,18 +50,20 @@ export type FiltersType =
 
 export type GenericFilterDefine = Record<string, FiltersType>;
 
+export type NarrowFilterType<T extends FiltersType["type"]> = T extends "select"
+  ? Categories
+  : T extends "range"
+    ? Range
+    : T extends "date"
+      ? DateFilter
+      : T extends "greaterThan"
+        ? GreaterThan
+        : never;
+
 export type InferFilterTypes<
   T extends ClientFilterDefine<GenericFilterDefine>,
 > = {
-  [P in keyof T]: T[P]["type"] extends "select"
-    ? Categories
-    : T[P]["type"] extends "range"
-      ? Range
-      : T[P]["type"] extends "date"
-        ? DateFilter
-        : T[P]["type"] extends "greaterThan"
-          ? GreaterThan
-          : never;
+  [P in keyof T]: NarrowFilterType<T[P]["type"]>;
 };
 
 // Exclude the dbCol and nullCol keys

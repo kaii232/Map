@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { FILTER_STRATEGIES, SELECT_DEFAULT } from "@/lib/filters";
 import {
   ClientFilterDefine,
   GenericFilterDefine,
@@ -75,41 +76,40 @@ export default function FormGenerate<
   const isLarge = useMediaQuery("(min-width:640px)");
 
   return Object.entries(filters).map(([key, filter]) => {
-    if (filter.type === "select")
-      return (
-        <FormField
-          key={key}
-          control={form.control}
-          name={key}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-neutral-50">{filter.name}</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value as string}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={filter.name} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  {initialData[key as keyof typeof filters]?.map((type) => (
-                    <SelectItem value={String(type)} key={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      );
-    if (filter.type === "range") {
-      return (
-        <div className="space-y-4" key={key}>
+    return (
+      <div className="space-y-4" key={key}>
+        {filter.type === "select" && (
+          <FormField
+            key={key}
+            control={form.control}
+            name={key}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-neutral-50">{filter.name}</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value as string}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={filter.name} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={SELECT_DEFAULT}>All</SelectItem>
+                    {initialData[key as keyof typeof filters]?.map((type) => (
+                      <SelectItem value={String(type)} key={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        {filter.type === "range" && (
           <FormField
             control={form.control}
             name={key}
@@ -166,34 +166,8 @@ export default function FormGenerate<
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name={`${key}AllowNull`}
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    checked={!!field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal text-neutral-300">
-                  Allow null values
-                </FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      );
-    }
-    if (filter.type === "greaterThan") {
-      return (
-        <div className="space-y-4" key={key}>
+        )}
+        {filter.type === "greaterThan" && (
           <FormField
             control={form.control}
             name={key}
@@ -241,51 +215,26 @@ export default function FormGenerate<
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name={`${key}AllowNull`}
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                    disabled={field.disabled}
-                    checked={!!field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel className="font-normal text-neutral-300">
-                  Allow null values
-                </FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      );
-    }
-    if (filter.type === "date") {
-      const earliest =
-        defaults[key] &&
-        typeof defaults[key] === "object" &&
-        !Array.isArray(defaults[key])
-          ? defaults[key].from
-          : new Date();
-      const latest =
-        defaults[key] &&
-        typeof defaults[key] === "object" &&
-        !Array.isArray(defaults[key])
-          ? defaults[key].to
-          : new Date();
-      return (
-        <div className="space-y-3" key={key}>
+        )}
+        {filter.type === "date" && (
           <FormField
             control={form.control}
             name={key}
-            render={({ field }) =>
-              typeof field.value === "object" && !Array.isArray(field.value) ? (
+            render={({ field }) => {
+              const earliest =
+                defaults[key] &&
+                typeof defaults[key] === "object" &&
+                !Array.isArray(defaults[key])
+                  ? defaults[key].from
+                  : new Date();
+              const latest =
+                defaults[key] &&
+                typeof defaults[key] === "object" &&
+                !Array.isArray(defaults[key])
+                  ? defaults[key].to
+                  : new Date();
+              return typeof field.value === "object" &&
+                !Array.isArray(field.value) ? (
                 <FormItem>
                   <FormLabel className="text-neutral-50">
                     {filter.name}
@@ -364,9 +313,11 @@ export default function FormGenerate<
                 </FormItem>
               ) : (
                 <></>
-              )
-            }
+              );
+            }}
           />
+        )}
+        {FILTER_STRATEGIES[filter.type].getAllowNull && (
           <FormField
             control={form.control}
             name={`${key}AllowNull`}
@@ -389,13 +340,8 @@ export default function FormGenerate<
               </FormItem>
             )}
           />
-        </div>
-      );
-    }
-    console.error(
-      "No filter control render method defined for filter of type",
-      //@ts-expect-error Nicer error message when no render method defined
-      filter.type,
+        )}
+      </div>
     );
   });
 }
