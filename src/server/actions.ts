@@ -406,13 +406,13 @@ export const LoadSlip = async (
   const data = await db
     .select({
       id: slipModelInInvest.patchId,
-      model_id: slipModelInInvest.modelId,
+      modelId: slipModelInInvest.modelId,
       depth: slipModelInInvest.patchDepth,
       strike: slipModelInInvest.patchStrike,
       rake: slipModelInInvest.patchRake,
       dip: slipModelInInvest.patchDip,
       slip: slipModelInInvest.patchSlip,
-      model_event: biblInInvest.biblTitle,
+      modelEvent: biblInInvest.biblTitle,
       longitude: slipModelInInvest.patchLon,
       latitude: slipModelInInvest.patchLat,
       range: sql<Range>`ARRAY[FLOOR(MIN(${slipModelInInvest.patchSlip}) OVER()), CEIL(MAX(${slipModelInInvest.patchSlip}) OVER())]`,
