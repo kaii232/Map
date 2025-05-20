@@ -53,6 +53,11 @@ const drawOptionsModes: (
   | "download"
 )[] = ["polygon", "rectangle", "select", "delete-selection", "delete"];
 
+function camelCaseToWords(s: string) {
+  const result = s.replace(/([A-Z])/g, " $1");
+  return result.charAt(0).toUpperCase() + result.slice(1);
+}
+
 /** Convenience function to get the layer props for seismic data */
 const getSeisProps = (
   property: "none" | "mb" | "mw" | "ms",
@@ -129,6 +134,46 @@ const getInterpolateRange = (range: Range, stops: (string | number)[]) => {
     out.push(stops[i]);
   }
   return out;
+};
+
+const PopupContent = ({
+  objKey,
+  value,
+}: {
+  objKey: string;
+  value: string | number;
+}) => {
+  if (typeof value === "string" && value.includes("https://"))
+    return (
+      <div className="text-sm text-neutral-300">
+        <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
+        <Link
+          href={value}
+          target="_blank"
+          className="text-blue-400 hover:underline"
+        >
+          {value}
+        </Link>
+      </div>
+    );
+  if (typeof value === "string" && value.includes("doi:"))
+    return (
+      <div className="text-sm text-neutral-300">
+        <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
+        <Link
+          href={value.replace("doi:", "https://doi.org/")}
+          target="_blank"
+          className="text-blue-400 hover:underline"
+        >
+          {value}
+        </Link>
+      </div>
+    );
+  return (
+    <div className="text-sm text-neutral-300">
+      <span className="font-semibold">{camelCaseToWords(objKey)}:</span> {value}
+    </div>
+  );
 };
 
 export default function DatabaseMap({
@@ -586,39 +631,8 @@ export default function DatabaseMap({
             )}
             {Object.entries(hoverInfo.feature.properties).map(
               ([key, value]) => {
-                if (key === "name") return;
-                if (typeof value === "string" && value.includes("https://"))
-                  return (
-                    <div className="text-sm text-neutral-300" key={key}>
-                      <span className="font-semibold">{key}:</span>{" "}
-                      <Link
-                        href={value}
-                        target="_blank"
-                        className="text-blue-400 hover:underline"
-                      >
-                        {value}
-                      </Link>
-                    </div>
-                  );
-                if (typeof value === "string" && value.includes("doi:"))
-                  return (
-                    <div className="text-sm text-neutral-300" key={key}>
-                      <span className="font-semibold">{key}:</span>{" "}
-                      <Link
-                        href={value.replace("doi:", "https://doi.org/")}
-                        target="_blank"
-                        className="text-blue-400 hover:underline"
-                      >
-                        {value}
-                      </Link>
-                    </div>
-                  );
-
-                return (
-                  <div className="text-sm text-neutral-300" key={key}>
-                    <span className="font-semibold">{key}:</span> {value}
-                  </div>
-                );
+                if (key === "name" || !value) return;
+                return <PopupContent key={key} objKey={key} value={value} />;
               },
             )}
           </Popup>
@@ -654,38 +668,8 @@ export default function DatabaseMap({
               )}
               {Object.entries(selectedFeature.feature.properties).map(
                 ([key, value]) => {
-                  if (key === "name") return;
-                  if (typeof value === "string" && value.includes("https://"))
-                    return (
-                      <div className="text-sm text-neutral-300" key={key}>
-                        <span className="font-semibold">{key}:</span>{" "}
-                        <Link
-                          href={value}
-                          target="_blank"
-                          className="text-blue-400 hover:underline"
-                        >
-                          {value}
-                        </Link>
-                      </div>
-                    );
-                  if (typeof value === "string" && value.includes("doi:"))
-                    return (
-                      <div className="text-sm text-neutral-300" key={key}>
-                        <span className="font-semibold">{key}:</span>{" "}
-                        <Link
-                          href={value.replace("doi:", "https://doi.org/")}
-                          target="_blank"
-                          className="text-blue-400 hover:underline"
-                        >
-                          {value}
-                        </Link>
-                      </div>
-                    );
-                  return (
-                    <div className="text-sm text-neutral-300" key={key}>
-                      <span className="font-semibold">{key}:</span> {value}
-                    </div>
-                  );
+                  if (key === "name" || !value) return;
+                  return <PopupContent key={key} objKey={key} value={value} />;
                 },
               )}
             </div>
