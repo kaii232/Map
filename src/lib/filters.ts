@@ -45,9 +45,12 @@ import type {
 
 // To add new types of filter:
 // 1. Define the type of the data needed to populate the filter in types.ts
-// 2. Update GenericFiltersInfo, FiltersType and NarrowFilterType to reflect this new filter
-// 3. Update FILTER_STRATEGIES in this file to deal with the new filter
-// 4. Update form-generate.tsx to render the UI needed for your filter
+// 2. Update GenericFiltersInfo (skip if does not need to be populated with data from server), FiltersType and
+//    NarrowFilterType (skip if does not need to be populated with data from server) in types.ts to reflect this new filter
+// 3. If the new filter does not need to be populated with data from the server, adjust FilterServerPopulated type in types.ts to reflect that
+// 4. Update FilterStrategy type in this file to reflect new filter
+// 5. Update FILTER_STRATEGIES in this file to deal with the new filter
+// 6. Update form-generate.tsx to render the UI needed for your filter
 
 /** Helper function to enable type safety when defining new filters */
 const createDataFilter = <T extends GenericFilterDefine>(obj: {

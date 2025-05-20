@@ -17,7 +17,7 @@ export type Categories = string[] | null;
 export type DateFilter = [string, string];
 export type GreaterThan = [number];
 
-/** Generic type of the data that describes the filter values */
+/** Generic type of the data that describes an object with data to populate filters */
 export type GenericFiltersInfo = Record<
   string,
   Range | Categories | DateFilter | GreaterThan
