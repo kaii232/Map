@@ -68,6 +68,14 @@ const TO_SELECT: Record<
   },
 };
 
+// Orders the labels alphabetically
+const TO_SELECT_ORDERED = Object.entries(TO_SELECT).sort(([keyA], [keyB]) =>
+  DATA_LABELS[keyA as keyof typeof TO_SELECT] <
+  DATA_LABELS[keyB as keyof typeof TO_SELECT]
+    ? -1
+    : 1,
+);
+
 export default async function Databases() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -77,7 +85,7 @@ export default async function Databases() {
   });
 
   const sources = await Promise.all(
-    Object.values(TO_SELECT).map((val) =>
+    TO_SELECT_ORDERED.map(([, val]) =>
       db
         .select(select)
         .from(biblInInvest)
@@ -94,56 +102,49 @@ export default async function Databases() {
           <h1 className="text-2xl font-semibold text-neutral-50">
             Data Sources
           </h1>
-          {Object.entries(TO_SELECT)
-            .sort(([keyA], [keyB]) =>
-              DATA_LABELS[keyA as keyof typeof TO_SELECT] <
-              DATA_LABELS[keyB as keyof typeof TO_SELECT]
-                ? -1
-                : 1,
-            )
-            .map(([key], index) => {
-              return (
-                <div key={key} className="rounded-2xl bg-neutral-950 p-4">
-                  <span className="mb-4 block text-neutral-50">
-                    {DATA_LABELS[key as keyof typeof TO_SELECT]}
-                  </span>
-                  <ul className="space-y-2">
-                    {sources[index].map((pub) => {
-                      return (
-                        <li
-                          key={pub.id}
-                          className="relative block rounded-lg border border-neutral-800 bg-neutral-800/70 p-4 text-neutral-300 transition hover:border-neutral-600"
-                        >
-                          <p className="mb-4 text-sm text-neutral-400">
-                            {pub.journal}
-                            {pub.journal && pub.year && " · "}
-                            {pub.year}
-                            {pub.year && pub.doi && " · "}
-                            {pub.doi}
-                          </p>
-                          {pub.url || pub.doi ? (
-                            <Link
-                              href={
-                                pub.url ? pub.url : `https://doi.org/${pub.doi}`
-                              }
-                              target="_blank"
-                              className="text-lg font-medium text-neutral-50"
-                            >
-                              <span className="absolute inset-0 rounded-lg"></span>
-                              {pub.title}
-                            </Link>
-                          ) : (
-                            <h3 className="text-lg font-medium text-neutral-50">
-                              {pub.title}
-                            </h3>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              );
-            })}
+          {TO_SELECT_ORDERED.map(([key], index) => {
+            return (
+              <div key={key} className="rounded-2xl bg-neutral-950 p-4">
+                <span className="mb-4 block text-neutral-50">
+                  {DATA_LABELS[key as keyof typeof TO_SELECT]}
+                </span>
+                <ul className="space-y-2">
+                  {sources[index].map((pub) => {
+                    return (
+                      <li
+                        key={pub.id}
+                        className="relative block rounded-lg border border-neutral-800 bg-neutral-800/70 p-4 text-neutral-300 transition hover:border-neutral-600"
+                      >
+                        <p className="mb-4 text-sm text-neutral-400">
+                          {pub.journal}
+                          {pub.journal && pub.year && " · "}
+                          {pub.year}
+                          {pub.year && pub.doi && " · "}
+                          {pub.doi}
+                        </p>
+                        {pub.url || pub.doi ? (
+                          <Link
+                            href={
+                              pub.url ? pub.url : `https://doi.org/${pub.doi}`
+                            }
+                            target="_blank"
+                            className="text-lg font-medium text-neutral-50"
+                          >
+                            <span className="absolute inset-0 rounded-lg"></span>
+                            {pub.title}
+                          </Link>
+                        ) : (
+                          <h3 className="text-lg font-medium text-neutral-50">
+                            {pub.title}
+                          </h3>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       </main>
     </>
