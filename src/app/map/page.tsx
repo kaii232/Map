@@ -39,7 +39,7 @@ const TOUR_STEPS: Steps = [
     type: "dialog",
     title: "Welcome to the map",
     description:
-      "On this page you will be able to load, view and download a variety of data. Logged in users will have access to unrestricted data.",
+      "On this page you will be able to load, view and download a variety of data. Logged in users will have access to restricted data.",
   },
   {
     type: "tooltip",
@@ -50,36 +50,36 @@ const TOUR_STEPS: Steps = [
   {
     type: "tooltip",
     title: "Select Basemap",
-    description: "You can select the basemap from different options here.",
+    description: "Select the basemap from the options here.",
   },
   {
     type: "tooltip",
     title: "Map layers",
     description:
-      "You can toggle the visibility of certain map layers like plate boundaries and hillshading here.",
+      "Toggle the visibility of map layers like plate boundaries and hillshading here.",
   },
   {
     type: "tooltip",
     title: "Select data",
-    description: "You can select the data you want to load from here.",
+    description: "Select the type of data you want to load from here.",
   },
   {
     type: "tooltip",
     title: "Filtering and downloading data",
     description:
-      "Use these filters to filter the type of data you wish to load. You can also download the selected data after loading.",
+      "Filter the type of data you wish to load using these filter controls. You can also download the selected data in a csv file after loading.",
   },
   {
     type: "tooltip",
     title: "Download map",
     description:
-      "You can click this button to download a high resolution picture of the map with separate layers.",
+      "Click this button to download a high resolution picture of the map with separate layers.",
   },
   {
     type: "tooltip",
     title: "Restart tour",
     description:
-      "If you missed anything, click this button to go through the tour again!",
+      "If you missed anything, click this button to go through the introduction guide again!",
   },
 ];
 
