@@ -75,6 +75,12 @@ const TOUR_STEPS: Steps = [
     description:
       "You can click this button to download a high resolution picture of the map with separate layers.",
   },
+  {
+    type: "tooltip",
+    title: "Restart tour",
+    description:
+      "If you missed anything, click this button to go through the tour again!",
+  },
 ];
 
 export default async function DatabasePage() {

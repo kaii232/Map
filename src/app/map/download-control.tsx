@@ -221,7 +221,6 @@ const DownloadControl = () => {
     <TourStep
       step={7}
       localBeforeStep={() => setPanelOpen(false)}
-      localAfterStep={() => setPanelOpen(true)}
       localGoBackStep={() => setPanelOpen(true)}
     >
       <div className="maplibregl-ctrl maplibregl-ctrl-group">

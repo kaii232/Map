@@ -35,6 +35,7 @@ import Controls from "./controls";
 import DownloadControl from "./download-control";
 import DrawControl from "./draw-control";
 import MapLayers from "./map-layers";
+import RestartTour from "./restart-tour";
 
 const drawOptionsModes: (
   | "polygon"
@@ -556,6 +557,7 @@ export default function DatabaseMap({
         <DrawControl modes={drawOptionsModes} open onUpdate={onUpdate} />
         <TerrainControl source={"terrain"} exaggeration={1.5} />
         <DownloadControl />
+        <RestartTour />
         <Basemaps />
         <MapLayers />
         {Object.entries(mapDataLayers).map(([key, val]) => {
