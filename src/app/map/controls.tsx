@@ -445,7 +445,7 @@ const Controls = ({
             <span className="text-xs font-medium text-neutral-300">
               Map Options
             </span>
-            <TourStep step={3}>
+            <TourStep step={3} localBeforeStep={() => setOpen(true)}>
               <div>
                 <Select
                   value={mapStyle}
