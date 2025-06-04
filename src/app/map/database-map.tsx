@@ -498,6 +498,23 @@ export default function DatabaseMap({
           ],
         },
       },
+      rock: {
+        type: "circle",
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 3, 10, 16],
+          "circle-stroke-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            5,
+            0,
+            8,
+            2,
+          ],
+          "circle-color": "#b85a1f",
+          "circle-stroke-color": "#f8fafc",
+        },
+      },
     }),
     [slipRange],
   );

@@ -3,6 +3,7 @@ import {
   LoadFlt,
   LoadGNSS,
   LoadHf,
+  LoadRock,
   LoadSeis,
   LoadSlab2,
   LoadSlip,
@@ -36,6 +37,7 @@ export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS_CLIENT, string> = {
   smt: "seamounts",
   vlc: "volcanoes",
   slip: "slip model data",
+  rock: "rock sample data",
 };
 
 /**
@@ -50,6 +52,7 @@ export const DATA_LABELS: Record<keyof typeof ALL_FILTERS_CLIENT, string> = {
   hf: "Heatflow",
   slab2: "Slab",
   slip: "Slip Models",
+  rock: "Rock Samples",
 };
 
 /**
@@ -73,6 +76,7 @@ export const LOADERS: Record<
   hf: LoadHf,
   slab2: LoadSlab2,
   slip: LoadSlip,
+  rock: LoadRock,
 };
 
 /** Convenience function to map a range to user defined stops for map layer style specification */

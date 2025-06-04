@@ -246,6 +246,7 @@ export const ALL_FILTERS = {
   hf: null,
   slab2: slab2Filters,
   slip: slipFilters,
+  rock: null,
 };
 
 /** Type of the data required to populate all filters */

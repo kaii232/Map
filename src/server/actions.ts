@@ -21,6 +21,7 @@ import {
   fltInInvest,
   gnssStnInInvest,
   heatflowInInvest,
+  rockSampleInInvest,
   seisInInvest,
   slab2InInvest,
   slipModelInInvest,
@@ -428,4 +429,38 @@ export const LoadSlip = async (
   const dataReturn = sqlToGeojson(data, ["range"]);
 
   return { success: true, data: dataReturn, metadata: range };
+};
+
+export const LoadRock = async (
+  drawing?: MultiPolygon | Polygon,
+): Promise<ActionReturn> => {
+  const filters = await generateFilters(
+    ALL_FILTERS.rock,
+    {},
+    true,
+    rockSampleInInvest.rockGeom,
+    drawing,
+  );
+
+  const data = await db
+    .select({
+      id: rockSampleInInvest.rockSampleId,
+      sampleName: rockSampleInInvest.rockSampleName,
+      locationComment: rockSampleInInvest.rockLocCmt,
+      rockName: rockSampleInInvest.rockName,
+      mineral: rockSampleInInvest.rockMineral,
+      "si\\O2": rockSampleInInvest.rockSio2,
+      "na2\\O": rockSampleInInvest.rockNa2O,
+      "k2\\O": rockSampleInInvest.rockK2O,
+      ageKa: rockSampleInInvest.rockAgeKa,
+      ageMa: rockSampleInInvest.rockAgeMa,
+      source: biblInInvest.biblTitle,
+      geojson: sql<string>`ST_ASGEOJSON(${rockSampleInInvest.rockGeom})`,
+    })
+    .from(rockSampleInInvest)
+    .leftJoin(biblInInvest, eq(biblInInvest.biblId, rockSampleInInvest.srcId))
+    .where(and(...filters));
+  const dataReturn = sqlToGeojson(data);
+
+  return { success: true, data: dataReturn };
 };
