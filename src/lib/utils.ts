@@ -89,7 +89,8 @@ export const getInterpolateRange = (
   return out;
 };
 
+/** Turns a camel case string into multiple words. Prefix a capital letter with a `\` to avoid splitting at that position */
 export function camelCaseToWords(s: string) {
-  const result = s.replace(/([A-Z])/g, " $1");
+  const result = s.replace(/(?<!\\)([A-Z])/g, " $1").replace("\\", "");
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
