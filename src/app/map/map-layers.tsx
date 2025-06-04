@@ -3,14 +3,14 @@
 import Spinner from "@/components/ui/spinner";
 import { getInterpolateRange, velocityStops } from "@/lib/utils";
 import { Feature, FeatureCollection } from "geojson";
-import { useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import { ExtractAtomValue, useAtomValue } from "jotai";
+import { ReactNode, useEffect, useState } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { toast } from "sonner";
 import { layersAtom } from "./atoms";
 import { LAYER_LABELS } from "./controls";
 
-/** Turns a loaded xlsx file into a geojson object */
+/** Turns the loaded xlsx file into a geojson object */
 const xlsxToGeojson = (
   input: Record<string, string | number>[],
 ): FeatureCollection => {
@@ -36,286 +36,44 @@ const xlsxToGeojson = (
   };
 };
 
-// The following lazy components defers the loading of additional layer data until they are selected
-
-const LazyCrustThickness = () => {
-  const layers = useAtomValue(layersAtom);
-  const [crustThickness, setCrustThickness] = useState<
-    FeatureCollection | undefined
-  >();
-
-  useEffect(() => {
-    const loadData = async () => {
-      toast(`Loading ${LAYER_LABELS.crustThickness}...`, {
-        icon: <Spinner className="size-5" />,
-        duration: Infinity,
-        id: `crustThickness`,
-      });
-      const data = await import("@/assets/crust_thickness.geojson");
-      setCrustThickness(data.default as unknown as FeatureCollection);
-      setTimeout(() => toast.dismiss("crustThickness"), 250);
-    };
-
-    if (layers.crustThickness && !crustThickness) {
-      loadData();
-    }
-  }, [crustThickness, layers]);
-
-  if (!crustThickness) return null;
-  return (
-    <Source id="crustThicknessSource" type="geojson" data={crustThickness}>
-      <Layer
-        type="fill"
-        id="crustThickness"
-        paint={{
-          "fill-color": [
-            "interpolate",
-            ["linear"],
-            ["get", "thickness"],
-            ...getInterpolateRange(
-              [0, 80],
-              [
-                "#ffffff00",
-                "#e0dfde1A",
-                "#c8c5b833",
-                "#bdb5964D",
-                "#b29f7666",
-                "#aa866580",
-                "#a4705c99",
-                "#9b5850B3",
-                "#883c3bCC",
-                "#6b1f1eE6",
-                "#4c0001",
-              ],
-            ),
-          ],
-          "fill-outline-color": "#FFFFFF0D",
-        }}
-        layout={{
-          visibility: layers.crustThickness ? "visible" : "none",
-        }}
-      />
-    </Source>
-  );
-};
-
-const LazyTectonicPlates = () => {
-  const layers = useAtomValue(layersAtom);
-  const [tectonicPlates, setTectonicPlates] = useState<
-    { plates: FeatureCollection; boundaries: FeatureCollection } | undefined
-  >();
+/** Lazy loads data needed for map layer */
+function GenericLazyLayer<T>({
+  layerKey,
+  loadFn,
+  layerToRender,
+}: {
+  layerKey: keyof ExtractAtomValue<typeof layersAtom>;
+  loadFn: () => Promise<T>;
+  layerToRender: (visibility: boolean, data: T) => ReactNode;
+}) {
+  const visibility = useAtomValue(layersAtom)[layerKey];
+  const [data, setData] = useState<T | undefined>();
 
   useEffect(() => {
     const loadData = async () => {
-      toast(`Loading ${LAYER_LABELS.plates}...`, {
-        icon: <Spinner className="size-5" />,
-        duration: Infinity,
-        id: `plates`,
-      });
-      const boundaries = (await import(
-        "@/assets/PB2002_boundaries.json"
-      )) as FeatureCollection;
-      const plates = (await import(
-        "@/assets/PB2002_plates.json"
-      )) as FeatureCollection;
-      setTectonicPlates({ plates, boundaries });
-      setTimeout(() => toast.dismiss("plates"), 250);
+      const timeout = setTimeout(
+        () =>
+          toast(`Loading ${LAYER_LABELS[layerKey]}...`, {
+            icon: <Spinner className="size-5" />,
+            duration: Infinity,
+            id: layerKey,
+          }),
+        50,
+      );
+      setData(await loadFn());
+      clearTimeout(timeout); // Only show loading toast if takes a while to load
+      toast.dismiss(layerKey);
     };
 
-    if (layers.plates && !tectonicPlates) {
+    if (visibility && !data) {
       loadData();
     }
-  }, [layers, tectonicPlates]);
+  }, [visibility, data, loadFn, layerKey]);
 
-  if (!tectonicPlates) return null;
+  if (!data) return null;
 
-  return (
-    <>
-      <Source
-        id="platesSource"
-        type="geojson"
-        data={tectonicPlates.plates}
-        generateId
-      >
-        <Layer
-          type="fill"
-          id="plates"
-          paint={{
-            "fill-opacity": 0,
-          }}
-          layout={{
-            visibility: layers.plates ? "visible" : "none",
-          }}
-        />
-      </Source>
-      <Source
-        id="platesBoundariesSource"
-        type="geojson"
-        data={tectonicPlates.boundaries}
-        generateId
-      >
-        <Layer
-          type="line"
-          id="platesBoundaries"
-          paint={{
-            "line-color": "#065f46",
-            "line-width": ["interpolate", ["linear"], ["zoom"], 5, 3, 15, 8],
-            "line-opacity": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              0.5,
-              15,
-              0.3,
-            ],
-          }}
-          layout={{
-            visibility: layers.plates ? "visible" : "none",
-          }}
-        />
-      </Source>
-    </>
-  );
-};
-
-const LazyTectonicPlatesNew = () => {
-  const layers = useAtomValue(layersAtom);
-  const [tectonicPlates, setTectonicPlates] = useState<
-    { plates: FeatureCollection; boundaries: FeatureCollection } | undefined
-  >();
-
-  useEffect(() => {
-    const loadData = async () => {
-      toast(`Loading ${LAYER_LABELS.platesNew}...`, {
-        icon: <Spinner className="size-5" />,
-        duration: Infinity,
-        id: `platesNew`,
-      });
-      const boundaries = (await import("@/assets/plate_boundaries_new.geojson"))
-        .default;
-      const plates = (await import("@/assets/plate_new.geojson")).default;
-      setTectonicPlates({ plates, boundaries });
-      setTimeout(() => toast.dismiss("platesNew"), 250);
-    };
-
-    if (layers.platesNew && !tectonicPlates) {
-      loadData();
-    }
-  }, [layers, tectonicPlates]);
-
-  if (!tectonicPlates) return null;
-
-  return (
-    <>
-      <Source
-        id="platesNewSource"
-        type="geojson"
-        data={tectonicPlates.plates}
-        promoteId={"id"}
-      >
-        <Layer
-          type="fill"
-          id="platesNew"
-          paint={{
-            "fill-opacity": 0,
-          }}
-          layout={{
-            visibility: layers.platesNew ? "visible" : "none",
-          }}
-        />
-      </Source>
-      <Source
-        id="platesNewBoundariesSource"
-        type="geojson"
-        data={tectonicPlates.boundaries}
-        promoteId={"feature_id"}
-        attribution={
-          "Hasterok, D., Halpin, J., Hand, M., Collins, A., Kreemer, C., Gard, M.G., Glorie, S., (revised) New maps of global geologic provinces and tectonic plates, Earth Science Reviews."
-        }
-      >
-        <Layer
-          type="line"
-          id="platesNewBoundaries"
-          paint={{
-            "line-color": "#4c1d95",
-            "line-width": ["interpolate", ["linear"], ["zoom"], 5, 3, 15, 8],
-            "line-opacity": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              0.5,
-              15,
-              0.3,
-            ],
-          }}
-          layout={{
-            visibility: layers.platesNew ? "visible" : "none",
-          }}
-        />
-      </Source>
-    </>
-  );
-};
-
-const LazyPlateVelocities = () => {
-  const layers = useAtomValue(layersAtom);
-  const [plateVelocities, setPlateVelocities] = useState<
-    FeatureCollection | undefined
-  >();
-
-  useEffect(() => {
-    const loadData = async () => {
-      toast(`Loading ${LAYER_LABELS.plateMovementVectors}...`, {
-        icon: <Spinner className="size-5" />,
-        duration: Infinity,
-        id: `plateVelocities`,
-      });
-      const data = await import("@/assets/morvel_velocity.xlsx");
-      setPlateVelocities(xlsxToGeojson(data.default));
-      setTimeout(() => toast.dismiss("plateVelocities"), 250);
-    };
-
-    if (layers.plateMovementVectors && !plateVelocities) {
-      loadData();
-    }
-  }, [plateVelocities, layers]);
-
-  if (!plateVelocities) return null;
-
-  return (
-    <Source
-      id="velocitySource"
-      type="geojson"
-      data={plateVelocities}
-      generateId
-    >
-      {velocityStops.map((velocity, index) => {
-        return (
-          <Layer
-            key={velocity}
-            id={`velocity_${index}`}
-            source="velocitySource"
-            type="symbol"
-            layout={{
-              "icon-image": `custom:arrow_${index}`,
-              "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 1, 10, 2],
-              "icon-overlap": "always",
-              "icon-rotate": ["get", "Direction"],
-              visibility: layers.plateMovementVectors ? "visible" : "none",
-            }}
-            filter={[
-              "all",
-              [">=", ["get", "Velocity (mm/yr)"], velocity],
-              ["<", ["get", "Velocity (mm/yr)"], velocity + 10],
-            ]}
-          />
-        );
-      })}
-    </Source>
-  );
-};
+  return layerToRender(visibility, data);
+}
 
 /** Contains the source and layers for the different map layers */
 export default function MapLayers() {
@@ -366,10 +124,235 @@ export default function MapLayers() {
           }}
         />
       </Source>
-      <LazyTectonicPlates />
-      <LazyTectonicPlatesNew />
-      <LazyPlateVelocities />
-      <LazyCrustThickness />
+      <GenericLazyLayer
+        layerKey="plates"
+        loadFn={async () => {
+          const boundaries = (await import(
+            "@/assets/PB2002_boundaries.json"
+          )) as FeatureCollection;
+          const plates = (await import(
+            "@/assets/PB2002_plates.json"
+          )) as FeatureCollection;
+          return { plates, boundaries };
+        }}
+        layerToRender={(visibility, data) => {
+          return (
+            <>
+              <Source
+                id="platesSource"
+                type="geojson"
+                data={data.plates}
+                generateId
+              >
+                <Layer
+                  type="fill"
+                  id="plates"
+                  paint={{
+                    "fill-opacity": 0,
+                  }}
+                  layout={{
+                    visibility: layers.plates ? "visible" : "none",
+                  }}
+                />
+              </Source>
+              <Source
+                id="platesBoundariesSource"
+                type="geojson"
+                data={data.boundaries}
+                generateId
+              >
+                <Layer
+                  type="line"
+                  id="platesBoundaries"
+                  paint={{
+                    "line-color": "#065f46",
+                    "line-width": [
+                      "interpolate",
+                      ["linear"],
+                      ["zoom"],
+                      5,
+                      3,
+                      15,
+                      8,
+                    ],
+                    "line-opacity": [
+                      "interpolate",
+                      ["linear"],
+                      ["zoom"],
+                      5,
+                      0.5,
+                      15,
+                      0.3,
+                    ],
+                  }}
+                  layout={{
+                    visibility: visibility ? "visible" : "none",
+                  }}
+                />
+              </Source>
+            </>
+          );
+        }}
+      />
+      <GenericLazyLayer
+        layerKey="platesNew"
+        loadFn={async () => {
+          const boundaries = (
+            await import("@/assets/plate_boundaries_new.geojson")
+          ).default as FeatureCollection;
+          const plates = (await import("@/assets/plate_new.geojson"))
+            .default as FeatureCollection;
+          return { plates, boundaries };
+        }}
+        layerToRender={(visibility, data) => {
+          return (
+            <>
+              <Source
+                id="platesNewSource"
+                type="geojson"
+                data={data.plates}
+                promoteId={"id"}
+              >
+                <Layer
+                  type="fill"
+                  id="platesNew"
+                  paint={{
+                    "fill-opacity": 0,
+                  }}
+                  layout={{
+                    visibility: layers.platesNew ? "visible" : "none",
+                  }}
+                />
+              </Source>
+              <Source
+                id="platesNewBoundariesSource"
+                type="geojson"
+                data={data.boundaries}
+                promoteId={"feature_id"}
+                attribution={
+                  "Hasterok, D., Halpin, J., Hand, M., Collins, A., Kreemer, C., Gard, M.G., Glorie, S., (revised) New maps of global geologic provinces and tectonic plates, Earth Science Reviews."
+                }
+              >
+                <Layer
+                  type="line"
+                  id="platesNewBoundaries"
+                  paint={{
+                    "line-color": "#4c1d95",
+                    "line-width": [
+                      "interpolate",
+                      ["linear"],
+                      ["zoom"],
+                      5,
+                      3,
+                      15,
+                      8,
+                    ],
+                    "line-opacity": [
+                      "interpolate",
+                      ["linear"],
+                      ["zoom"],
+                      5,
+                      0.5,
+                      15,
+                      0.3,
+                    ],
+                  }}
+                  layout={{
+                    visibility: visibility ? "visible" : "none",
+                  }}
+                />
+              </Source>
+            </>
+          );
+        }}
+      />
+      <GenericLazyLayer
+        layerKey="crustThickness"
+        loadFn={async () => {
+          const data = await import("@/assets/crust_thickness.geojson");
+          return data.default as FeatureCollection;
+        }}
+        layerToRender={(visibility, data) => {
+          return (
+            <Source id="crustThicknessSource" type="geojson" data={data}>
+              <Layer
+                type="fill"
+                id="crustThickness"
+                paint={{
+                  "fill-color": [
+                    "interpolate",
+                    ["linear"],
+                    ["get", "thickness"],
+                    ...getInterpolateRange(
+                      [0, 80],
+                      [
+                        "#ffffff00",
+                        "#e0dfde1A",
+                        "#c8c5b833",
+                        "#bdb5964D",
+                        "#b29f7666",
+                        "#aa866580",
+                        "#a4705c99",
+                        "#9b5850B3",
+                        "#883c3bCC",
+                        "#6b1f1eE6",
+                        "#4c0001",
+                      ],
+                    ),
+                  ],
+                  "fill-outline-color": "#FFFFFF0D",
+                }}
+                layout={{
+                  visibility: visibility ? "visible" : "none",
+                }}
+              />
+            </Source>
+          );
+        }}
+      />
+      <GenericLazyLayer
+        layerKey="plateMovementVectors"
+        loadFn={async () => {
+          const data = await import("@/assets/morvel_velocity.xlsx");
+          return xlsxToGeojson(data.default);
+        }}
+        layerToRender={(visibility, data) => {
+          return (
+            <Source id="velocitySource" type="geojson" data={data} generateId>
+              {velocityStops.map((velocity, index) => {
+                return (
+                  <Layer
+                    key={velocity}
+                    id={`velocity_${index}`}
+                    source="velocitySource"
+                    type="symbol"
+                    layout={{
+                      "icon-image": `custom:arrow_${index}`,
+                      "icon-size": [
+                        "interpolate",
+                        ["linear"],
+                        ["zoom"],
+                        5,
+                        1,
+                        10,
+                        2,
+                      ],
+                      "icon-overlap": "always",
+                      "icon-rotate": ["get", "Direction"],
+                      visibility: visibility ? "visible" : "none",
+                    }}
+                    filter={[
+                      "all",
+                      [">=", ["get", "Velocity (mm/yr)"], velocity],
+                      ["<", ["get", "Velocity (mm/yr)"], velocity + 10],
+                    ]}
+                  />
+                );
+              })}
+            </Source>
+          );
+        }}
+      />
     </>
   );
 }
