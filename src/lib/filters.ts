@@ -179,7 +179,7 @@ const fltFilters = createDataFilter({
     dbCol: fltInInvest.fltLen,
     name: "Length",
     type: "range",
-    units: "Km",
+    units: "km",
   },
   sliprateRange: {
     dbCol: fltInInvest.fltSliprate,
