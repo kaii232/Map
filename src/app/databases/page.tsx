@@ -7,6 +7,7 @@ import {
   biblInInvest,
   fltInInvest,
   heatflowInInvest,
+  rockSampleInInvest,
   seisInInvest,
   slab2InInvest,
   slipModelInInvest,
@@ -65,6 +66,10 @@ const TO_SELECT: Record<
   slip: {
     from: slipModelInInvest,
     biblCol: slipModelInInvest.modelSrcId,
+  },
+  rock: {
+    from: rockSampleInInvest,
+    biblCol: rockSampleInInvest.srcId,
   },
 };
 
