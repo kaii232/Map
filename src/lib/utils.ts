@@ -14,6 +14,7 @@ import { MultiPolygon, Polygon } from "geojson";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 import type { ALL_FILTERS_CLIENT, createZodSchema } from "./filters";
+import { Range } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -73,3 +74,22 @@ export const LOADERS: Record<
   slab2: LoadSlab2,
   slip: LoadSlip,
 };
+
+/** Convenience function to map a range to user defined stops for map layer style specification */
+export const getInterpolateRange = (
+  range: Range,
+  stops: (string | number)[],
+) => {
+  const step = (range[1] - range[0]) / (stops.length - 1);
+  const out = [];
+  for (let i = 0, length = stops.length; i < length; i++) {
+    out.push(range[0] + i * step);
+    out.push(stops[i]);
+  }
+  return out;
+};
+
+export function camelCaseToWords(s: string) {
+  const result = s.replace(/([A-Z])/g, " $1");
+  return result.charAt(0).toUpperCase() + result.slice(1);
+}

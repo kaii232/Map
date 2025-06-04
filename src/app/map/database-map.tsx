@@ -2,8 +2,11 @@
 
 import { style } from "@/assets/map_style";
 import type { ALL_FILTERS, PopulateFilters } from "@/lib/filters";
-import { Range } from "@/lib/types";
-import { velocityStops } from "@/lib/utils";
+import {
+  camelCaseToWords,
+  getInterpolateRange,
+  velocityStops,
+} from "@/lib/utils";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Position } from "geojson";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -53,11 +56,6 @@ const drawOptionsModes: (
   | "delete-selection"
   | "download"
 )[] = ["polygon", "rectangle", "select", "delete-selection", "delete"];
-
-function camelCaseToWords(s: string) {
-  const result = s.replace(/([A-Z])/g, " $1");
-  return result.charAt(0).toUpperCase() + result.slice(1);
-}
 
 /** Convenience function to get the layer props for seismic data */
 const getSeisProps = (
@@ -125,17 +123,6 @@ const getSeisProps = (
           ["!", ["to-boolean", ["get", "ms"]]],
         ],
 });
-
-/** Convenience function to map a range to user defined stops for map layer style specification */
-const getInterpolateRange = (range: Range, stops: (string | number)[]) => {
-  const step = (range[1] - range[0]) / (stops.length - 1);
-  const out = [];
-  for (let i = 0, length = stops.length; i < length; i++) {
-    out.push(range[0] + i * step);
-    out.push(stops[i]);
-  }
-  return out;
-};
 
 const PopupContent = ({
   objKey,
