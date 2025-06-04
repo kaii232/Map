@@ -245,7 +245,8 @@ export default function DatabaseMap({
         hoveredFeature.source === "platesSource" ||
         hoveredFeature.source === "platesBoundariesSource" ||
         hoveredFeature.source === "platesNewSource" ||
-        hoveredFeature.source === "platesNewBoundariesSource"
+        hoveredFeature.source === "platesNewBoundariesSource" ||
+        hoveredFeature.source === "crustThicknessSource"
       ) {
         setHoverInfo(undefined);
         return;
@@ -548,6 +549,7 @@ export default function DatabaseMap({
           "platesBoundaries",
           "platesNew",
           "platesNewBoundaries",
+          "crustThickness",
           ...velocityStops.map((_, index) => `velocity_${index}`),
         ]}
         reuseMaps

@@ -5,7 +5,7 @@ import Spinner from "@/components/ui/spinner";
 import type { ALL_FILTERS } from "@/lib/filters";
 import { velocityStops } from "@/lib/utils";
 import { downloadZip } from "client-zip";
-import { useAtomValue, useSetAtom } from "jotai";
+import { ExtractAtomValue, useAtomValue, useSetAtom } from "jotai";
 import { Download } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { memo, useEffect, useState } from "react";
@@ -20,12 +20,16 @@ import {
 } from "./atoms";
 
 /** Layer IDs for each map layer for separating when downloading */
-const SOURCES_LAYERS: Record<string, string[]> = {
+const SOURCES_LAYERS: Record<
+  keyof ExtractAtomValue<typeof layersAtom>,
+  string[]
+> = {
   hillshade: ["terrainHillshade"],
   plateMovementVectors: velocityStops.map((_, index) => `velocity_${index}`),
   plates: ["plates", "platesBoundaries"],
   platesNew: ["platesNew", "platesNewBoundaries"],
   seafloorAge: ["seafloorAge"],
+  crustThickness: ["crustThickness"],
 };
 
 /** Zips and downloads the files */
@@ -181,8 +185,12 @@ const DownloadControl = () => {
         Object.entries(layers).map(([src, visible]) => {
           // If terrain is enabled do not disable hillshade as "idle" event will not be fired
           if (visible && (!isTerrainEnabled || src !== "hillshade")) {
-            layersToExport.push(SOURCES_LAYERS[src]);
-            SOURCES_LAYERS[src].forEach((layerId) =>
+            layersToExport.push(
+              SOURCES_LAYERS[src as keyof ExtractAtomValue<typeof layersAtom>],
+            );
+            SOURCES_LAYERS[
+              src as keyof ExtractAtomValue<typeof layersAtom>
+            ].forEach((layerId) =>
               newMap.setLayoutProperty(layerId, "visibility", "none"),
             );
           }

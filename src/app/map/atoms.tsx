@@ -10,6 +10,7 @@ export const layersAtom = atom({
   plates: false,
   platesNew: false,
   seafloorAge: false,
+  crustThickness: false,
 });
 
 /** Keeps track of the currently selected basemap */

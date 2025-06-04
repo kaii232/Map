@@ -43,7 +43,7 @@ import { BasemapNames, Range } from "@/lib/types";
 import { cn, DATA_LABELS } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { bbox } from "@turf/bbox";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { ExtractAtomValue, useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   Book,
   ChevronDown,
@@ -97,13 +97,15 @@ const MAP_STYLE: {
 ] as const;
 
 /** Labels for the map layer select component */
-const LAYER_LABELS: Record<string, string> = {
-  hillshade: "Hillshade",
-  plateMovementVectors: "Plate Movement Vectors",
-  plates: "Tectonic Plates (Bird, 2003)",
-  platesNew: "Tectonic Plates (Hasterok, 2022)",
-  seafloorAge: "Seafloor Age",
-};
+const LAYER_LABELS: Record<keyof ExtractAtomValue<typeof layersAtom>, string> =
+  {
+    hillshade: "Hillshade",
+    plateMovementVectors: "Plate Movement Vectors",
+    plates: "Tectonic Plates (Bird, 2003)",
+    platesNew: "Tectonic Plates (Hasterok, 2022)",
+    seafloorAge: "Seafloor Age",
+    crustThickness: "Crust Thickness",
+  };
 
 const FitDataToScreen = ({
   dataKey,
@@ -504,7 +506,11 @@ const Controls = ({
                           setLayers((prev) => ({ ...prev, [layer]: e }))
                         }
                       >
-                        {LAYER_LABELS[layer]}
+                        {
+                          LAYER_LABELS[
+                            layer as keyof ExtractAtomValue<typeof layersAtom>
+                          ]
+                        }
                       </DropdownMenuCheckboxItem>
                     ))}
                   </DropdownMenuContent>

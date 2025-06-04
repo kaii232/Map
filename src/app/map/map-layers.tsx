@@ -1,3 +1,4 @@
+import crustThickness from "@/assets/crust_thickness.geojson";
 import plateVelocities from "@/assets/morvel_velocity.xlsx";
 import tectonicBoundaries from "@/assets/PB2002_boundaries.json";
 import tectonicPlates from "@/assets/PB2002_plates.json";
@@ -151,7 +152,7 @@ export default function MapLayers() {
         />
       </Source>
       <Source
-        id="terrain"
+        id="terrainSource"
         type="raster-dem"
         tiles={[
           "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
@@ -205,6 +206,31 @@ export default function MapLayers() {
             />
           );
         })}
+      </Source>
+      <Source
+        id="crustThicknessSource"
+        type="geojson"
+        data={crustThickness as FeatureCollection}
+      >
+        <Layer
+          type="fill"
+          id="crustThickness"
+          paint={{
+            "fill-color": [
+              "interpolate",
+              ["linear"],
+              ["get", "thickness"],
+              10,
+              "#FFFFFF00",
+              75,
+              "#FFFFFF",
+            ],
+            "fill-outline-color": "#FFFFFF0D",
+          }}
+          layout={{
+            visibility: layers.crustThickness ? "visible" : "none",
+          }}
+        />
       </Source>
     </>
   );
