@@ -211,6 +211,14 @@ const ColourRamps = ({ className }: { className?: string }) => {
         !!mapData.slip &&
         mapData.slip.features.length > 0,
     },
+    {
+      name: "Crust Thickness",
+      colour:
+        "bg-[linear-gradient(90deg,#ffffff_0%,#e0dfde_10%,#c8c5b8_20%,#bdb596_30%,#b29f76_40%,#aa8665_50%,#a4705c_60%,#9b5850_70%,#883c3b_80%,#6b1f1e_90%,#4c0001_100%)]",
+      min: "0km",
+      max: "80km",
+      visible: layers.crustThickness,
+    },
   ];
 
   const showColourRange = legends.some((legend) => legend.visible);
