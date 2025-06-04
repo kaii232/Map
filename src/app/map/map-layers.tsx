@@ -4,7 +4,7 @@ import tectonicBoundaries from "@/assets/PB2002_boundaries.json";
 import tectonicPlates from "@/assets/PB2002_plates.json";
 import tectonicBoundariesNew from "@/assets/plate_boundaries_new.geojson";
 import tectonicPlatesNew from "@/assets/plate_new.geojson";
-import { velocityStops } from "@/lib/utils";
+import { getInterpolateRange, velocityStops } from "@/lib/utils";
 import { Feature, FeatureCollection } from "geojson";
 import { useAtomValue } from "jotai";
 import { Layer, Source } from "react-map-gl/maplibre";
@@ -220,10 +220,22 @@ export default function MapLayers() {
               "interpolate",
               ["linear"],
               ["get", "thickness"],
-              10,
-              "#FFFFFF00",
-              75,
-              "#FFFFFF",
+              ...getInterpolateRange(
+                [0, 80],
+                [
+                  "#ffffff00",
+                  "#e0dfde1A",
+                  "#c8c5b833",
+                  "#bdb5964D",
+                  "#b29f7666",
+                  "#aa866580",
+                  "#a4705c99",
+                  "#9b5850B3",
+                  "#883c3bCC",
+                  "#6b1f1eE6",
+                  "#4c0001",
+                ],
+              ),
             ],
             "fill-outline-color": "#FFFFFF0D",
           }}
