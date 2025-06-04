@@ -97,15 +97,17 @@ const MAP_STYLE: {
 ] as const;
 
 /** Labels for the map layer select component */
-const LAYER_LABELS: Record<keyof ExtractAtomValue<typeof layersAtom>, string> =
-  {
-    hillshade: "Hillshade",
-    plateMovementVectors: "Plate Movement Vectors",
-    plates: "Tectonic Plates (Bird, 2003)",
-    platesNew: "Tectonic Plates (Hasterok, 2022)",
-    seafloorAge: "Seafloor Age",
-    crustThickness: "Crust Thickness",
-  };
+export const LAYER_LABELS: Record<
+  keyof ExtractAtomValue<typeof layersAtom>,
+  string
+> = {
+  hillshade: "Hillshade",
+  plateMovementVectors: "Plate Movement Vectors",
+  plates: "Tectonic Plates (Bird, 2003)",
+  platesNew: "Tectonic Plates (Hasterok, 2022)",
+  seafloorAge: "Seafloor Age",
+  crustThickness: "Crust Thickness",
+};
 
 const FitDataToScreen = ({
   dataKey,
