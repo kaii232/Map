@@ -148,6 +148,7 @@ export const LoadSmt = async (
       bl: smtInInvest.smtBl,
       longitude: smtInInvest.smtLon,
       latitude: smtInInvest.smtLat,
+      source: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${smtInInvest.smtGeom})`,
     })
     .from(smtInInvest)
@@ -187,6 +188,7 @@ export const LoadVlc = async (
       gvp: vlcInInvest.vlcGvpUrl,
       longitude: vlcInInvest.vlcLon,
       latitude: vlcInInvest.vlcLat,
+      catalog: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${vlcInInvest.vlcGeom})`,
     })
     .from(vlcInInvest)
@@ -344,6 +346,7 @@ export const LoadHf = async (
       reference: heatflowInInvest.hfRef,
       longitude: heatflowInInvest.hfLon,
       latitude: heatflowInInvest.hfLat,
+      source: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${heatflowInInvest.hfGeom})`,
     })
     .from(heatflowInInvest)
