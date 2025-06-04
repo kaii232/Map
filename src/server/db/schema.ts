@@ -458,6 +458,110 @@ export const user = invest.table(
   (table) => [unique("user_email_unique").on(table.email)],
 );
 
+export const rockSampleInInvest = invest.table(
+  "rock_sample",
+  {
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    rockSampleId: bigint("rock_sample_id", { mode: "number" })
+      .primaryKey()
+      .generatedByDefaultAsIdentity({
+        name: "invest.rock_sample_rock_sample_id_seq",
+        startWith: 1,
+        increment: 1,
+        minValue: 1,
+        maxValue: 9223372036854775807,
+        cache: 1,
+      }),
+    rockSrc: text("rock_src").default("NULL"),
+    rockSampleName: text("rock_sample_name"),
+    rockSetting: text("rock_setting").default("NULL"),
+    rockLoc: text("rock_loc").default("NULL"),
+    rockLocCmt: text("rock_loc_cmt").default("NULL"),
+    rockLatMin: doublePrecision("rock_lat_min"),
+    rockLatMax: doublePrecision("rock_lat_max"),
+    rockLonMin: doublePrecision("rock_lon_min"),
+    rockLonMax: doublePrecision("rock_lon_max"),
+    rockGeom: geometry("rock_geom"),
+    rockName: text("rock_name").default("NULL"),
+    rockTexture: text("rock_texture"),
+    rockAlteration: text("rock_alteration"),
+    rockMineral: text("rock_mineral"),
+    rockCrystalType: text("rock_crystal_type"),
+    rockGrain: text("rock_grain"),
+    rockSio2: text("rock_sio2"),
+    rockTio2: text("rock_tio2"),
+    rockZro2: text("rock_zro2"),
+    rockTho2: text("rock_tho2"),
+    rockAl2O3: text("rock_al2o3"),
+    rockCr2O3: text("rock_cr2o3"),
+    rockLa2O3: text("rock_la2o3"),
+    rockCe2O3: text("rock_ce2o3"),
+    rockV2O3: text("rock_v2o3"),
+    rockNb2O5: text("rock_nb2o5"),
+    rockFe2O3T: text("rock_fe2o3t"),
+    rockFe2O3: text("rock_fe2o3"),
+    rockFeot: text("rock_feot"),
+    rockFeo: text("rock_feo"),
+    rockCao: text("rock_cao"),
+    rockMgo: text("rock_mgo"),
+    rockMno: text("rock_mno"),
+    rockBao: text("rock_bao"),
+    rockSro: text("rock_sro"),
+    rockPbo: text("rock_pbo"),
+    rockNio: text("rock_nio"),
+    rockZno: text("rock_zno"),
+    rockCoo: text("rock_coo"),
+    rockRb2O: text("rock_rb2o"),
+    rockK2O: text("rock_k2o"),
+    rockNa2O: text("rock_na2o"),
+    rockLi2O: text("rock_li2o"),
+    rockP2O5: text("rock_p2o5"),
+    rockH2O: text("rock_h2o"),
+    rockH2Op: text("rock_h2op"),
+    rockH2Om: text("rock_h2om"),
+    rockCo2: text("rock_co2"),
+    rockF: text("rock_f"),
+    rockCl: text("rock_cl"),
+    rockCl2: text("rock_cl2"),
+    rockBr: text("rock_br"),
+    rockOh: text("rock_oh"),
+    rockSo2: text("rock_so2"),
+    rockSo3: text("rock_so3"),
+    rockSo4: text("rock_so4"),
+    rockS: text("rock_s"),
+    rockS2: text("rock_s2"),
+    rockLoi: text("rock_loi"),
+    rockO: text("rock_o"),
+    rockSi: text("rock_si"),
+    rockAl: text("rock_al"),
+    rockFe: text("rock_fe"),
+    rockMg: text("rock_mg"),
+    rockCa: text("rock_ca"),
+    rockK: text("rock_k"),
+    rockNa: text("rock_na"),
+    rockAgeKa: text("rock_age_ka"),
+    rockAgeMa: text("rock_age_ma"),
+    srcId: integer("src_id"),
+    ccLoadId: smallint("cc_load_id").default(sql`'1'`),
+    rockLoaddate: timestamp("rock_loaddate", {
+      withTimezone: true,
+      mode: "string",
+    }).defaultNow(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.ccLoadId],
+      foreignColumns: [ccInInvest.ccId],
+      name: "rock_sample_cc_load_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.srcId],
+      foreignColumns: [biblInInvest.biblId],
+      name: "rock_sample_src_id_fkey",
+    }),
+  ],
+);
+
 export const heatflowInInvest = invest.table(
   "heatflow",
   {
@@ -697,6 +801,20 @@ export const vlcInInvestRelations = relations(vlcInInvest, ({ one }) => ({
     references: [biblInInvest.biblId],
   }),
 }));
+
+export const rockSampleInInvestRelations = relations(
+  rockSampleInInvest,
+  ({ one }) => ({
+    ccInInvest: one(ccInInvest, {
+      fields: [rockSampleInInvest.ccLoadId],
+      references: [ccInInvest.ccId],
+    }),
+    biblInInvest: one(biblInInvest, {
+      fields: [rockSampleInInvest.srcId],
+      references: [biblInInvest.biblId],
+    }),
+  }),
+);
 
 export const heatflowInInvestRelations = relations(
   heatflowInInvest,
