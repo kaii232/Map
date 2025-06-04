@@ -440,7 +440,7 @@ export const LoadRock = async (
   const filters = await generateFilters(
     ALL_FILTERS.rock,
     {},
-    true,
+    false,
     rockSampleInInvest.rockGeom,
     drawing,
   );
