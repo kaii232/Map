@@ -111,7 +111,7 @@ const getSeisProps = (
             15,
             ["interpolate", ["exponential", 2], ["get", property], 2, 8, 9, 24],
           ]
-        : ["interpolate", ["linear"], ["zoom"], 5, 3, 15, 12],
+        : ["interpolate", ["linear"], ["zoom"], 5, 3, 12, 12],
   },
   filter:
     property !== "none"
@@ -384,8 +384,8 @@ export default function DatabaseMap({
               ["linear"],
               ["zoom"],
               5,
-              4,
-              10,
+              3,
+              12,
               12,
             ],
             "circle-stroke-width": [
@@ -458,45 +458,7 @@ export default function DatabaseMap({
         getSeisProps("ms"),
         getSeisProps("none"),
       ],
-      hf: {
-        type: "circle",
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 3, 15, 12],
-          "circle-stroke-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            5,
-            0,
-            8,
-            2,
-          ],
-          "circle-stroke-color": [
-            "interpolate",
-            ["linear"],
-            ["get", "qval"],
-            -400,
-            "#f8fafc",
-            -100,
-            "#000000",
-            100,
-            "#000000",
-            400,
-            "#f8fafc",
-          ],
-          "circle-opacity": 0.7,
-          "circle-color": [
-            "interpolate",
-            ["linear"],
-            ["get", "qval"],
-            ...getInterpolateRange(
-              [-400, 400],
-              ["#0c4a6e", "#0284c7", "#eeeeee", "#e11d48", "#4c0519"],
-            ),
-          ],
-        },
-      },
-      rock: [
+      hf: [
         {
           id: "Icon",
           type: "circle",
@@ -506,8 +468,8 @@ export default function DatabaseMap({
               ["linear"],
               ["zoom"],
               5,
-              4,
-              10,
+              3,
+              12,
               12,
             ],
             "circle-stroke-width": [
@@ -519,6 +481,60 @@ export default function DatabaseMap({
               8,
               2,
             ],
+            "circle-stroke-color": [
+              "interpolate",
+              ["linear"],
+              ["get", "qval"],
+              -400,
+              "#f8fafc",
+              -100,
+              "#000000",
+              100,
+              "#000000",
+              400,
+              "#f8fafc",
+            ],
+            "circle-opacity": 0.7,
+            "circle-color": [
+              "interpolate",
+              ["linear"],
+              ["get", "qval"],
+              ...getInterpolateRange(
+                [-400, 400],
+                ["#0c4a6e", "#0284c7", "#eeeeee", "#e11d48", "#4c0519"],
+              ),
+            ],
+          },
+        },
+        {
+          id: "Label",
+          ...mapSymbolStyle(undefined, 1.5),
+        },
+      ],
+      rock: [
+        {
+          id: "Icon",
+          type: "circle",
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              3,
+              12,
+              12,
+            ],
+            "circle-stroke-width": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              0,
+              8,
+              2,
+            ],
+            "circle-opacity": 0.7,
             "circle-color": "#b85a1f",
             "circle-stroke-color": "#f8fafc",
           },
