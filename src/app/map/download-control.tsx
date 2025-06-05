@@ -2,7 +2,6 @@
 
 import { TourStep } from "@/components/tour";
 import Spinner from "@/components/ui/spinner";
-import type { ALL_FILTERS } from "@/lib/filters";
 import { velocityStops } from "@/lib/utils";
 import { downloadZip } from "client-zip";
 import { ExtractAtomValue, useAtomValue, useSetAtom } from "jotai";
@@ -12,12 +11,7 @@ import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMap } from "react-map-gl/maplibre";
 import { toast } from "sonner";
-import {
-  dataAtom,
-  dataVisibilityAtom,
-  layersAtom,
-  panelOpenAtom,
-} from "./atoms";
+import { layersAtom, panelOpenAtom } from "./atoms";
 
 /** Layer IDs for each map layer for separating when downloading */
 const SOURCES_LAYERS: Record<
@@ -84,9 +78,7 @@ const prepareNextLayer = (
 };
 
 /** Downloads the currently visible map in separate layers */
-const DownloadControl = () => {
-  const data = useAtomValue(dataAtom);
-  const dataVisibility = useAtomValue(dataVisibilityAtom);
+const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
   const layers = useAtomValue(layersAtom);
   const [controlContainer, setControlContainer] = useState<Element | null>(
     null,
@@ -97,6 +89,7 @@ const DownloadControl = () => {
 
   const drawLayers = () => {
     if (!map) return;
+    const mapDataLayers = layerIds;
     setIsDrawing(true);
     toast("Downloading map layers...", {
       icon: <Spinner className="size-5" />,
@@ -162,25 +155,25 @@ const DownloadControl = () => {
       }
       if (iteration === -1) {
         // Hide everything but the basemap
-        Object.entries(dataVisibility).map(([src, visible]) => {
-          if (visible && data[src as keyof typeof ALL_FILTERS]) {
-            if (src === "seis") {
-              layersToExport.push([
-                `${src}Mw`,
-                `${src}Mb`,
-                `${src}Ms`,
-                `${src}None`,
-              ]);
-              newMap.setLayoutProperty(`${src}Mw`, "visibility", "none");
-              newMap.setLayoutProperty(`${src}Mb`, "visibility", "none");
-              newMap.setLayoutProperty(`${src}Ms`, "visibility", "none");
-              newMap.setLayoutProperty(`${src}None`, "visibility", "none");
-            } else {
-              layersToExport.push(src);
-              newMap.setLayoutProperty(src, "visibility", "none");
-            }
+        mapDataLayers.forEach((layer) => {
+          if (Array.isArray(layer)) {
+            const group: string[] = []; //Technically if one layer is visible all are visible so this could just be a boolean, but who knows
+            layer.forEach((layerPart) => {
+              if (newMap.getLayer(layerPart)?.visibility === "visible") {
+                group.push(layerPart);
+                newMap.setLayoutProperty(layerPart, "visibility", "none");
+              }
+            });
+            if (group.length > 0) layersToExport.push(group);
+            return;
+          }
+
+          if (newMap.getLayer(layer)?.visibility === "visible") {
+            layersToExport.push(layer);
+            newMap.setLayoutProperty(layer, "visibility", "none");
           }
         });
+
         // For additional data layers
         Object.entries(layers).map(([src, visible]) => {
           // If terrain is enabled do not disable hillshade as "idle" event will not be fired

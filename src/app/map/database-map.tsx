@@ -533,7 +533,17 @@ export default function DatabaseMap({
         }
         ids.push(key);
         return ids;
-      }, []),
+      Object.entries(mapDataLayers).reduce<(string | string[])[]>(
+        (ids, [key, val]) => {
+          if (Array.isArray(val)) {
+            ids.push(val.map((valLayers) => `${key}${valLayers.id}`));
+            return ids;
+          }
+          ids.push(key);
+          return ids;
+        },
+        [],
+      ),
     [mapDataLayers],
   );
 
@@ -553,7 +563,7 @@ export default function DatabaseMap({
         onMouseMove={onHover}
         onClick={onClick}
         interactiveLayerIds={[
-          ...mapDataIds,
+          ...mapDataIds.flat(),
           "plates",
           "platesBoundaries",
           "platesNew",
@@ -567,7 +577,7 @@ export default function DatabaseMap({
         <NavigationControl />
         <DrawControl modes={drawOptionsModes} open onUpdate={onUpdate} />
         <TerrainControl source={"terrain"} exaggeration={1.5} />
-        <DownloadControl />
+        <DownloadControl layerIds={mapDataIds} />
         <RestartTour />
         <Basemaps />
         <MapLayers />
