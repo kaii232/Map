@@ -64,13 +64,6 @@ export type FiltersType =
 /** Type for a generic object containing some filters */
 export type GenericFilterDefine = Record<string, FiltersType>;
 
-/** Infer the types of data that needs to be retrieved from the server for a filter define object */
-export type InferFilterTypes<
-  T extends ClientFilterDefine<GenericFilterDefine>,
-> = {
-  [P in keyof T as FilterServerPopulated<T, P>]: NarrowFilterType<T[P]["type"]>;
-};
-
 /** Type that determines the type of data that needs to come from the server in order to populate the filter */
 export type NarrowFilterType<T extends FiltersType["type"]> = T extends "select"
   ? Categories
@@ -87,6 +80,13 @@ type FilterServerPopulated<
   T extends ClientFilterDefine<GenericFilterDefine>,
   P extends keyof T,
 > = T[P]["type"] extends "search" ? never : P;
+
+/** Infer the types of data that needs to be retrieved from the server for a filter define object */
+export type InferFilterTypes<
+  T extends ClientFilterDefine<GenericFilterDefine>,
+> = {
+  [P in keyof T as FilterServerPopulated<T, P>]: NarrowFilterType<T[P]["type"]>;
+};
 
 /** Default value for select filter */
 export const SELECT_DEFAULT = "All";
