@@ -72,6 +72,11 @@ const sqlToGeojson = (
   };
 };
 
+/** Helper function to enable type safety when defining units */
+const defineUnits = <T extends Record<string, unknown>[]>(
+  units: Partial<Record<keyof T[number], string>>,
+) => units;
+
 /** Restricts data if the user is not logged in */
 const isLoggedIn = async () => {
   const session = await auth.api.getSession({
@@ -161,20 +166,21 @@ export const LoadSmt = async (
     .from(smtInInvest)
     .leftJoin(biblInInvest, eq(smtInInvest.smtSrcId, biblInInvest.biblId))
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data);
+  const units = defineUnits<typeof data>({
+    elevation: "m",
+    base: "m",
+    summit: "m",
+    bw: "km",
+    ba: "km",
+    bl: "km²",
+  });
 
   return {
     success: true,
     data: {
-      geojson: dataReturn,
-      units: {
-        elevation: "m",
-        base: "m",
-        summit: "m",
-        bw: "km",
-        ba: "km",
-        bl: "km²",
-      },
+      geojson,
+      units,
     },
   };
 };
@@ -219,11 +225,14 @@ export const LoadVlc = async (
     )
     .leftJoin(biblInInvest, eq(vlcInInvest.vlcSrcId, biblInInvest.biblId))
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data);
+  const units = defineUnits<typeof data>({
+    elevation: "m",
+  });
 
   return {
     success: true,
-    data: { geojson: dataReturn, units: { elevation: "m" } },
+    data: { geojson, units },
   };
 };
 
@@ -266,11 +275,14 @@ export const LoadGNSS = async (
       eq(stnTypeInInvest.stnTypeId, gnssStnInInvest.stnTypeId),
     )
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data);
+  const units = defineUnits<typeof data>({
+    elevation: "m",
+  });
 
   return {
     success: true,
-    data: { geojson: dataReturn, units: { elevation: "m" } },
+    data: { geojson, units },
   };
 };
 
@@ -312,22 +324,23 @@ export const LoadFlt = async (
     .from(fltInInvest)
     .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId))
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data);
+  const units = defineUnits<typeof data>({
+    length: "km",
+    sliprate: "mm/yr",
+    strikeSlip: "mm/yr",
+    verticalSeparation: "mm/yr",
+    horizontalSeparation: "mm/yr",
+    dip: "°",
+    rake: "°",
+    lockingDepth: "km",
+  });
 
   return {
     success: true,
     data: {
-      geojson: dataReturn,
-      units: {
-        length: "km",
-        sliprate: "mm/yr",
-        strikeSlip: "mm/yr",
-        verticalSeparation: "mm/yr",
-        horizontalSeparation: "mm/yr",
-        dip: "°",
-        rake: "°",
-        lockingDepth: "km",
-      },
+      geojson,
+      units,
     },
   };
 };
@@ -363,11 +376,14 @@ export const LoadSeis = async (
     .from(seisInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, seisInInvest.seisCatId))
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data);
+  const units = defineUnits<typeof data>({
+    depth: "m",
+  });
 
   return {
     success: true,
-    data: { geojson: dataReturn, units: { depth: "m" } },
+    data: { geojson, units },
   };
 };
 
@@ -397,11 +413,15 @@ export const LoadHf = async (
     .from(heatflowInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, heatflowInInvest.hfSrcId))
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data);
+  const units = defineUnits<typeof data>({
+    elevation: "m",
+    qval: "W/m²",
+  });
 
   return {
     success: true,
-    data: { geojson: dataReturn, units: { elevation: "m", qval: "W/m²" } },
+    data: { geojson, units },
   };
 };
 
@@ -435,11 +455,12 @@ export const LoadSlab2 = async (
       eq(countryInInvest.countryId, slab2InInvest.slabCountryId),
     )
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data);
+  const units = defineUnits<typeof data>({ depth: "km" });
 
   return {
     success: true,
-    data: { geojson: dataReturn, units: { depth: "km" } },
+    data: { geojson, units },
   };
 };
 
@@ -480,13 +501,20 @@ export const LoadSlip = async (
     )
     .where(and(...filters));
   const range: Range = data.length ? data[0].range : [0, 1]; // Range needs to be strictly ascending or error is thrown
-  const dataReturn = sqlToGeojson(data, ["range"]);
+  const geojson = sqlToGeojson(data, ["range"]);
+  const units = defineUnits<typeof data>({
+    depth: "km",
+    strike: "°",
+    rake: "°",
+    dip: "°",
+    slip: "m",
+  });
 
   return {
     success: true,
     data: {
-      geojson: dataReturn,
-      units: { depth: "km", strike: "°", rake: "°", dip: "°", slip: "m" },
+      geojson,
+      units,
     },
     metadata: range,
   };
@@ -510,9 +538,9 @@ export const LoadRock = async (
       locationComment: rockSampleInInvest.rockLocCmt,
       rockName: rockSampleInInvest.rockName,
       mineral: rockSampleInInvest.rockMineral,
-      "si\\O2": rockSampleInInvest.rockSio2, // Backslash so the camelCaseToWords function does not split it into Si O2
-      "na2\\O": rockSampleInInvest.rockNa2O,
-      "k2\\O": rockSampleInInvest.rockK2O,
+      "si\\O₂": rockSampleInInvest.rockSio2, // Backslash so the camelCaseToWords function does not split it into Si O₂
+      "na₂\\O": rockSampleInInvest.rockNa2O,
+      "k₂\\O": rockSampleInInvest.rockK2O,
       ageKa: rockSampleInInvest.rockAgeKa,
       ageMa: rockSampleInInvest.rockAgeMa,
       source: biblInInvest.biblTitle,
@@ -521,19 +549,20 @@ export const LoadRock = async (
     .from(rockSampleInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, rockSampleInInvest.srcId))
     .where(and(...filters));
-  const dataReturn = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data);
+  const units = defineUnits<typeof data>({
+    "si\\O₂": "wt%",
+    "na₂\\O": "wt%",
+    "k₂\\O": "wt%",
+    ageKa: "Ka",
+    ageMa: "Ma",
+  });
 
   return {
     success: true,
     data: {
-      geojson: dataReturn,
-      units: {
-        "si\\O2": "wt%",
-        "na2\\O": "wt%",
-        "k2\\O": "wt%",
-        ageKa: "Ka",
-        ageMa: "Ma",
-      },
+      geojson,
+      units,
     },
   };
 };
