@@ -124,6 +124,35 @@ const getSeisProps = (
         ],
 });
 
+const mapLabelStyleProps = (
+  get: string = "name",
+): Extract<LayerProps, { type: "symbol" }> => {
+  return {
+    type: "symbol",
+    layout: {
+      "text-field": ["get", get],
+      "text-font": ["Noto Sans Regular"],
+      "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.3, 10, 1],
+      "text-offset": [0, 1.25],
+      "text-anchor": "top",
+      "text-size": 12,
+      "text-optional": true,
+      "icon-overlap": "always",
+    },
+    paint: {
+      "text-halo-color": "#F8FAFCCC",
+      "text-halo-width": 2,
+      "text-opacity": {
+        type: "interval",
+        stops: [
+          [7, 0],
+          [8, 1],
+        ],
+      },
+    },
+  };
+};
+
 const PopupContent = ({
   objKey,
   value,
@@ -388,31 +417,38 @@ export default function DatabaseMap({
           },
         },
       },
-      gnss: {
-        type: "symbol",
-        layout: {
-          "icon-image": "custom:GNSS",
-          "text-field": ["get", "name"],
-          "text-font": ["Noto Sans Regular"],
-          "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.3, 10, 1],
-          "text-offset": [0, 1],
-          "text-anchor": "top",
-          "text-size": 12,
-          "text-optional": true,
-          "icon-overlap": "always",
-        },
-        paint: {
-          "text-halo-color": "#F8FAFCCC",
-          "text-halo-width": 2,
-          "text-opacity": {
-            type: "interval",
-            stops: [
-              [7, 0],
-              [8, 1],
+      gnss: [
+        {
+          id: "Icon",
+          type: "circle",
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              4,
+              10,
+              12,
             ],
+            "circle-stroke-width": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              0,
+              8,
+              2,
+            ],
+            "circle-color": "#E39F40",
+            "circle-stroke-color": "#f8fafc",
           },
         },
-      },
+        {
+          id: "Label",
+          ...mapLabelStyleProps(),
+        },
+      ],
       flt: {
         type: "line",
         layout: {
@@ -503,23 +539,38 @@ export default function DatabaseMap({
           ],
         },
       },
-      rock: {
-        type: "circle",
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 3, 10, 16],
-          "circle-stroke-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            5,
-            0,
-            8,
-            2,
-          ],
-          "circle-color": "#b85a1f",
-          "circle-stroke-color": "#f8fafc",
+      rock: [
+        {
+          id: "Icon",
+          type: "circle",
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              4,
+              10,
+              12,
+            ],
+            "circle-stroke-width": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              0,
+              8,
+              2,
+            ],
+            "circle-color": "#b85a1f",
+            "circle-stroke-color": "#f8fafc",
+          },
         },
-      },
+        {
+          id: "Label",
+          ...mapLabelStyleProps(),
+        },
+      ],
     }),
     [slipRange],
   );
@@ -527,12 +578,6 @@ export default function DatabaseMap({
   // Gets all the layer IDs for the map's interactiveLayerIds prop
   const mapDataIds = useMemo(
     () =>
-      Object.entries(mapDataLayers).reduce<string[]>((ids, [key, val]) => {
-        if (Array.isArray(val)) {
-          return ids.concat(val.map((valLayers) => `${key}${valLayers.id}`));
-        }
-        ids.push(key);
-        return ids;
       Object.entries(mapDataLayers).reduce<(string | string[])[]>(
         (ids, [key, val]) => {
           if (Array.isArray(val)) {
