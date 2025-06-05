@@ -116,7 +116,11 @@ const FitDataToScreen = ({
 }) => {
   const { map } = useMap();
   const loadedData = useAtomValue(dataAtom);
-  if (!map || !loadedData[dataKey] || loadedData[dataKey].features.length === 0)
+  if (
+    !map ||
+    !loadedData[dataKey] ||
+    loadedData[dataKey].geojson.features.length === 0
+  )
     return (
       <Button variant="outline" className="w-full" disabled>
         Fit Data to Screen
@@ -128,7 +132,12 @@ const FitDataToScreen = ({
       className="w-full"
       onClick={() => {
         map.fitBounds(
-          bbox(loadedData[dataKey]!) as [number, number, number, number],
+          bbox(loadedData[dataKey]!.geojson) as [
+            number,
+            number,
+            number,
+            number,
+          ],
           {
             maxZoom: 15,
             duration: 3000,
@@ -180,7 +189,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
       visible:
         dataVisibility.seis &&
         !!mapData.seis &&
-        mapData.seis.features.length > 0,
+        mapData.seis.geojson.features.length > 0,
     },
     {
       name: "Heatflow qval",
@@ -189,7 +198,9 @@ const ColourRamps = ({ className }: { className?: string }) => {
       min: "<-400W/m²",
       max: ">400W/m²",
       visible:
-        dataVisibility.hf && !!mapData.hf && mapData.hf.features.length > 0,
+        dataVisibility.hf &&
+        !!mapData.hf &&
+        mapData.hf.geojson.features.length > 0,
     },
     {
       name: "Slab depth",
@@ -200,7 +211,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
       visible:
         dataVisibility.slab2 &&
         !!mapData.slab2 &&
-        mapData.slab2.features.length > 0,
+        mapData.slab2.geojson.features.length > 0,
     },
     {
       name: "Slip",
@@ -211,7 +222,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
       visible:
         dataVisibility.slip &&
         !!mapData.slip &&
-        mapData.slip.features.length > 0,
+        mapData.slip.geojson.features.length > 0,
     },
     {
       name: "Crust Thickness",

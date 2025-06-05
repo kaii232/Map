@@ -1,6 +1,7 @@
 import { ALL_FILTERS_CLIENT } from "@/lib/filters";
 import { BasemapNames, Range } from "@/lib/types";
-import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
+import { ActionReturn } from "@/server/actions";
+import { MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
 
 /** Keeps track of which layers are visible */
@@ -32,7 +33,12 @@ export const dataVisibilityAtom =
   atom<Record<keyof typeof ALL_FILTERS_CLIENT, boolean>>(defaultVisibility());
 /** Contains the geojson for each data type */
 export const dataAtom = atom<
-  Partial<Record<keyof typeof ALL_FILTERS_CLIENT, FeatureCollection>>
+  Partial<
+    Record<
+      keyof typeof ALL_FILTERS_CLIENT,
+      Extract<ActionReturn, { success: true }>["data"]
+    >
+  >
 >({});
 
 /** Contains the slip range of currently loaded slip data. Used for mapping the colour range to the slip range */

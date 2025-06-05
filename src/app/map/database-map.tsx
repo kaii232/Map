@@ -127,9 +127,11 @@ const getSeisProps = (
 const PopupContent = ({
   objKey,
   value,
+  units,
 }: {
   objKey: string;
   value: string | number;
+  units?: string;
 }) => {
   if (typeof value === "string" && value.includes("https://"))
     return (
@@ -160,6 +162,7 @@ const PopupContent = ({
   return (
     <div className="text-sm text-neutral-300">
       <span className="font-semibold">{camelCaseToWords(objKey)}:</span> {value}
+      {units}
     </div>
   );
 };
@@ -240,7 +243,9 @@ export default function DatabaseMap({
       }
       if (
         !selectedFeature ||
-        (selectedFeature && selectedFeature.feature.id !== hoveredFeature.id)
+        (selectedFeature &&
+          (selectedFeature.feature.source !== hoveredFeature.source ||
+            selectedFeature.feature.id !== hoveredFeature.id)) // IDs are only unique within each source
       ) {
         const popupLon =
           hoveredFeature.geometry.type === "Point"
@@ -574,7 +579,7 @@ export default function DatabaseMap({
             <Source
               id={typedKey + "Source"}
               type="geojson"
-              data={mapData[typedKey]}
+              data={mapData[typedKey].geojson}
               key={typedKey}
             >
               {Array.isArray(val) ? (
@@ -640,7 +645,21 @@ export default function DatabaseMap({
             {Object.entries(hoverInfo.feature.properties).map(
               ([key, value]) => {
                 if (key === "name" || !value) return;
-                return <PopupContent key={key} objKey={key} value={value} />;
+                return (
+                  <PopupContent
+                    key={key}
+                    objKey={key}
+                    value={value}
+                    units={
+                      mapData[
+                        hoverInfo.feature.source.slice(
+                          0,
+                          -6,
+                        ) as keyof typeof mapData
+                      ]?.units?.[key]
+                    }
+                  />
+                );
               },
             )}
           </Popup>
@@ -677,7 +696,21 @@ export default function DatabaseMap({
               {Object.entries(selectedFeature.feature.properties).map(
                 ([key, value]) => {
                   if (key === "name" || !value) return;
-                  return <PopupContent key={key} objKey={key} value={value} />;
+                  return (
+                    <PopupContent
+                      key={key}
+                      objKey={key}
+                      value={value}
+                      units={
+                        mapData[
+                          selectedFeature.feature.source.slice(
+                            0,
+                            -6,
+                          ) as keyof typeof mapData
+                        ]?.units?.[key]
+                      }
+                    />
+                  );
                 },
               )}
             </div>

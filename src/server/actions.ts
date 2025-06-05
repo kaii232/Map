@@ -31,8 +31,15 @@ import {
 } from "./db/schema";
 
 type ActionSuccess<T = undefined> = T extends undefined
-  ? { success: true; data: FeatureCollection }
-  : { success: true; data: FeatureCollection; metadata: T };
+  ? {
+      success: true;
+      data: { geojson: FeatureCollection; units?: Record<string, string> };
+    }
+  : {
+      success: true;
+      data: { geojson: FeatureCollection; units?: Record<string, string> };
+      metadata: T;
+    };
 
 export type ActionReturn<T = undefined> =
   | ActionSuccess<T>
@@ -156,7 +163,20 @@ export const LoadSmt = async (
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
-  return { success: true, data: dataReturn };
+  return {
+    success: true,
+    data: {
+      geojson: dataReturn,
+      units: {
+        elevation: "m",
+        base: "m",
+        summit: "m",
+        bw: "km",
+        ba: "km",
+        bl: "km²",
+      },
+    },
+  };
 };
 
 const vlcFormSchema = z.object(createZodSchema(ALL_FILTERS.vlc));
@@ -201,7 +221,10 @@ export const LoadVlc = async (
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
-  return { success: true, data: dataReturn };
+  return {
+    success: true,
+    data: { geojson: dataReturn, units: { elevation: "m" } },
+  };
 };
 
 const gnssFormSchema = z.object(createZodSchema(ALL_FILTERS.gnss));
@@ -245,7 +268,10 @@ export const LoadGNSS = async (
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
-  return { success: true, data: dataReturn };
+  return {
+    success: true,
+    data: { geojson: dataReturn, units: { elevation: "m" } },
+  };
 };
 
 const fltFormSchema = z.object(createZodSchema(ALL_FILTERS.flt));
@@ -288,7 +314,22 @@ export const LoadFlt = async (
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
-  return { success: true, data: dataReturn };
+  return {
+    success: true,
+    data: {
+      geojson: dataReturn,
+      units: {
+        length: "km",
+        sliprate: "mm/yr",
+        strikeSlip: "mm/yr",
+        verticalSeparation: "mm/yr",
+        horizontalSeparation: "mm/yr",
+        dip: "°",
+        rake: "°",
+        lockingDepth: "km",
+      },
+    },
+  };
 };
 
 const seisFormSchema = z.object(createZodSchema(ALL_FILTERS.seis));
@@ -324,7 +365,10 @@ export const LoadSeis = async (
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
-  return { success: true, data: dataReturn };
+  return {
+    success: true,
+    data: { geojson: dataReturn, units: { depth: "m" } },
+  };
 };
 
 export const LoadHf = async (
@@ -355,7 +399,10 @@ export const LoadHf = async (
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
-  return { success: true, data: dataReturn };
+  return {
+    success: true,
+    data: { geojson: dataReturn, units: { elevation: "m", qval: "W/m²" } },
+  };
 };
 
 const slab2FormSchema = z.object(createZodSchema(ALL_FILTERS.slab2));
@@ -390,7 +437,10 @@ export const LoadSlab2 = async (
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
-  return { success: true, data: dataReturn };
+  return {
+    success: true,
+    data: { geojson: dataReturn, units: { depth: "km" } },
+  };
 };
 
 const slipFormSchema = z.object(createZodSchema(ALL_FILTERS.slip));
@@ -432,7 +482,14 @@ export const LoadSlip = async (
   const range: Range = data.length ? data[0].range : [0, 1]; // Range needs to be strictly ascending or error is thrown
   const dataReturn = sqlToGeojson(data, ["range"]);
 
-  return { success: true, data: dataReturn, metadata: range };
+  return {
+    success: true,
+    data: {
+      geojson: dataReturn,
+      units: { depth: "km", strike: "°", rake: "°", dip: "°", slip: "m" },
+    },
+    metadata: range,
+  };
 };
 
 export const LoadRock = async (
@@ -466,5 +523,17 @@ export const LoadRock = async (
     .where(and(...filters));
   const dataReturn = sqlToGeojson(data);
 
-  return { success: true, data: dataReturn };
+  return {
+    success: true,
+    data: {
+      geojson: dataReturn,
+      units: {
+        "si\\O2": "wt%",
+        "na2\\O": "wt%",
+        "k2\\O": "wt%",
+        ageKa: "Ka",
+        ageMa: "Ma",
+      },
+    },
+  };
 };

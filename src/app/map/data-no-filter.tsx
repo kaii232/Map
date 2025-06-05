@@ -46,7 +46,7 @@ const DataNoFilter = ({
       toast.dismiss(`Load${dataKey}`);
       if (data.success) {
         toast.success(
-          `Successfully loaded ${data.data.features.length} ${TOAST_MESSAGE[dataKey]}`,
+          `Successfully loaded ${data.data.geojson.features.length} ${TOAST_MESSAGE[dataKey]}`,
         );
         setMapData((prev) => ({
           ...prev,
@@ -65,7 +65,7 @@ const DataNoFilter = ({
         </Button>
         <DownloadButton
           className="w-full"
-          data={mapData[dataKey]}
+          data={mapData[dataKey]?.geojson}
           fileName={`${dataKey}_invest.csv`}
         />
         {additionalActions && (
