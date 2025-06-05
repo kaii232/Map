@@ -126,6 +126,7 @@ const getSeisProps = (
 
 const mapSymbolStyle = (
   get: string = "name",
+  offset: number = 1.2,
   icon?: string,
 ): Extract<LayerProps, { type: "symbol" }> => {
   return {
@@ -133,11 +134,11 @@ const mapSymbolStyle = (
     layout: {
       "text-field": ["get", get],
       "text-font": ["Noto Sans Regular"],
-      "text-offset": [0, 1.25],
+      "text-offset": [0, offset],
       "text-anchor": "top",
       "text-size": 12,
       "text-optional": true,
-      ...(!!icon && {
+      ...(icon && {
         "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.3, 10, 1],
         "icon-overlap": "always",
         "icon-image": icon,
@@ -371,8 +372,8 @@ export default function DatabaseMap({
           ],
         },
       },
-      vlc: mapSymbolStyle("name", "custom:volcano"),
-      smt: mapSymbolStyle("name", "custom:seamount"),
+      vlc: mapSymbolStyle(undefined, undefined, "custom:volcano"),
+      smt: mapSymbolStyle(undefined, undefined, "custom:seamount"),
       gnss: [
         {
           id: "Icon",
@@ -402,7 +403,7 @@ export default function DatabaseMap({
         },
         {
           id: "Label",
-          ...mapSymbolStyle(),
+          ...mapSymbolStyle(undefined, 1.5),
         },
       ],
       flt: {
@@ -524,7 +525,7 @@ export default function DatabaseMap({
         },
         {
           id: "Label",
-          ...mapSymbolStyle(),
+          ...mapSymbolStyle(undefined, 1.5),
         },
       ],
     }),
