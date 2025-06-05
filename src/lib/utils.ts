@@ -98,3 +98,11 @@ export function camelCaseToWords(s: string) {
   const result = s.replace(/(?<!\\)([A-Z])/g, " $1").replace("\\", "");
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
+
+export function downloadData(blob: Blob, fileName: string) {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  link.click();
+  link.remove();
+}

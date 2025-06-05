@@ -2,7 +2,7 @@
 
 import { TourStep } from "@/components/tour";
 import Spinner from "@/components/ui/spinner";
-import { velocityStops } from "@/lib/utils";
+import { downloadData, velocityStops } from "@/lib/utils";
 import { downloadZip } from "client-zip";
 import { ExtractAtomValue, useAtomValue, useSetAtom } from "jotai";
 import { Download } from "lucide-react";
@@ -39,11 +39,7 @@ const downladFiles = async (images: Blob[]) => {
       input: image,
     })),
   ).blob();
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "map_layers.zip";
-  link.click();
-  link.remove();
+  downloadData(blob, "map_layers.zip");
 };
 
 /** Toggles the visibility of the previous and current layers */
