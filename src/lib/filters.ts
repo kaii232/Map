@@ -185,12 +185,13 @@ const fltFilters = createDataFilter({
     dbCol: fltInInvest.fltSliprate,
     name: "Sliprate",
     type: "range",
+    units: "mm/yr",
   },
   depthRange: {
     dbCol: fltInInvest.fltLockDepth,
-    name: "Depth",
+    name: "Locking Depth",
     type: "range",
-    units: "m",
+    units: "km",
   },
   types: {
     dbCol: fltInInvest.fltType,

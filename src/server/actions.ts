@@ -188,6 +188,7 @@ export const LoadVlc = async (
       gvp: vlcInInvest.vlcGvpUrl,
       longitude: vlcInInvest.vlcLon,
       latitude: vlcInInvest.vlcLat,
+      timePeriod: vlcInInvest.vlcTimePeriod,
       catalog: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${vlcInInvest.vlcGeom})`,
     })
@@ -271,14 +272,14 @@ export const LoadFlt = async (
       type: fltInInvest.fltType,
       length: fltInInvest.fltLen,
       sliprate: fltInInvest.fltSliprate,
-      ss: fltInInvest.fltSs,
+      strikeSlip: fltInInvest.fltSs,
       verticalSeparation: fltInInvest.fltVertSep,
       horizontalSeparation: fltInInvest.fltHorzSep,
       dip: fltInInvest.fltDip,
       rake: fltInInvest.fltRake,
       maxm: fltInInvest.fltMaxm,
       cmt: fltInInvest.fltCmt,
-      lockdepth: fltInInvest.fltLockDepth,
+      lockingDepth: fltInInvest.fltLockDepth,
       catalog: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${fltInInvest.fltGeom})`,
     })
@@ -375,7 +376,7 @@ export const LoadSlab2 = async (
   const data = await db
     .select({
       id: slab2InInvest.slabId,
-      depth: sql.raw(`${slab2InInvest.slabDepth.name}`).mapWith(Number),
+      depth: sql.raw(`${slab2InInvest.slabDepth.name}`).mapWith(Number), //Convenient way to map string to number
       region: slab2InInvest.slabRegion,
       layer: slab2InInvest.slabLayer,
       country: countryInInvest.countryName,
@@ -440,7 +441,7 @@ export const LoadRock = async (
   const filters = await generateFilters(
     ALL_FILTERS.rock,
     {},
-    false,
+    true,
     rockSampleInInvest.rockGeom,
     drawing,
   );
@@ -448,11 +449,11 @@ export const LoadRock = async (
   const data = await db
     .select({
       id: rockSampleInInvest.rockSampleId,
-      sampleName: rockSampleInInvest.rockSampleName,
+      name: rockSampleInInvest.rockSampleName,
       locationComment: rockSampleInInvest.rockLocCmt,
       rockName: rockSampleInInvest.rockName,
       mineral: rockSampleInInvest.rockMineral,
-      "si\\O2": rockSampleInInvest.rockSio2,
+      "si\\O2": rockSampleInInvest.rockSio2, // Backslash so the camelCaseToWords function does not split it into Si O2
       "na2\\O": rockSampleInInvest.rockNa2O,
       "k2\\O": rockSampleInInvest.rockK2O,
       ageKa: rockSampleInInvest.rockAgeKa,
