@@ -167,6 +167,7 @@ export const LoadSmt = async (
       latitude: smtInInvest.smtLat,
       source: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${smtInInvest.smtGeom})`,
+      geometry: sql.raw(smtInInvest.smtGeom.name).mapWith(String),
     })
     .from(smtInInvest)
     .leftJoin(biblInInvest, eq(smtInInvest.smtSrcId, biblInInvest.biblId))
@@ -222,6 +223,7 @@ export const LoadVlc = async (
       timePeriod: vlcInInvest.vlcTimePeriod,
       catalog: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${vlcInInvest.vlcGeom})`,
+      geometry: sql.raw(vlcInInvest.vlcGeom.name).mapWith(String),
     })
     .from(vlcInInvest)
     .leftJoin(
@@ -269,6 +271,7 @@ export const LoadGNSS = async (
       longitude: gnssStnInInvest.gnssLon,
       latitude: gnssStnInInvest.gnssLat,
       geojson: sql<string>`ST_ASGEOJSON(${gnssStnInInvest.gnssGeom})`,
+      geometry: sql.raw(gnssStnInInvest.gnssGeom.name).mapWith(String),
     })
     .from(gnssStnInInvest)
     .leftJoin(
@@ -297,7 +300,6 @@ export const LoadFlt = async (
   drawing?: MultiPolygon | Polygon,
 ): Promise<ActionReturn> => {
   const { success } = fltFormSchema.safeParse(values);
-  console.log(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
   const filters = await generateFilters(
     ALL_FILTERS.flt,
@@ -325,6 +327,7 @@ export const LoadFlt = async (
       lockingDepth: fltInInvest.fltLockDepth,
       catalog: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${fltInInvest.fltGeom})`,
+      geometry: sql.raw(fltInInvest.fltGeom.name).mapWith(String),
     })
     .from(fltInInvest)
     .leftJoin(biblInInvest, eq(fltInInvest.fltSrcId, biblInInvest.biblId))
@@ -377,6 +380,7 @@ export const LoadSeis = async (
       longitude: seisInInvest.seisLon,
       latitude: seisInInvest.seisLat,
       geojson: sql<string>`ST_ASGEOJSON(${seisInInvest.seisGeom})`,
+      geometry: sql.raw(seisInInvest.seisGeom.name).mapWith(String),
     })
     .from(seisInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, seisInInvest.seisCatId))
@@ -414,6 +418,7 @@ export const LoadHf = async (
       latitude: heatflowInInvest.hfLat,
       source: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${heatflowInInvest.hfGeom})`,
+      geometry: sql.raw(heatflowInInvest.hfGeom.name).mapWith(String),
     })
     .from(heatflowInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, heatflowInInvest.hfSrcId))
@@ -453,6 +458,7 @@ export const LoadSlab2 = async (
       layer: slab2InInvest.slabLayer,
       country: countryInInvest.countryName,
       geojson: sql<string>`ST_ASGEOJSON(${slab2InInvest.slabGeom})`,
+      geometry: sql.raw(slab2InInvest.slabGeom.name).mapWith(String),
     })
     .from(slab2InInvest)
     .leftJoin(
@@ -498,6 +504,7 @@ export const LoadSlip = async (
       latitude: slipModelInInvest.patchLat,
       range: sql<Range>`ARRAY[FLOOR(MIN(${slipModelInInvest.patchSlip}) OVER()), CEIL(MAX(${slipModelInInvest.patchSlip}) OVER())]`,
       geojson: sql<string>`ST_ASGEOJSON(${slipModelInInvest.patchGeom})`,
+      geometry: sql.raw(slipModelInInvest.patchGeom.name).mapWith(String),
     })
     .from(slipModelInInvest)
     .leftJoin(
@@ -550,6 +557,7 @@ export const LoadRock = async (
       ageMa: rockSampleInInvest.rockAgeMa,
       source: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${rockSampleInInvest.rockGeom})`,
+      geometry: sql.raw(rockSampleInInvest.rockGeom.name).mapWith(String),
     })
     .from(rockSampleInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, rockSampleInInvest.srcId))

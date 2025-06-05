@@ -167,6 +167,7 @@ const PopupContent = ({
   value: string | number;
   units?: string;
 }) => {
+  if (objKey === "geometry") return null;
   if (typeof value === "string" && value.includes("https://"))
     return (
       <div className="text-sm text-neutral-300">

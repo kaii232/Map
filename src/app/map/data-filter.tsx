@@ -100,7 +100,7 @@ const DataFormFilters = ({
         <DownloadButton
           className="w-full"
           data={mapData[dataKey]?.geojson}
-          fileName={`${dataKey}_invest.csv`}
+          fileName={`${dataKey}_invest`}
         />
         {additionalActions && (
           <div className="mt-2 space-y-2">{additionalActions}</div>
