@@ -124,20 +124,24 @@ const getSeisProps = (
         ],
 });
 
-const mapLabelStyleProps = (
+const mapSymbolStyle = (
   get: string = "name",
+  icon?: string,
 ): Extract<LayerProps, { type: "symbol" }> => {
   return {
     type: "symbol",
     layout: {
       "text-field": ["get", get],
       "text-font": ["Noto Sans Regular"],
-      "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.3, 10, 1],
       "text-offset": [0, 1.25],
       "text-anchor": "top",
       "text-size": 12,
       "text-optional": true,
-      "icon-overlap": "always",
+      ...(!!icon && {
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.3, 10, 1],
+        "icon-overlap": "always",
+        "icon-image": icon,
+      }),
     },
     paint: {
       "text-halo-color": "#F8FAFCCC",
@@ -367,56 +371,8 @@ export default function DatabaseMap({
           ],
         },
       },
-      vlc: {
-        type: "symbol",
-        layout: {
-          "icon-image": "custom:volcano",
-          "text-field": ["get", "name"],
-          "text-font": ["Noto Sans Regular"],
-          "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.4, 8, 1],
-          "text-offset": [0, 1],
-          "text-anchor": "top",
-          "text-size": 12,
-          "text-optional": true,
-          "icon-overlap": "always",
-        },
-        paint: {
-          "text-halo-color": "#F8FAFCCC",
-          "text-halo-width": 2,
-          "text-opacity": {
-            type: "interval",
-            stops: [
-              [7, 0],
-              [8, 1],
-            ],
-          },
-        },
-      },
-      smt: {
-        type: "symbol",
-        layout: {
-          "icon-image": "custom:seamount",
-          "text-field": ["get", "name"],
-          "text-font": ["Noto Sans Regular"],
-          "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.4, 8, 1],
-          "text-offset": [0, 1],
-          "text-anchor": "top",
-          "text-size": 12,
-          "text-optional": true,
-          "icon-overlap": "always",
-        },
-        paint: {
-          "text-halo-color": "#F8FAFCCC",
-          "text-halo-width": 2,
-          "text-opacity": {
-            type: "interval",
-            stops: [
-              [7, 0],
-              [8, 1],
-            ],
-          },
-        },
-      },
+      vlc: mapSymbolStyle("name", "custom:volcano"),
+      smt: mapSymbolStyle("name", "custom:seamount"),
       gnss: [
         {
           id: "Icon",
@@ -446,7 +402,7 @@ export default function DatabaseMap({
         },
         {
           id: "Label",
-          ...mapLabelStyleProps(),
+          ...mapSymbolStyle(),
         },
       ],
       flt: {
@@ -568,7 +524,7 @@ export default function DatabaseMap({
         },
         {
           id: "Label",
-          ...mapLabelStyleProps(),
+          ...mapSymbolStyle(),
         },
       ],
     }),
