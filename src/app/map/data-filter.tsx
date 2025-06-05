@@ -4,12 +4,8 @@ import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import Spinner from "@/components/ui/spinner";
-import {
-  ALL_FILTERS_CLIENT,
-  createDefaultValues,
-  createZodSchema,
-  PopulateFilters,
-} from "@/lib/filters";
+import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/data-definitions";
+import { createDefaultValues, createZodSchema } from "@/lib/filters";
 import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";

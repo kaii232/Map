@@ -1,7 +1,7 @@
 "use client";
 
 import { style } from "@/assets/map_style";
-import type { ALL_FILTERS, PopulateFilters } from "@/lib/filters";
+import type { ALL_FILTERS, PopulateFilters } from "@/lib/data-definitions";
 import {
   camelCaseToWords,
   getInterpolateRange,

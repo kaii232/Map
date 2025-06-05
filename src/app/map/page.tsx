@@ -1,6 +1,6 @@
 import { Steps, TourRoot } from "@/components/tour";
-import { ALL_FILTERS, generateSQLSelect } from "@/lib/filters";
-import { GenericFiltersInfo } from "@/lib/types";
+import { ALL_FILTERS } from "@/lib/data-definitions";
+import { GenericFiltersInfo, generateSQLSelect } from "@/lib/filters";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import {

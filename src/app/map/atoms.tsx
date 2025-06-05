@@ -1,5 +1,6 @@
-import { ALL_FILTERS_CLIENT } from "@/lib/filters";
-import { BasemapNames, Range } from "@/lib/types";
+import { ALL_FILTERS_CLIENT } from "@/lib/data-definitions";
+import { Range } from "@/lib/filters";
+import { BasemapNames } from "@/lib/types";
 import { ActionReturn } from "@/server/actions";
 import { MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";

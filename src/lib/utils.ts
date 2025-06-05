@@ -14,8 +14,8 @@ import { clsx, type ClassValue } from "clsx";
 import { MultiPolygon, Polygon } from "geojson";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
-import type { ALL_FILTERS_CLIENT, createZodSchema } from "./filters";
-import { Range } from "./types";
+import type { ALL_FILTERS_CLIENT } from "./data-definitions";
+import type { createZodSchema, Range } from "./filters";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

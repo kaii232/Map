@@ -1,7 +1,12 @@
 "use server";
 
-import { ALL_FILTERS, createZodSchema, FILTER_STRATEGIES } from "@/lib/filters";
-import { GenericFilterDefine, Range } from "@/lib/types";
+import { ALL_FILTERS } from "@/lib/data-definitions";
+import {
+  createZodSchema,
+  FILTER_STRATEGIES,
+  GenericFilterDefine,
+  Range,
+} from "@/lib/filters";
 import { and, eq, type SQL, sql } from "drizzle-orm";
 import { AnyPgColumn } from "drizzle-orm/pg-core";
 import {

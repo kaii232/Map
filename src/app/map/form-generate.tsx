@@ -25,12 +25,13 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
-import { FILTER_STRATEGIES, SELECT_DEFAULT } from "@/lib/filters";
+import { ClientFilterDefine } from "@/lib/data-definitions";
 import {
-  ClientFilterDefine,
+  FILTER_STRATEGIES,
   GenericFilterDefine,
   InferFilterTypes,
-} from "@/lib/types";
+  SELECT_DEFAULT,
+} from "@/lib/filters";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { CalendarDays, Search } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";

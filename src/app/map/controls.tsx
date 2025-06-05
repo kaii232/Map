@@ -38,8 +38,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/filters";
-import { BasemapNames, Range } from "@/lib/types";
+import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/data-definitions";
+import { Range } from "@/lib/filters";
+import { BasemapNames } from "@/lib/types";
 import { cn, DATA_LABELS } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { bbox } from "@turf/bbox";

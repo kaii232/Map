@@ -1,5 +1,5 @@
 import Header from "@/components/header";
-import { ALL_FILTERS_CLIENT } from "@/lib/filters";
+import { ALL_FILTERS_CLIENT } from "@/lib/data-definitions";
 import { DATA_LABELS } from "@/lib/utils";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
