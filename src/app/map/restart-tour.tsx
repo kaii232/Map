@@ -1,3 +1,5 @@
+"use client";
+
 import { TourStart, TourStep } from "@/components/tour";
 import { useSetAtom } from "jotai";
 import { Info } from "lucide-react";

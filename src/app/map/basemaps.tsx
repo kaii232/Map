@@ -1,3 +1,5 @@
+"use client";
+
 import { useAtomValue } from "jotai";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { mapStyleAtom } from "./atoms";
