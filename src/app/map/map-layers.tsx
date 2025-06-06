@@ -98,7 +98,7 @@ export default function MapLayers() {
         />
       </Source>
       <Source
-        id="terrainSource"
+        id="terrain" //Source HAS to be named terrain
         type="raster-dem"
         tiles={[
           "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
@@ -147,6 +147,7 @@ export default function MapLayers() {
                 <Layer
                   type="fill"
                   id="plates"
+                  beforeId="terrainHillshade" // Important to specify! Ensures that user can still interact with the map when this layer is inserted as this layer covers the map completely.
                   paint={{
                     "fill-opacity": 0,
                   }}
@@ -164,6 +165,7 @@ export default function MapLayers() {
                 <Layer
                   type="line"
                   id="platesBoundaries"
+                  beforeId="terrainHillshade"
                   paint={{
                     "line-color": "#065f46",
                     "line-width": [
@@ -216,6 +218,7 @@ export default function MapLayers() {
                 <Layer
                   type="fill"
                   id="platesNew"
+                  beforeId="terrainHillshade"
                   paint={{
                     "fill-opacity": 0,
                   }}
@@ -236,6 +239,7 @@ export default function MapLayers() {
                 <Layer
                   type="line"
                   id="platesNewBoundaries"
+                  beforeId="terrainHillshade"
                   paint={{
                     "line-color": "#4c1d95",
                     "line-width": [
@@ -278,6 +282,7 @@ export default function MapLayers() {
               <Layer
                 type="fill"
                 id="crustThickness"
+                beforeId="terrainHillshade"
                 paint={{
                   "fill-color": [
                     "interpolate",
