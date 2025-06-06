@@ -94,8 +94,8 @@ export const getInterpolateRange = (
   let step =
     base === 1 || base === 0
       ? (range[1] - range[0]) / (stops.length - 1)
-      : (range[1] - range[0]) /
-        ((1 - Math.pow(1 / base, stops.length - 1)) / (1 - 1 / base)); //Geometric series sum to find starting step
+      : (range[1] - range[0]) / //step + step/base + step/base^2 + ... + step/base^(stops.length - 1) = range; step = range / [(1 - (1/base)^(stops.length - 1)) / (1 - 1/base)] <- geometric series sum
+        ((1 - Math.pow(1 / base, stops.length - 1)) / (1 - 1 / base));
   let curr = range[0];
   const out: (string | number)[] = [];
   for (let i = 0, length = stops.length; i < length; i++) {
