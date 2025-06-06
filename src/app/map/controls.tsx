@@ -65,7 +65,7 @@ import {
   layersAtom,
   mapStyleAtom,
   panelOpenAtom,
-  slipRangeAtom,
+  rangeAtom,
 } from "./atoms";
 import DataFormFilters from "./data-filter";
 import DataNoFilter from "./data-no-filter";
@@ -163,7 +163,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
   const layers = useAtomValue(layersAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
   const mapData = useAtomValue(dataAtom);
-  const slipRange = useAtomValue(slipRangeAtom);
+  const ranges = useAtomValue(rangeAtom);
 
   /** Defines how to display the legend and when it should be visible */
   const legends: {
@@ -184,9 +184,9 @@ const ColourRamps = ({ className }: { className?: string }) => {
     {
       name: "Seismic depth",
       colour:
-        "bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)0.4%,rgba(253,212,158,1)0.8%,rgba(253,187,132,1)1.6%,rgba(235,124,73,1)3.2%,rgba(219,82,53,1)6.4%,rgba(181,33,18,1)12.8%,rgba(117,6,6,1)25.6%,rgba(54,10,7,1)51.2%,rgba(0,0,0,1)100%)]",
-      min: "<2m",
-      max: ">1024m",
+        "bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)0.4%,rgba(253,212,158,1)0.8%,rgba(253,187,132,1)1.5%,rgba(235,124,73,1)3.1%,rgba(219,82,53,1)6.3%,rgba(181,33,18,1)12.5%,rgba(117,6,6,1)25%,rgba(54,10,7,1)50%,rgba(0,0,0,1)100%)]",
+      min: `${ranges.seis && ranges.seis[0]}m`,
+      max: `${ranges.seis && ranges.seis[1]}m`,
       visible:
         dataVisibility.seis &&
         !!mapData.seis &&
@@ -207,8 +207,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Slab depth",
       colour:
         "bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]",
-      min: "0m",
-      max: "1000m",
+      min: `${ranges.slab2 && ranges.slab2[0]}km`,
+      max: `${ranges.slab2 && ranges.slab2[1]}km`,
       visible:
         dataVisibility.slab2 &&
         !!mapData.slab2 &&
@@ -218,8 +218,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Slip",
       colour:
         "bg-[linear-gradient(90deg,_#FCFDBF_3.28%,_#FDDC9E_10.05%,_#FEBA80_16.71%,_#FD9869_23.11%,_#F8765C_30.04%,_#EB5760_36.81%,_#D3436E_43.23%,_#B63779_50.1%,_#982D80_56.61%,_#7B2382_63.38%,_#5F187F_70.41%,_#410F74_76.57%,_#231151_83.43%,_#0C0927_90.09%,_#000004_96.86%)]",
-      min: `${slipRange[0]}m`,
-      max: `${slipRange[1]}m`,
+      min: `${ranges.slip && ranges.slip[0]}m`,
+      max: `${ranges.slip && ranges.slip[1]}m`,
       visible:
         dataVisibility.slip &&
         !!mapData.slip &&
@@ -279,7 +279,7 @@ const Controls = ({
   const [dataVisibility, setDataVisibility] = useAtom(dataVisibilityAtom);
   const setLoadedData = useSetAtom(dataAtom);
   const [dataSelectValue, setDataSelectValue] = useState<string>();
-  const setSlipRange = useSetAtom(slipRangeAtom);
+  const setRanges = useSetAtom(rangeAtom);
   const { map } = useMap();
 
   const [filtersKey, setFiltersKey] = useState(Math.random().toString()); // Used to reset filters
@@ -357,6 +357,10 @@ const Controls = ({
             </Button>
           </>
         ),
+        onLoad(data) {
+          if (data.metadata)
+            setRanges((prev) => ({ ...prev, seis: data.metadata as Range }));
+        },
       },
       vlc: {
         additionalActions: (
@@ -374,12 +378,19 @@ const Controls = ({
       },
       slip: {
         onLoad(data) {
-          if (data.metadata) setSlipRange(data.metadata as Range);
+          if (data.metadata)
+            setRanges((prev) => ({ ...prev, slip: data.metadata as Range }));
         },
         additionalActions: <FitDataToScreen dataKey={"slip"} />,
       },
+      slab2: {
+        onLoad(data) {
+          if (data.metadata)
+            setRanges((prev) => ({ ...prev, slab2: data.metadata as Range }));
+        },
+      },
     }),
-    [setSlipRange],
+    [setRanges],
   );
 
   return (

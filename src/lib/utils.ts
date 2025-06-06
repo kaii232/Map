@@ -83,12 +83,26 @@ export const LOADERS: Record<
 export const getInterpolateRange = (
   range: Range,
   stops: (string | number)[],
+  exponential: boolean = false,
 ) => {
-  const step = (range[1] - range[0]) / (stops.length - 1);
-  const out = [];
+  if (!exponential) {
+    const step = (range[1] - range[0]) / (stops.length - 1);
+    const out = [];
+    for (let i = 0, length = stops.length; i < length; i++) {
+      out.push(range[0] + i * step);
+      out.push(stops[i]);
+    }
+    return out;
+  }
+
+  let step = (range[1] - range[0]) / Math.pow(2, stops.length - 1);
+  let curr = range[0];
+  const out: (string | number)[] = [];
   for (let i = 0, length = stops.length; i < length; i++) {
-    out.push(range[0] + i * step);
+    out.push(curr);
     out.push(stops[i]);
+    curr += step;
+    step *= 2;
   }
   return out;
 };

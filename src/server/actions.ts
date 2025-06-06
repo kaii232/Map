@@ -357,7 +357,7 @@ const seisFormSchema = z.object(createZodSchema(ALL_FILTERS.seis));
 export const LoadSeis = async (
   values: z.infer<typeof seisFormSchema>,
   drawing?: MultiPolygon | Polygon,
-): Promise<ActionReturn> => {
+): Promise<ActionReturn<Range>> => {
   const { success } = seisFormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
   const filters = await generateFilters(
@@ -379,20 +379,23 @@ export const LoadSeis = async (
       date: seisInInvest.seisDate,
       longitude: seisInInvest.seisLon,
       latitude: seisInInvest.seisLat,
+      range: sql<Range>`ARRAY[FLOOR(MIN(${seisInInvest.seisDepth}) OVER()), CEIL(MAX(${seisInInvest.seisDepth}) OVER())]`,
       geojson: sql<string>`ST_ASGEOJSON(${seisInInvest.seisGeom})`,
       geometry: sql.raw(seisInInvest.seisGeom.name).mapWith(String),
     })
     .from(seisInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, seisInInvest.seisCatId))
     .where(and(...filters));
-  const geojson = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data, ["range"]);
   const units = defineUnits<typeof data>({
     depth: "m",
   });
+  const range: Range = data.length ? data[0].range : [0, 1024];
 
   return {
     success: true,
     data: { geojson, units },
+    metadata: range,
   };
 };
 
@@ -423,7 +426,7 @@ export const LoadHf = async (
     .from(heatflowInInvest)
     .leftJoin(biblInInvest, eq(biblInInvest.biblId, heatflowInInvest.hfSrcId))
     .where(and(...filters));
-  const geojson = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data, ["range"]);
   const units = defineUnits<typeof data>({
     elevation: "m",
     qval: "W/m²",
@@ -439,7 +442,7 @@ const slab2FormSchema = z.object(createZodSchema(ALL_FILTERS.slab2));
 export const LoadSlab2 = async (
   values: z.infer<typeof slab2FormSchema>,
   drawing?: MultiPolygon | Polygon,
-): Promise<ActionReturn> => {
+): Promise<ActionReturn<Range>> => {
   const { success } = slab2FormSchema.safeParse(values);
   if (!success) return { success: false, error: "Values do not follow schema" };
   const filters = await generateFilters(
@@ -457,6 +460,9 @@ export const LoadSlab2 = async (
       region: slab2InInvest.slabRegion,
       layer: slab2InInvest.slabLayer,
       country: countryInInvest.countryName,
+      range: sql<
+        [string, string]
+      >`ARRAY[FLOOR(MIN(${slab2InInvest.slabDepth}) OVER()), CEIL(MAX(${slab2InInvest.slabDepth}) OVER())]`, // It is a string array as slapDepth is numeric type
       geojson: sql<string>`ST_ASGEOJSON(${slab2InInvest.slabGeom})`,
       geometry: sql.raw(slab2InInvest.slabGeom.name).mapWith(String),
     })
@@ -466,12 +472,16 @@ export const LoadSlab2 = async (
       eq(countryInInvest.countryId, slab2InInvest.slabCountryId),
     )
     .where(and(...filters));
-  const geojson = sqlToGeojson(data);
+  const geojson = sqlToGeojson(data, ["range"]);
   const units = defineUnits<typeof data>({ depth: "km" });
+  const range: Range = data.length
+    ? (data[0].range.map(Number) as Range)
+    : [0, 800];
 
   return {
     success: true,
     data: { geojson, units },
+    metadata: range,
   };
 };
 

@@ -42,5 +42,7 @@ export const dataAtom = atom<
   >
 >({});
 
-/** Contains the slip range of currently loaded slip data. Used for mapping the colour range to the slip range */
-export const slipRangeAtom = atom<Range>([0, 0]);
+/** Contains the range of currently loaded data. Used for mapping the colour range to the data range */
+export const rangeAtom = atom<
+  Partial<Record<keyof typeof ALL_FILTERS_CLIENT, Range>>
+>({});

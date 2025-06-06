@@ -2,6 +2,7 @@
 
 import { style } from "@/assets/map_style";
 import type { ALL_FILTERS, PopulateFilters } from "@/lib/data-definitions";
+import { Range } from "@/lib/filters";
 import {
   camelCaseToWords,
   getInterpolateRange,
@@ -27,12 +28,7 @@ import {
   useMap,
 } from "react-map-gl/maplibre";
 import { GeoJSONStoreFeatures } from "terra-draw";
-import {
-  dataAtom,
-  dataVisibilityAtom,
-  drawingAtom,
-  slipRangeAtom,
-} from "./atoms";
+import { dataAtom, dataVisibilityAtom, drawingAtom, rangeAtom } from "./atoms";
 import Basemaps from "./basemaps";
 import Controls from "./controls";
 import DownloadControl from "./download-control";
@@ -60,6 +56,7 @@ const drawOptionsModes: (
 /** Convenience function to get the layer props for seismic data */
 const getSeisProps = (
   property: "none" | "mb" | "mw" | "ms",
+  range: Range | undefined,
 ): LayerProps & { id: string } => ({
   id: property.charAt(0).toUpperCase() + property.substring(1),
   type: "circle",
@@ -69,36 +66,29 @@ const getSeisProps = (
       "interpolate",
       ["linear"],
       ["get", "depth"],
-      0,
-      "#000000",
-      640,
-      "#f8fafc",
+      ...getInterpolateRange(range ?? [2, 1024], ["#000000", "#f8fafc"]),
     ],
     "circle-opacity": 0.7,
     "circle-color": [
       "interpolate",
       ["linear"],
       ["get", "depth"],
-      2,
-      "#fff7ec",
-      4,
-      "#fee8c8",
-      8,
-      "#fdd49e",
-      16,
-      "#fdbb84",
-      32,
-      "#eb7c49",
-      64,
-      "#db5235",
-      128,
-      "#b52112",
-      256,
-      "#750606",
-      512,
-      "#360A07",
-      1024,
-      "#000000",
+      ...getInterpolateRange(
+        range ?? [2, 1024],
+        [
+          "#fff7ec",
+          "#fee8c8",
+          "#fdd49e",
+          "#fdbb84",
+          "#eb7c49",
+          "#db5235",
+          "#b52112",
+          "#750606",
+          "#360A07",
+          "#000000",
+        ],
+        true,
+      ),
     ],
     "circle-radius":
       property !== "none"
@@ -225,7 +215,7 @@ export default function DatabaseMap({
   }>();
 
   const setDrawing = useSetAtom(drawingAtom);
-  const slipRange = useAtomValue(slipRangeAtom);
+  const ranges = useAtomValue(rangeAtom);
 
   const onUpdate = useCallback(
     (features: GeoJSONStoreFeatures[] | undefined) => {
@@ -357,7 +347,7 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "slip"],
-            ...getInterpolateRange(slipRange, [
+            ...getInterpolateRange(ranges.slip ?? [0, 1], [
               "#FCFDBF",
               "#FDDC9E",
               "#FD9869",
@@ -436,10 +426,14 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "depth"],
-            ...getInterpolateRange(
-              [0, 1000],
-              ["#ffffa4", "#fca309", "#db503b", "#922568", "#400a67", "#fff"],
-            ),
+            ...getInterpolateRange(ranges.slab2 ?? [0, 800], [
+              "#ffffa4",
+              "#fca309",
+              "#db503b",
+              "#922568",
+              "#400a67",
+              "#fff",
+            ]),
           ],
           "line-width": [
             "interpolate",
@@ -454,10 +448,10 @@ export default function DatabaseMap({
         },
       },
       seis: [
-        getSeisProps("mw"),
-        getSeisProps("mb"),
-        getSeisProps("ms"),
-        getSeisProps("none"),
+        getSeisProps("mw", ranges.seis),
+        getSeisProps("mb", ranges.seis),
+        getSeisProps("ms", ranges.seis),
+        getSeisProps("none", ranges.seis),
       ],
       hf: [
         {
@@ -546,7 +540,7 @@ export default function DatabaseMap({
         },
       ],
     }),
-    [slipRange],
+    [ranges],
   );
 
   // Gets all the layer IDs for the map's interactiveLayerIds prop
