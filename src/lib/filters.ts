@@ -292,8 +292,9 @@ export function createDefaultValues<T extends keyof PopulateFilters>( // This ge
   } = {};
   Object.keys(filters).forEach((key) => {
     values[key] = FILTER_STRATEGIES[filters[key].type].getDefaultVal(
-      //@ts-expect-error Types can't be properly differentiated
-      initialData[key],
+      initialData[key as keyof typeof initialData] as NarrowFilterType<
+        (typeof filters)[string]["type"]
+      >, // What a mess
     );
     if (FILTER_STRATEGIES[filters[key].type].getAllowNull)
       values[`${key}AllowNull`] = true;
