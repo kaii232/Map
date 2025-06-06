@@ -81,7 +81,7 @@ const seisFilters = createDataFilter({
     dbCol: seisInInvest.seisDepth,
     name: "Depth",
     type: "range",
-    units: "m",
+    units: "km",
   },
   mwRange: {
     dbCol: seisInInvest.seisMw,

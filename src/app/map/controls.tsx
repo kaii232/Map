@@ -185,8 +185,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Seismic depth",
       colour:
         "bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)0.4%,rgba(253,212,158,1)0.8%,rgba(253,187,132,1)1.5%,rgba(235,124,73,1)3.1%,rgba(219,82,53,1)6.3%,rgba(181,33,18,1)12.5%,rgba(117,6,6,1)25%,rgba(54,10,7,1)50%,rgba(0,0,0,1)100%)]",
-      min: `${ranges.seis && ranges.seis[0]}m`,
-      max: `${ranges.seis && ranges.seis[1]}m`,
+      min: `${ranges.seis && ranges.seis[0]}km`,
+      max: `${ranges.seis && ranges.seis[1]}km`,
       visible:
         dataVisibility.seis &&
         !!mapData.seis &&

@@ -388,7 +388,7 @@ export const LoadSeis = async (
     .where(and(...filters));
   const geojson = sqlToGeojson(data, ["range"]);
   const units = defineUnits<typeof data>({
-    depth: "m",
+    depth: "km",
   });
   const range: Range = data.length ? data[0].range : [0, 1024];
 
