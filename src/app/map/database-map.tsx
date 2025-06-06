@@ -99,7 +99,7 @@ const getSeisProps = (
             5,
             ["interpolate", ["exponential", 2], ["get", property], 2, 3, 9, 12],
             15,
-            ["interpolate", ["exponential", 2], ["get", property], 2, 8, 9, 24],
+            ["interpolate", ["exponential", 2], ["get", property], 2, 8, 9, 32],
           ]
         : ["interpolate", ["linear"], ["zoom"], 5, 3, 12, 12],
   },
