@@ -67,7 +67,7 @@ const TOUR_STEPS: Steps = [
     type: "tooltip",
     title: "Filtering and downloading data",
     description:
-      "Filter the type of data you wish to load using these filter controls. You can also download the selected data in a csv file after loading.",
+      "Filter the type of data you wish to load using these filter controls. You can also download the selected data in a .geojson or .csv file after loading.",
   },
   {
     type: "tooltip",
