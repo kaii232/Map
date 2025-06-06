@@ -41,7 +41,7 @@ import {
 import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/data-definitions";
 import { Range } from "@/lib/filters";
 import { BasemapNames } from "@/lib/types";
-import { cn, DATA_LABELS } from "@/lib/utils";
+import { cn, DATA_LABELS, getInterpolateRange } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { bbox } from "@turf/bbox";
 import { ExtractAtomValue, useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -56,7 +56,14 @@ import {
   Trash,
 } from "lucide-react";
 import Link from "next/link";
-import { memo, ReactNode, useCallback, useMemo, useState } from "react";
+import {
+  CSSProperties,
+  memo,
+  ReactNode,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { useMap } from "react-map-gl/maplibre";
 import {
   dataAtom,
@@ -176,15 +183,32 @@ const ColourRamps = ({ className }: { className?: string }) => {
     {
       name: "Seafloor age",
       colour:
-        "bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]",
+        "linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)",
       min: "0",
       max: "194Mya",
       visible: layers.seafloorAge,
     },
     {
       name: "Seismic depth",
-      colour:
-        "bg-[linear-gradient(90deg,rgba(255,247,236,1)0%,rgba(254,232,200,1)0.4%,rgba(253,212,158,1)0.8%,rgba(253,187,132,1)1.5%,rgba(235,124,73,1)3.1%,rgba(219,82,53,1)6.3%,rgba(181,33,18,1)12.5%,rgba(117,6,6,1)25%,rgba(54,10,7,1)50%,rgba(0,0,0,1)100%)]",
+      colour: `linear-gradient(90deg${getInterpolateRange(
+        [0, 100],
+        [
+          "#fff7ec",
+          "#fee8c8",
+          "#fdd49e",
+          "#fdbb84",
+          "#eb7c49",
+          "#db5235",
+          "#b52112",
+          "#750606",
+          "#360A07",
+          "#000000",
+        ],
+        0.5,
+      ).reduce((prev, current, index, arr) => {
+        if (index % 2 === 0) return prev;
+        return `${prev}, ${current} ${arr[index - 1]}%`;
+      }, "")})`,
       min: `${ranges.seis && ranges.seis[0]}km`,
       max: `${ranges.seis && ranges.seis[1]}km`,
       visible:
@@ -195,7 +219,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
     {
       name: "Heatflow qval",
       colour:
-        "bg-[linear-gradient(90deg,rgba(12,74,110,1)0%,rgba(2,132,199,1)25%,rgba(238,238,238,1)50%,rgba(225,29,72,1)75%,rgba(76,5,25,1)100%)]",
+        "linear-gradient(90deg,rgba(12,74,110,1)0%,rgba(2,132,199,1)25%,rgba(238,238,238,1)50%,rgba(225,29,72,1)75%,rgba(76,5,25,1)100%)",
       min: "<-400W/m²",
       max: ">400W/m²",
       visible:
@@ -206,7 +230,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
     {
       name: "Slab depth",
       colour:
-        "bg-[linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)]",
+        "linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)",
       min: `${ranges.slab2 && ranges.slab2[0]}km`,
       max: `${ranges.slab2 && ranges.slab2[1]}km`,
       visible:
@@ -217,7 +241,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
     {
       name: "Slip",
       colour:
-        "bg-[linear-gradient(90deg,_#FCFDBF_3.28%,_#FDDC9E_10.05%,_#FEBA80_16.71%,_#FD9869_23.11%,_#F8765C_30.04%,_#EB5760_36.81%,_#D3436E_43.23%,_#B63779_50.1%,_#982D80_56.61%,_#7B2382_63.38%,_#5F187F_70.41%,_#410F74_76.57%,_#231151_83.43%,_#0C0927_90.09%,_#000004_96.86%)]",
+        "linear-gradient(90deg, #FCFDBF 3.28%, #FDDC9E 10.05%, #FEBA80 16.71%, #FD9869 23.11%, #F8765C 30.04%, #EB5760 36.81%, #D3436E 43.23%, #B63779 50.1%, #982D80 56.61%, #7B2382 63.38%, #5F187F 70.41%, #410F74 76.57%, #231151 83.43%, #0C0927 90.09%, #000004 96.86%)",
       min: `${ranges.slip && ranges.slip[0]}m`,
       max: `${ranges.slip && ranges.slip[1]}m`,
       visible:
@@ -228,7 +252,7 @@ const ColourRamps = ({ className }: { className?: string }) => {
     {
       name: "Crust Thickness",
       colour:
-        "bg-[linear-gradient(90deg,#ffffff_0%,#e0dfde_10%,#c8c5b8_20%,#bdb596_30%,#b29f76_40%,#aa8665_50%,#a4705c_60%,#9b5850_70%,#883c3b_80%,#6b1f1e_90%,#4c0001_100%)]",
+        "linear-gradient(90deg,#ffffff 0%,#e0dfde 10%,#c8c5b8 20%,#bdb596 30%,#b29f76 40%,#aa8665 50%,#a4705c 60%,#9b5850 70%,#883c3b 80%,#6b1f1e 90%,#4c0001 100%)",
       min: "0km",
       max: "80km",
       visible: layers.crustThickness,
@@ -253,7 +277,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
             <span className="mb-0.5 block">{legend.name}</span>
             <div
               role="presentation"
-              className={`mb-1 h-6 w-full ${legend.colour}`}
+              className={`mb-1 h-6 w-full bg-[image:var(--gradient)]`}
+              style={{ "--gradient": legend.colour } as CSSProperties}
             ></div>
             <div className="flex w-full justify-between">
               <span>{legend.min}</span>
