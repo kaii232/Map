@@ -57,7 +57,7 @@ const drawOptionsModes: (
 const getSeisProps = (
   property: "none" | "mb" | "mw" | "ms",
   range: Range | undefined,
-): LayerProps & { id: string } => ({
+): Exclude<LayerProps, { type: "custom" }> & { id: string } => ({
   id: property.charAt(0).toUpperCase() + property.substring(1),
   type: "circle",
   paint: {
@@ -336,7 +336,8 @@ export default function DatabaseMap({
    * */
   const mapDataLayers: Record<
     keyof typeof ALL_FILTERS,
-    LayerProps | (LayerProps & { id: string })[]
+    | Exclude<LayerProps, { type: "custom" }>
+    | (Exclude<LayerProps, { type: "custom" }> & { id: string })[]
   > = useMemo(
     () => ({
       slip: {
@@ -612,9 +613,7 @@ export default function DatabaseMap({
                       {...layer}
                       key={typedKey + layer.id}
                       id={typedKey + layer.id}
-                      //@ts-expect-error Discriminated union can't properly be distinguished due to dynamic mapping
                       layout={{
-                        //@ts-expect-error Discriminated union can't properly be distinguished due to dynamic mapping
                         ...layer.layout,
                         visibility: dataVisibility[typedKey]
                           ? "visible"
@@ -627,9 +626,7 @@ export default function DatabaseMap({
                 <Layer
                   {...val}
                   id={typedKey}
-                  //@ts-expect-error Discriminated union can't properly be distinguished due to dynamic mapping
                   layout={{
-                    //@ts-expect-error Discriminated union can't properly be distinguished due to dynamic mapping
                     ...val.layout,
                     visibility: dataVisibility[typedKey] ? "visible" : "none",
                   }}
