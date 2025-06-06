@@ -64,7 +64,7 @@ const getSeisProps = (
     "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0, 8, 2],
     "circle-stroke-color": [
       "interpolate",
-      ["linear"],
+      ["exponential", 0.9],
       ["get", "depth"],
       ...getInterpolateRange(range ?? [2, 1024], ["#000000", "#f8fafc"]),
     ],
@@ -87,7 +87,7 @@ const getSeisProps = (
           "#360A07",
           "#000000",
         ],
-        true,
+        0.5,
       ),
     ],
     "circle-radius":

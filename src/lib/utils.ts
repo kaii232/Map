@@ -79,30 +79,30 @@ export const LOADERS: Record<
   rock: LoadRock,
 };
 
-/** Convenience function to map a range to user defined stops for map layer style specification */
+/**
+ * Convenience function to map a range to user defined stops for map layer style specification
+ * @param range Range of data to map
+ * @param stops Array containing value at each stop
+ * @param base base of the interpolation. Default of `1` is linear interpolation.
+ * @returns Array containing correctly formatted interpolation of range at each stop. Can be spread directly in layer specification
+ */
 export const getInterpolateRange = (
   range: Range,
   stops: (string | number)[],
-  exponential: boolean = false,
+  base: number = 1,
 ) => {
-  if (!exponential) {
-    const step = (range[1] - range[0]) / (stops.length - 1);
-    const out = [];
-    for (let i = 0, length = stops.length; i < length; i++) {
-      out.push(range[0] + i * step);
-      out.push(stops[i]);
-    }
-    return out;
-  }
-
-  let step = (range[1] - range[0]) / Math.pow(2, stops.length - 1);
+  let step =
+    base === 1 || base === 0
+      ? (range[1] - range[0]) / (stops.length - 1)
+      : (range[1] - range[0]) /
+        ((1 - Math.pow(1 / base, stops.length - 1)) / (1 - 1 / base)); //Geometric series sum to find starting step
   let curr = range[0];
   const out: (string | number)[] = [];
   for (let i = 0, length = stops.length; i < length; i++) {
     out.push(curr);
     out.push(stops[i]);
     curr += step;
-    step *= 2;
+    step /= base;
   }
   return out;
 };
