@@ -688,7 +688,6 @@ export default function DatabaseMap({
         )}
         {selectedFeature && (
           <Popup
-            key={`${selectedFeature.feature.id}click`}
             longitude={selectedFeature.lng}
             latitude={selectedFeature.lat}
             offset={{
