@@ -428,6 +428,19 @@ export default function DatabaseMap({
           },
           filter: ["==", "$type", "LineString"],
         },
+        {
+          id: "VectorArrow",
+          type: "symbol",
+          layout: {
+            "symbol-placement": "line-center",
+            "icon-allow-overlap": true,
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.3, 10, 1],
+            "icon-overlap": "always",
+            "icon-image": "custom:arrow_9",
+            "icon-rotate": 90,
+          },
+          filter: ["==", "$type", "LineString"],
+        },
       ],
       flt: {
         type: "line",
