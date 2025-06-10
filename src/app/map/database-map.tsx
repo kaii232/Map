@@ -34,7 +34,7 @@ import Basemaps from "./basemaps";
 import Controls from "./controls";
 import DownloadControl from "./download-control";
 import DrawControl from "./draw-control";
-import MapLayers from "./map-layers";
+import MapLayers, { MAP_LAYER_UNITS } from "./map-layers";
 import RestartTour from "./restart-tour";
 
 const drawOptionsModes: (
@@ -672,6 +672,7 @@ export default function DatabaseMap({
                     objKey={key}
                     value={value}
                     units={
+                      MAP_LAYER_UNITS[hoverInfo.feature.source]?.[key] ??
                       mapData[
                         hoverInfo.feature.source.slice(
                           0,
@@ -723,6 +724,9 @@ export default function DatabaseMap({
                       objKey={key}
                       value={value}
                       units={
+                        MAP_LAYER_UNITS[selectedFeature.feature.source]?.[
+                          key
+                        ] ??
                         mapData[
                           selectedFeature.feature.source.slice(
                             0,
