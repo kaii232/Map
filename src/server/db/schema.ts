@@ -10,6 +10,7 @@ import {
   numeric,
   pgSchema,
   primaryKey,
+  real,
   smallint,
   text,
   timestamp,
@@ -124,6 +125,58 @@ export const gnssStnInInvest = invest.table(
       foreignColumns: [stnTypeInInvest.stnTypeId],
       name: "gnss_stn_stn_type_id_fkey",
     }),
+  ],
+);
+
+export const gnssVectorInInvest = invest.table(
+  "gnss_vector",
+  {
+    // You can use { mode: "bigint" } if numbers are exceeding js number limitations
+    vectorId: bigint("vector_id", { mode: "number" })
+      .primaryKey()
+      .generatedByDefaultAsIdentity({
+        name: "invest.gnss_vector_vector_id_seq",
+        startWith: 1,
+        increment: 1,
+        minValue: 1,
+        maxValue: 9223372036854775807,
+        cache: 1,
+      }),
+    vectorGnssId: integer("vector_gnss_id"),
+    vectorLoaddate: timestamp("vector_loaddate", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+    vectorEasting: real("vector_easting"),
+    vectorNorthing: real("vector_northing"),
+    vectorVertical: real("vector_vertical"),
+    vectorEastingUnc: real("vector_easting_unc"),
+    vectorNorthingUnc: real("vector_northing_unc"),
+    vectorVerticalUnc: real("vector_vertical_unc"),
+    vectorCorr: real("vector_corr"),
+    vectorTimePeriod: text("vector_time_period"),
+    ccLoadId: smallint("cc_load_id").default(sql`'1'`),
+    vectorBiblId: integer("vector_bibl_id"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.ccLoadId],
+      foreignColumns: [ccInInvest.ccId],
+      name: "gnss_vector_cc_load_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.vectorBiblId],
+      foreignColumns: [biblInInvest.biblId],
+      name: "gnss_vector_vector_bibl_id_fkey",
+    }),
+    foreignKey({
+      columns: [table.vectorGnssId],
+      foreignColumns: [gnssStnInInvest.gnssId],
+      name: "gnss_vector_vector_gnss_id_fkey",
+    }),
+    unique("gnss_vector_vector_id_key").on(table.vectorId),
   ],
 );
 
@@ -743,6 +796,24 @@ export const gnssStnInInvestRelations = relations(
     stnTypeInInvest: one(stnTypeInInvest, {
       fields: [gnssStnInInvest.stnTypeId],
       references: [stnTypeInInvest.stnTypeId],
+    }),
+  }),
+);
+
+export const gnssVectorInInvestRelations = relations(
+  gnssVectorInInvest,
+  ({ one }) => ({
+    ccInInvest: one(ccInInvest, {
+      fields: [gnssVectorInInvest.ccLoadId],
+      references: [ccInInvest.ccId],
+    }),
+    biblInInvest: one(biblInInvest, {
+      fields: [gnssVectorInInvest.vectorBiblId],
+      references: [biblInInvest.biblId],
+    }),
+    gnssStnInInvest: one(gnssStnInInvest, {
+      fields: [gnssVectorInInvest.vectorGnssId],
+      references: [gnssStnInInvest.gnssId],
     }),
   }),
 );

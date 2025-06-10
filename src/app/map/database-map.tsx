@@ -393,10 +393,40 @@ export default function DatabaseMap({
             "circle-color": "#E39F40",
             "circle-stroke-color": "#f8fafc",
           },
+          filter: ["==", "$type", "Point"],
         },
         {
           id: "Label",
           ...mapSymbolStyle(undefined, 1.5),
+        },
+        {
+          id: "Vector",
+          type: "line",
+          layout: {
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": "#8b36d1",
+            "line-width": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
+              15,
+              ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
+            ],
+            "line-opacity": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              1,
+              15,
+              0.6,
+            ],
+          },
+          filter: ["==", "$type", "LineString"],
         },
       ],
       flt: {

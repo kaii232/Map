@@ -13,7 +13,9 @@ import {
   Feature,
   FeatureCollection,
   GeoJsonProperties,
+  LineString,
   MultiPolygon,
+  Point,
   Polygon,
 } from "geojson";
 import { headers } from "next/headers";
@@ -25,6 +27,7 @@ import {
   countryInInvest,
   fltInInvest,
   gnssStnInInvest,
+  gnssVectorInInvest,
   heatflowInInvest,
   rockSampleInInvest,
   seisInInvest,
@@ -250,6 +253,35 @@ export const LoadVlc = async (
   };
 };
 
+const createGNSSVectors = (
+  vector: {
+    id: number | null;
+    endPoint: Point;
+    [key: string]: unknown;
+  }[],
+  stations: Feature<Point>[],
+) => {
+  const vectors: Feature<LineString>[] = [];
+  for (let i = 0; i < vector.length; i++) {
+    if (vector[i].id === null) continue;
+    const start = stations[i].geometry.coordinates;
+    const end = vector[i].endPoint.coordinates;
+    const properties: GeoJsonProperties = { ...vector[i] };
+    delete properties.endPoint;
+    delete properties.id;
+    vectors.push({
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: [start, end],
+      },
+      properties,
+      id: vector[i].id!,
+    });
+  }
+  return vectors;
+};
+
 const gnssFormSchema = z.object(createZodSchema(ALL_FILTERS.gnss));
 export const LoadGNSS = async (
   values: z.infer<typeof gnssFormSchema>,
@@ -267,18 +299,39 @@ export const LoadGNSS = async (
 
   const data = await db
     .select({
-      id: gnssStnInInvest.gnssId,
-      name: gnssStnInInvest.gnssName,
-      project: gnssStnInInvest.gnssProj,
-      type: stnTypeInInvest.stnTypeName,
-      elevation: gnssStnInInvest.gnssElev,
-      country: countryInInvest.countryName,
-      installDate: gnssStnInInvest.gnssInstDate,
-      decomDate: gnssStnInInvest.gnssDecomDate,
-      longitude: gnssStnInInvest.gnssLon,
-      latitude: gnssStnInInvest.gnssLat,
-      geojson: sql<string>`ST_ASGEOJSON(${gnssStnInInvest.gnssGeom})`,
-      geometry: sql.raw(gnssStnInInvest.gnssGeom.name).mapWith(String),
+      gnss: {
+        id: gnssStnInInvest.gnssId,
+        name: gnssStnInInvest.gnssName,
+        project: gnssStnInInvest.gnssProj,
+        type: stnTypeInInvest.stnTypeName,
+        elevation: gnssStnInInvest.gnssElev,
+        country: countryInInvest.countryName,
+        installDate: gnssStnInInvest.gnssInstDate,
+        decomDate: gnssStnInInvest.gnssDecomDate,
+        longitude: gnssStnInInvest.gnssLon,
+        latitude: gnssStnInInvest.gnssLat,
+        geojson: sql<string>`ST_ASGEOJSON(${gnssStnInInvest.gnssGeom})`,
+        geometry: sql.raw(gnssStnInInvest.gnssGeom.name).mapWith(String),
+      },
+      vector: {
+        id: gnssVectorInInvest.vectorId,
+        source: biblInInvest.biblTitle,
+        easting: gnssVectorInInvest.vectorEasting,
+        northing: gnssVectorInInvest.vectorNorthing,
+        vertical: gnssVectorInInvest.vectorVertical,
+        eastingUncertainty: gnssVectorInInvest.vectorEastingUnc,
+        northingUncertainty: gnssVectorInInvest.vectorNorthingUnc,
+        verticalUncertainty: gnssVectorInInvest.vectorVerticalUnc,
+        correlation: gnssVectorInInvest.vectorCorr,
+        timePeriod: gnssVectorInInvest.vectorTimePeriod,
+        endPoint: sql`ST_ASGEOJSON(
+                        ST_PROJECT(
+                          ST_POINT(${gnssStnInInvest.gnssLon}, ${gnssStnInInvest.gnssLat}), 
+                          SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 5000,
+                          ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
+                        )
+                      )`.mapWith(JSON.parse),
+      },
     })
     .from(gnssStnInInvest)
     .leftJoin(
@@ -289,12 +342,35 @@ export const LoadGNSS = async (
       stnTypeInInvest,
       eq(stnTypeInInvest.stnTypeId, gnssStnInInvest.stnTypeId),
     )
+    .leftJoin(
+      gnssVectorInInvest,
+      eq(gnssVectorInInvest.vectorGnssId, gnssStnInInvest.gnssId),
+    )
+    .leftJoin(
+      biblInInvest,
+      eq(biblInInvest.biblId, gnssVectorInInvest.vectorBiblId),
+    )
     .where(and(...filters));
-  const geojson = sqlToGeojson(data);
-  const units = defineUnits<typeof data>({
+  const geojson = sqlToGeojson(data.map((val) => val.gnss));
+  const units = defineUnits<
+    ((typeof data)[number]["gnss"] & (typeof data)[number]["vector"])[]
+  >({
     elevation: "m",
+    easting: "m/yr",
+    northing: "m/yr",
+    vertical: "m/yr",
+    eastingUncertainty: "m/yr",
+    northingUncertainty: "m/yr",
+    verticalUncertainty: "m/yr",
     ...lngLatUnits,
   });
+  // Adds the GNSS vectors into the geojson
+  geojson.features = geojson.features.concat(
+    createGNSSVectors(
+      data.map((val) => val.vector),
+      geojson.features as Feature<Point>[],
+    ),
+  );
 
   return {
     success: true,

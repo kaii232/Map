@@ -3,6 +3,7 @@ import {
   countryInInvest,
   fltInInvest,
   gnssStnInInvest,
+  gnssVectorInInvest,
   seisInInvest,
   slab2InInvest,
   slipModelInInvest,
@@ -88,11 +89,6 @@ const seisFilters = createDataFilter({
     name: "Mw",
     type: "range",
   },
-  dateRange: {
-    dbCol: seisInInvest.seisDate,
-    name: "Date",
-    type: "date",
-  },
   catalogs: {
     dbCol: biblInInvest.biblTitle,
     nullCol: seisInInvest.seisCatId,
@@ -135,12 +131,6 @@ const smtFilters = createDataFilter({
 });
 
 const gnssFilters = createDataFilter({
-  elevRange: {
-    dbCol: gnssStnInInvest.gnssElev,
-    name: "Elevation",
-    type: "range",
-    units: "m",
-  },
   dateRange: {
     dbCol: gnssStnInInvest.gnssInstDate,
     name: "Install Date",
@@ -163,6 +153,12 @@ const gnssFilters = createDataFilter({
     nullCol: gnssStnInInvest.stnTypeId,
     type: "select",
     name: "Station Type",
+  },
+  vector: {
+    dbCol: biblInInvest.biblTitle,
+    nullCol: gnssVectorInInvest.vectorBiblId,
+    type: "select",
+    name: "GNSS Vector",
   },
 });
 

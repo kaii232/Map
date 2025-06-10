@@ -8,6 +8,7 @@ import {
   countryInInvest,
   fltInInvest,
   gnssStnInInvest,
+  gnssVectorInInvest,
   seisInInvest,
   slab2InInvest,
   slipModelInInvest,
@@ -149,6 +150,14 @@ export default async function DatabasePage() {
       .leftJoin(
         stnTypeInInvest,
         eq(gnssStnInInvest.stnTypeId, stnTypeInInvest.stnTypeId),
+      )
+      .leftJoin(
+        gnssVectorInInvest,
+        eq(gnssVectorInInvest.vectorGnssId, gnssStnInInvest.gnssId),
+      )
+      .leftJoin(
+        biblInInvest,
+        eq(biblInInvest.biblId, gnssVectorInInvest.vectorBiblId),
       ),
     db
       .select(generateSQLSelect(ALL_FILTERS.flt))
