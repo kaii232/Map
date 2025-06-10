@@ -1,74 +1,11 @@
-import { AnyPgColumn } from "drizzle-orm/pg-core";
-
-// This type collapses the type and makes it nicer to look at in the editor typehints
-// E.g. ComplexType<{someKey: AnotherType; someKey2: AnotherType2}> will become => {finalKey: finalVal; finalKey2: finalVal2}
+/** This type collapses the type and makes it nicer to look at in the editor typehints
+E.g. `ComplexType<{someKey: AnotherType; someKey2: AnotherType2}>` will become: `{finalKey: finalVal; finalKey2: finalVal2}` */
 export type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
+/** Contains names of all the different basemaps */
 export type BasemapNames =
   | "Openstreetmap"
   | "Opentopomap"
   | "Satellite"
   | "Ocean"
   | "Openfreemap";
-
-export type Range = [number, number];
-export type Categories = string[] | null;
-export type DateFilter = [string, string];
-export type GreaterThan = [number];
-// Generic type of the data that describes the filter values
-export type GenericFiltersInfo = Record<
-  string,
-  Range | Categories | DateFilter | GreaterThan
->;
-
-// Information needed to generate the form depending on the type of filter it is
-export type FiltersType =
-  | {
-      name: string;
-      type: "select";
-      dbCol: AnyPgColumn;
-      nullCol: AnyPgColumn;
-    }
-  | {
-      name: string;
-      type: "range";
-      dbCol: AnyPgColumn;
-      units?: string;
-    }
-  | {
-      name: string;
-      type: "date";
-      dbCol: AnyPgColumn;
-    }
-  | {
-      name: string;
-      type: "greaterThan";
-      dbCol: AnyPgColumn;
-      maxVal: number;
-      units?: string;
-    };
-
-export type GenericFilterDefine = Record<string, FiltersType>;
-
-export type InferFilterTypes<
-  T extends ClientFilterDefine<GenericFilterDefine>,
-> = {
-  [P in keyof T]: T[P]["type"] extends "select"
-    ? Categories
-    : T[P]["type"] extends "range"
-      ? Range
-      : T[P]["type"] extends "date"
-        ? DateFilter
-        : T[P]["type"] extends "greaterThan"
-          ? GreaterThan
-          : never;
-};
-
-// Exclude the dbCol and nullCol keys
-export type ClientFilterType<T extends FiltersType> = {
-  [P in keyof T as Exclude<P, "dbCol" | "nullCol">]: T[P];
-};
-
-export type ClientFilterDefine<T extends GenericFilterDefine> = {
-  [P in keyof T]: Simplify<ClientFilterType<T[P]>>;
-};

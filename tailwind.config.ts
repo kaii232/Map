@@ -19,6 +19,13 @@ export default {
       transitionTimingFunction: {
         map: "cubic-bezier(0.25, 0.1, 0.25, 1)",
       },
+      colors: {
+        earth: "#e2a856",
+        water: "#005596",
+        fire: "#a9302e",
+        background: "#171717",
+        "background-secondary": "#3b3b3b",
+      },
     },
   },
   // eslint-disable-next-line @typescript-eslint/no-require-imports

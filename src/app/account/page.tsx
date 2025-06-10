@@ -28,7 +28,7 @@ export default async function AccountPage() {
   return (
     <>
       <Header />
-      <main className="px-4">
+      <main className="px-4 pt-[53px]">
         <div className="mx-auto w-full max-w-4xl space-y-8 pb-4 pt-16">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
             <div>
@@ -44,7 +44,7 @@ export default async function AccountPage() {
               Personal Information
             </h3>
             <div className="grow space-y-4">
-              <div className="flex w-full items-center gap-6 rounded-lg bg-neutral-900 px-6 py-3">
+              <div className="flex w-full items-center gap-6 rounded-lg bg-neutral-800 px-6 py-3">
                 <Mail className="shrink-0" />
                 <div className="min-w-0 space-y-1">
                   <h6 className="text-sm font-medium text-neutral-300">
@@ -55,7 +55,7 @@ export default async function AccountPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex w-full items-center gap-6 rounded-lg bg-neutral-900 px-6 py-3">
+              <div className="flex w-full items-center gap-6 rounded-lg bg-neutral-800 px-6 py-3">
                 <User className="shrink-0" />
                 <div className="min-w-0 space-y-1">
                   <h6 className="text-sm font-medium text-neutral-300">Name</h6>
@@ -64,7 +64,7 @@ export default async function AccountPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex w-full items-center gap-6 rounded-lg bg-neutral-900 px-6 py-3">
+              <div className="flex w-full items-center gap-6 rounded-lg bg-neutral-800 px-6 py-3">
                 <IdCard className="shrink-0" />
                 <div className="min-w-0 space-y-1">
                   <h6 className="text-sm font-medium text-neutral-300">Role</h6>

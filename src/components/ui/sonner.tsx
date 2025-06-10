@@ -18,7 +18,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           description:
             "font-sans text-sm text-neutral-300 group-data-[type='success']:text-green-600 group-data-[type='error']:text-red-600 group-data-[type='warning']:text-orange-600 group-data-[type='info']:text-blue-600",
           toast:
-            "border-neutral-600 text-neutral-50 bg-neutral-950 shadow-lg rounded-xl p-4 group border",
+            "border-neutral-600 text-neutral-50 bg-background shadow-lg rounded-xl p-4 group border",
           actionButton:
             "bg-neutral-700 text-neutral-50 hover:bg-neutral-700/90 font-sans text-xs border border-neutral-600",
           cancelButton:

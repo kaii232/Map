@@ -28,6 +28,7 @@
     "@radix-ui/react-switch": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@tanstack/react-table": "^8.21.2",
+    "@turf/bbox": "^7.2.0",
     "@types/adm-zip": "^0.5.7",
     "@types/geojson": "^7946.0.15",
     "better-auth": "^1.2.7",

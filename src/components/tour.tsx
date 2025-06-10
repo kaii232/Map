@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { Popover, PopoverContent } from "@/components/ui/popover";
 import { PopoverAnchor } from "@radix-ui/react-popover";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
+  ComponentProps,
   createContext,
   memo,
   ReactNode,
@@ -186,35 +187,38 @@ const TourStep = ({
   const setDimensions = useSetAtom(tourHighlightDimsAtom);
   const containerRef = useRef<HTMLDivElement>(null);
   const ticking = useRef<boolean>(false);
+  const frameId = useRef(0);
 
   useEffect(() => {
     if (!containerRef.current) return;
+    const container = containerRef.current;
     const onResize = () => {
       if (ticking.current) return;
       // Calling getBoundingClientRect on scroll is not very performant
       // This throttles the event so less calls are fired
       // See: https://developer.mozilla.org/en-US/docs/Web/API/Document/scroll_event#scroll_event_throttling
-      if (!containerRef.current) return;
-      setDimensions(containerRef.current.getBoundingClientRect());
+      if (!container) return;
+      setDimensions(container.getBoundingClientRect());
       // About 60fps
       setTimeout(() => (ticking.current = false), 16);
       ticking.current = true;
     };
+    const frameLoop = () => {
+      onResize();
+      frameId.current = requestAnimationFrame(frameLoop);
+    };
     if (currentStep === step) {
-      containerRef.current.scrollIntoView({
+      container.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
-      setDimensions(containerRef.current.getBoundingClientRect());
-      window.addEventListener("resize", onResize);
-      window.addEventListener("scroll", onResize, true);
+      frameLoop();
       if (steps[step - 1].beforeStep) steps[step - 1].beforeStep!();
       if (localBeforeStep) localBeforeStep();
     }
 
     return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onResize, true);
+      cancelAnimationFrame(frameId.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
@@ -276,17 +280,15 @@ const TourStep = ({
   );
 };
 
-const TourStart = (props: ButtonProps) => {
+const TourStart = (props: ComponentProps<"button">) => {
   const setStep = useSetAtom(stepAtom);
   return (
-    <Button
+    <button
       {...props}
       onClick={() => {
         setStep(1);
       }}
-    >
-      Start Tour
-    </Button>
+    />
   );
 };
 

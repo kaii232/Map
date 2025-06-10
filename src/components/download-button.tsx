@@ -1,11 +1,17 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { FeatureCollection } from "geojson";
+import { cn, downloadData } from "@/lib/utils";
+import { Feature, FeatureCollection } from "geojson";
 import { json2csv } from "json-2-csv";
-import Link from "next/link";
-import { ComponentProps, useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { ComponentProps } from "react";
 import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const flattenGeoJsonToCSV = (input: FeatureCollection) => {
@@ -14,7 +20,10 @@ const flattenGeoJsonToCSV = (input: FeatureCollection) => {
   for (let i = 0; i < items.length; i++) {
     if (items[i].properties) res.push(items[i].properties!);
   }
-  const csv = json2csv(res);
+  const csv = json2csv(res, {
+    expandNestedObjects: false,
+    emptyFieldValue: "",
+  });
   return csv;
 };
 /**
@@ -28,38 +37,82 @@ export default function DownloadButton({
 }: { data?: FeatureCollection; fileName: string } & ComponentProps<
   typeof Button
 >) {
-  const [url, setUrl] = useState<string>();
+  const downloadAsGeojson = () => {
+    if (!data) return;
+    const newFeatures: Feature[] = [];
+    data.features.forEach((feature) => {
+      newFeatures.push({
+        ...feature,
+        properties: { ...feature.properties, geometry: undefined },
+      });
+    });
+    const blob = new Blob(
+      [JSON.stringify({ type: "FeatureCollection", features: newFeatures })],
+      {
+        type: "application/geo+json",
+      },
+    );
+    downloadData(blob, fileName + ".geojson");
+  };
 
-  useEffect(() => {
-    if (!data || !fileName) return;
+  const downloadAsCsv = () => {
+    if (!data) return;
     const csv = flattenGeoJsonToCSV(data);
-    const downloadData = new Blob([csv], { type: "text/csv" });
-    const downloadUrl = window.URL.createObjectURL(downloadData);
-    setUrl(downloadUrl);
-  }, [data, fileName]);
+    const blob = new Blob([csv], { type: "text/csv" });
+    downloadData(blob, fileName + ".csv");
+  };
 
-  if (url)
+  if (!data || !fileName)
     return (
-      <Button variant="outline" className={className} asChild {...rest}>
-        <Link href={url} target="_blank" download={fileName} prefetch={false}>
-          Download Selected Data
-        </Link>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            disabled
+            className={cn(
+              "group flex h-10 w-full items-center justify-between rounded-full bg-neutral-800 px-3 py-2 pl-4 text-left text-sm font-bold text-white ring-offset-background placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:rounded-b-none data-[state=open]:rounded-t-2xl data-[state=open]:bg-neutral-950",
+              className,
+            )}
+            {...rest}
+          >
+            Download Selected Data
+            <ChevronDown
+              className="size-4 shrink-0 text-earth transition-transform group-data-[state=open]:rotate-180"
+              strokeWidth="3px"
+            />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">Please load some data first</TooltipContent>
+      </Tooltip>
     );
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="outline"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "group flex h-10 w-full items-center justify-between rounded-full bg-neutral-800 px-3 py-2 pl-4 text-left text-sm font-bold text-white ring-offset-background placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 data-[state=open]:rounded-b-none data-[state=open]:rounded-t-2xl data-[state=open]:bg-neutral-950",
+            className,
+          )}
           {...rest}
-          disabled
-          className={cn("disabled:pointer-events-auto", className)}
         >
           Download Selected Data
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="top">Please load some data first</TooltipContent>
-    </Tooltip>
+          <ChevronDown
+            className="size-4 shrink-0 text-earth transition-transform group-data-[state=open]:rotate-180"
+            strokeWidth="3px"
+          />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        sideOffset={0}
+        className="w-[--radix-dropdown-menu-trigger-width] rounded-t-none border-0 bg-neutral-950 text-neutral-400"
+      >
+        <DropdownMenuItem onSelect={downloadAsGeojson}>
+          Download as .geojson
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={downloadAsCsv}>
+          Download as .csv
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
