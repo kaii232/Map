@@ -5,6 +5,7 @@ import type { ALL_FILTERS, PopulateFilters } from "@/lib/data-definitions";
 import { Range } from "@/lib/filters";
 import {
   camelCaseToWords,
+  formatUnits,
   getInterpolateRange,
   velocityStops,
 } from "@/lib/utils";
@@ -187,7 +188,7 @@ const PopupContent = ({
   return (
     <div className="text-sm text-neutral-300">
       <span className="font-semibold">{camelCaseToWords(objKey)}:</span> {value}
-      {units}
+      {formatUnits(units)}
     </div>
   );
 };

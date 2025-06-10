@@ -136,6 +136,11 @@ const generateFilters = async (
   return output;
 };
 
+const lngLatUnits = {
+  longitude: "°",
+  latitude: "°",
+};
+
 const smtFormSchema = z.object(createZodSchema(ALL_FILTERS.smt));
 
 export const LoadSmt = async (
@@ -180,6 +185,7 @@ export const LoadSmt = async (
     bw: "km",
     ba: "km",
     bl: "km²",
+    ...lngLatUnits,
   });
 
   return {
@@ -235,6 +241,7 @@ export const LoadVlc = async (
   const geojson = sqlToGeojson(data);
   const units = defineUnits<typeof data>({
     elevation: "m",
+    ...lngLatUnits,
   });
 
   return {
@@ -286,6 +293,7 @@ export const LoadGNSS = async (
   const geojson = sqlToGeojson(data);
   const units = defineUnits<typeof data>({
     elevation: "m",
+    ...lngLatUnits,
   });
 
   return {
@@ -389,6 +397,7 @@ export const LoadSeis = async (
   const geojson = sqlToGeojson(data, ["range"]);
   const units = defineUnits<typeof data>({
     depth: "km",
+    ...lngLatUnits,
   });
   const range: Range = data.length ? data[0].range : [0, 1024];
 
@@ -430,6 +439,7 @@ export const LoadHf = async (
   const units = defineUnits<typeof data>({
     elevation: "m",
     qval: "W/m²",
+    ...lngLatUnits,
   });
 
   return {
@@ -530,6 +540,7 @@ export const LoadSlip = async (
     rake: "°",
     dip: "°",
     slip: "m",
+    ...lngLatUnits,
   });
 
   return {

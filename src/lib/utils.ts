@@ -24,6 +24,13 @@ export function cn(...inputs: ClassValue[]) {
 /** Velocities for the plate movement vectors map layer */
 export const velocityStops = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
+/** Conditionally adds a space before the units depending on what the unit is */
+export function formatUnits(units: string | undefined) {
+  if (!units) return null;
+  if (["°"].includes(units)) return units; // Edit the array if other units doesn't need a space
+  return " " + units;
+}
+
 /**
  * Used for displaying the message on the toast when loading data
  * On successful load of data, a message of: "Successfully loaded `length` `TOAST_MESSAGE`" is shown

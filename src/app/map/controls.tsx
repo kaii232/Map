@@ -184,8 +184,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Seafloor age",
       colour:
         "linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)",
-      min: "0",
-      max: "194Mya",
+      min: "0 Mya",
+      max: "194 Mya",
       visible: layers.seafloorAge,
     },
     {
@@ -209,8 +209,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
         if (index % 2 === 0) return prev;
         return `${prev}, ${current} ${arr[index - 1]}%`;
       }, "")})`,
-      min: `${ranges.seis && ranges.seis[0]}km`,
-      max: `${ranges.seis && ranges.seis[1]}km`,
+      min: `${ranges.seis && ranges.seis[0]} ${mapData.seis?.units?.depth}`,
+      max: `${ranges.seis && ranges.seis[1]} ${mapData.seis?.units?.depth}`,
       visible:
         dataVisibility.seis &&
         !!mapData.seis &&
@@ -220,8 +220,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Heatflow qval",
       colour:
         "linear-gradient(90deg,rgba(12,74,110,1)0%,rgba(2,132,199,1)25%,rgba(238,238,238,1)50%,rgba(225,29,72,1)75%,rgba(76,5,25,1)100%)",
-      min: "<-400W/m²",
-      max: ">400W/m²",
+      min: `<-400 ${mapData.hf?.units?.qval}`,
+      max: `>400 ${mapData.hf?.units?.qval}`,
       visible:
         dataVisibility.hf &&
         !!mapData.hf &&
@@ -231,8 +231,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Slab depth",
       colour:
         "linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)",
-      min: `${ranges.slab2 && ranges.slab2[0]}km`,
-      max: `${ranges.slab2 && ranges.slab2[1]}km`,
+      min: `${ranges.slab2 && ranges.slab2[0]} ${mapData.slab2?.units?.depth}`,
+      max: `${ranges.slab2 && ranges.slab2[1]} ${mapData.slab2?.units?.depth}`,
       visible:
         dataVisibility.slab2 &&
         !!mapData.slab2 &&
@@ -242,8 +242,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Slip",
       colour:
         "linear-gradient(90deg, #FCFDBF 3.28%, #FDDC9E 10.05%, #FEBA80 16.71%, #FD9869 23.11%, #F8765C 30.04%, #EB5760 36.81%, #D3436E 43.23%, #B63779 50.1%, #982D80 56.61%, #7B2382 63.38%, #5F187F 70.41%, #410F74 76.57%, #231151 83.43%, #0C0927 90.09%, #000004 96.86%)",
-      min: `${ranges.slip && ranges.slip[0]}m`,
-      max: `${ranges.slip && ranges.slip[1]}m`,
+      min: `${ranges.slip && ranges.slip[0]} ${mapData.slip?.units?.slip}`,
+      max: `${ranges.slip && ranges.slip[1]} ${mapData.slip?.units?.slip}`,
       visible:
         dataVisibility.slip &&
         !!mapData.slip &&
@@ -253,8 +253,8 @@ const ColourRamps = ({ className }: { className?: string }) => {
       name: "Crust Thickness",
       colour:
         "linear-gradient(90deg,#ffffff 0%,#e0dfde 10%,#c8c5b8 20%,#bdb596 30%,#b29f76 40%,#aa8665 50%,#a4705c 60%,#9b5850 70%,#883c3b 80%,#6b1f1e 90%,#4c0001 100%)",
-      min: "0km",
-      max: "80km",
+      min: "0 km",
+      max: "80 km",
       visible: layers.crustThickness,
     },
   ];
