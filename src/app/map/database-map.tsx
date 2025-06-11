@@ -14,7 +14,7 @@ import { Position } from "geojson";
 import { useAtomValue, useSetAtom } from "jotai";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   Layer,
   LayerProps,
@@ -156,31 +156,44 @@ const mapSymbolStyle = (
   };
 };
 
-const PopupContent = ({
-  objKey,
-  value,
-  units,
-}: {
-  objKey: string;
-  value: string | number;
-  units?: string;
-}) => {
-  if (objKey === "geometry") return null;
-  if (typeof value === "string" && value.includes("https://"))
-    return (
-      <div className="text-sm text-neutral-300">
-        <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
-        <Link
-          href={value}
-          target="_blank"
-          className="text-blue-400 hover:underline"
-        >
-          {value}
-        </Link>
-      </div>
-    );
-  if (typeof value === "string" && value.includes("doi:"))
 /** Displays a row in the map popup. Note that the geometry property is used for downloading in .csv. It is omitted from displaying here. */
+const PopupContent = memo(
+  ({
+    objKey,
+    value,
+    units,
+  }: {
+    objKey: string;
+    value: string | number | null;
+    units?: string;
+  }) => {
+    if (objKey === "geometry" || !value) return null;
+    if (typeof value === "string" && value.includes("https://"))
+      return (
+        <div className="text-sm text-neutral-300">
+          <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
+          <Link
+            href={value}
+            target="_blank"
+            className="text-blue-400 hover:underline"
+          >
+            {value}
+          </Link>
+        </div>
+      );
+    if (typeof value === "string" && value.includes("doi:"))
+      return (
+        <div className="text-sm text-neutral-300">
+          <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
+          <Link
+            href={value.replace("doi:", "https://doi.org/")}
+            target="_blank"
+            className="text-blue-400 hover:underline"
+          >
+            {value}
+          </Link>
+        </div>
+      );
     return (
       <div className="text-sm text-neutral-300">
         <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
