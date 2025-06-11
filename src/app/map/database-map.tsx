@@ -369,6 +369,15 @@ export default function DatabaseMap({
       smt: mapSymbolStyle(undefined, undefined, "custom:seamount"),
       gnss: [
         {
+          id: "Uncertainty",
+          type: "fill",
+          paint: {
+            "fill-color": "transparent",
+            "fill-outline-color": "#000",
+          },
+          filter: ["==", "$type", "Polygon"],
+        },
+        {
           id: "Icon",
           type: "circle",
           paint: {

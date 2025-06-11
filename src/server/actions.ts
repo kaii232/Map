@@ -54,24 +54,28 @@ export type ActionReturn<T = undefined> =
   | { success: false; error: string };
 
 const sqlToGeojson = (
-  input: {
-    id: number;
+  input: ({
+    id: number | null;
     geojson: string;
     [key: string]: unknown;
-  }[],
+  } | null)[],
   excludeKey?: string[],
 ): FeatureCollection => {
   const features: Feature[] = [];
+  const added: Record<string | number, boolean> = {};
   for (let i = 0; i < input.length; i++) {
-    const properties: GeoJsonProperties = { ...input[i] };
+    if (!input[i] || !input[i]!.id || added[input[i]!.id!]) continue; // Do not add duplicate rows again
+    const currentVal = input[i]!;
+    added[currentVal.id!] = true;
+    const properties: GeoJsonProperties = { ...currentVal };
     delete properties.geojson;
     delete properties.id;
     if (excludeKey) excludeKey.map((key) => delete properties[key]);
     features.push({
       type: "Feature",
-      id: input[i].id,
+      id: currentVal.id!,
       properties,
-      geometry: JSON.parse(input[i].geojson),
+      geometry: JSON.parse(currentVal.geojson),
     });
   }
   return {
@@ -319,9 +323,6 @@ export const LoadGNSS = async (
         easting: gnssVectorInInvest.vectorEasting,
         northing: gnssVectorInInvest.vectorNorthing,
         vertical: gnssVectorInInvest.vectorVertical,
-        eastingUncertainty: gnssVectorInInvest.vectorEastingUnc,
-        northingUncertainty: gnssVectorInInvest.vectorNorthingUnc,
-        verticalUncertainty: gnssVectorInInvest.vectorVerticalUnc,
         correlation: gnssVectorInInvest.vectorCorr,
         timePeriod: gnssVectorInInvest.vectorTimePeriod,
         endPoint: sql`ST_ASGEOJSON(
@@ -331,6 +332,37 @@ export const LoadGNSS = async (
                           ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
                         )
                       )`.mapWith(JSON.parse),
+      },
+      ellipse: {
+        id: gnssVectorInInvest.vectorId,
+        eastingUncertainty: gnssVectorInInvest.vectorEastingUnc,
+        northingUncertainty: gnssVectorInInvest.vectorNorthingUnc,
+        verticalUncertainty: gnssVectorInInvest.vectorVerticalUnc,
+        geojson: sql<string>`ST_ASGEOJSON(
+                              ST_Translate(
+                                ST_Scale(
+                                  ST_Buffer(
+                                      ST_SetSRID(ST_Point(0,0), 4326), 
+                                      0.2
+                                    ), 
+                                  ABS(${gnssVectorInInvest.vectorEastingUnc}), ABS(${gnssVectorInInvest.vectorNorthingUnc})
+                                ),
+                                ST_X(
+                                  ST_PROJECT(
+                                    ST_POINT(${gnssStnInInvest.gnssLon}, ${gnssStnInInvest.gnssLat}), 
+                                    SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 5000,
+                                    ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
+                                  )::geometry
+                                ), 
+                                ST_Y(
+                                  ST_PROJECT(
+                                    ST_POINT(${gnssStnInInvest.gnssLon}, ${gnssStnInInvest.gnssLat}), 
+                                    SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 5000,
+                                    ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
+                                  )::geometry
+                                )
+                              )
+                            )`,
       },
     })
     .from(gnssStnInInvest)
@@ -352,8 +384,11 @@ export const LoadGNSS = async (
     )
     .where(and(...filters));
   const geojson = sqlToGeojson(data.map((val) => val.gnss));
+  const vectorUnc = sqlToGeojson(data.map((val) => val.ellipse));
   const units = defineUnits<
-    ((typeof data)[number]["gnss"] & (typeof data)[number]["vector"])[]
+    ((typeof data)[number]["gnss"] &
+      (typeof data)[number]["vector"] &
+      (typeof data)[number]["ellipse"])[]
   >({
     elevation: "m",
     easting: "m/yr",
@@ -371,6 +406,7 @@ export const LoadGNSS = async (
       geojson.features as Feature<Point>[],
     ),
   );
+  geojson.features = geojson.features.concat(vectorUnc.features);
 
   return {
     success: true,
