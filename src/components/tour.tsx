@@ -194,12 +194,9 @@ const TourStep = ({
     const container = containerRef.current;
     const onResize = () => {
       if (ticking.current) return;
-      // Calling getBoundingClientRect on scroll is not very performant
-      // This throttles the event so less calls are fired
-      // See: https://developer.mozilla.org/en-US/docs/Web/API/Document/scroll_event#scroll_event_throttling
       if (!container) return;
       setDimensions(container.getBoundingClientRect());
-      // About 60fps
+      // This throttles the event so less calls are fired at about 60fps
       setTimeout(() => (ticking.current = false), 16);
       ticking.current = true;
     };

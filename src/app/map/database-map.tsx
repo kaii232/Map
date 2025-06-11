@@ -115,6 +115,13 @@ const getSeisProps = (
         ],
 });
 
+/**
+ * Convenience function to get the maps text and icon layer styles
+ * @param get The property to get to display the text
+ * @param offset The text offset from the icon/other layer
+ * @param icon Name of the icon to use
+ * @returns An object which can be spread directly into the layer style definition
+ */
 const mapSymbolStyle = (
   get: string = "name",
   offset: number = 1.2,
@@ -173,25 +180,18 @@ const PopupContent = ({
       </div>
     );
   if (typeof value === "string" && value.includes("doi:"))
+/** Displays a row in the map popup. Note that the geometry property is used for downloading in .csv. It is omitted from displaying here. */
     return (
       <div className="text-sm text-neutral-300">
         <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
-        <Link
-          href={value.replace("doi:", "https://doi.org/")}
-          target="_blank"
-          className="text-blue-400 hover:underline"
-        >
-          {value}
-        </Link>
+        {value}
+        {formatUnits(units)}
       </div>
     );
-  return (
-    <div className="text-sm text-neutral-300">
-      <span className="font-semibold">{camelCaseToWords(objKey)}:</span> {value}
-      {formatUnits(units)}
-    </div>
-  );
-};
+  },
+);
+
+PopupContent.displayName = "PopupContent";
 
 export default function DatabaseMap({
   initialData,
