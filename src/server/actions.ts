@@ -323,6 +323,7 @@ export const LoadGNSS = async (
       },
       vector: {
         id: gnssVectorInInvest.vectorId,
+        gnssId: gnssStnInInvest.gnssId,
         source: biblInInvest.biblTitle,
         easting: gnssVectorInInvest.vectorEasting,
         northing: gnssVectorInInvest.vectorNorthing,
@@ -332,7 +333,8 @@ export const LoadGNSS = async (
         geometry: sql<string>`ST_MAKELINE(${gnssStnInInvest.gnssGeom},${ellipses.projected})`,
       },
       ellipse: {
-        id: gnssVectorInInvest.vectorId,
+        id: gnssVectorInInvest.vectorId, // Since the ID of ellipse and vector is the same, hovering over ellipses sets the feature state of the vectors to hover also.
+        gnssId: gnssStnInInvest.gnssId,
         eastingUncertainty: gnssVectorInInvest.vectorEastingUnc,
         northingUncertainty: gnssVectorInInvest.vectorNorthingUnc,
         verticalUncertainty: gnssVectorInInvest.vectorVerticalUnc,
