@@ -13,9 +13,7 @@ import {
   Feature,
   FeatureCollection,
   GeoJsonProperties,
-  LineString,
   MultiPolygon,
-  Point,
   Polygon,
 } from "geojson";
 import { headers } from "next/headers";
@@ -257,35 +255,6 @@ export const LoadVlc = async (
   };
 };
 
-const createGNSSVectors = (
-  vector: {
-    id: number | null;
-    endPoint: Point;
-    [key: string]: unknown;
-  }[],
-  stations: Feature<Point>[],
-) => {
-  const vectors: Feature<LineString>[] = [];
-  for (let i = 0; i < vector.length; i++) {
-    if (vector[i].id === null) continue;
-    const start = stations[i].geometry.coordinates;
-    const end = vector[i].endPoint.coordinates;
-    const properties: GeoJsonProperties = { ...vector[i] };
-    delete properties.endPoint;
-    delete properties.id;
-    vectors.push({
-      type: "Feature",
-      geometry: {
-        type: "LineString",
-        coordinates: [start, end],
-      },
-      properties,
-      id: vector[i].id!,
-    });
-  }
-  return vectors;
-};
-
 const gnssFormSchema = z.object(createZodSchema(ALL_FILTERS.gnss));
 export const LoadGNSS = async (
   values: z.infer<typeof gnssFormSchema>,
@@ -301,6 +270,41 @@ export const LoadGNSS = async (
     drawing,
   );
 
+  const endPoint = db
+    .select({
+      vectorId: gnssVectorInInvest.vectorId,
+      eastingUncertainty: gnssVectorInInvest.vectorEastingUnc,
+      northingUncertainty: gnssVectorInInvest.vectorNorthingUnc,
+      projected: sql<string>`ST_PROJECT(
+                              ST_POINT(${gnssStnInInvest.gnssLon}, ${gnssStnInInvest.gnssLat}), 
+                              SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 5000,
+                              ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
+                            )::geometry`.as("projected"),
+    })
+    .from(gnssStnInInvest)
+    .leftJoin(
+      gnssVectorInInvest,
+      eq(gnssVectorInInvest.vectorGnssId, gnssStnInInvest.gnssId),
+    )
+    .as("end_point");
+  const ellipses = db
+    .select({
+      vectorId: endPoint.vectorId,
+      projected: endPoint.projected,
+      ellipse: sql<string>`ST_Translate(
+                              ST_Scale(
+                                ST_Buffer(
+                                    ST_SetSRID(ST_Point(0,0), 4326), 
+                                    0.2
+                                  ), 
+                                ABS(${endPoint.eastingUncertainty}), ABS(${endPoint.northingUncertainty})
+                              ),
+                              ST_X(${endPoint.projected}), 
+                              ST_Y(${endPoint.projected})
+                            )`.as("ellipse"),
+    })
+    .from(endPoint)
+    .as("ellipses");
   const data = await db
     .select({
       gnss: {
@@ -323,46 +327,17 @@ export const LoadGNSS = async (
         easting: gnssVectorInInvest.vectorEasting,
         northing: gnssVectorInInvest.vectorNorthing,
         vertical: gnssVectorInInvest.vectorVertical,
-        correlation: gnssVectorInInvest.vectorCorr,
         timePeriod: gnssVectorInInvest.vectorTimePeriod,
-        endPoint: sql`ST_ASGEOJSON(
-                        ST_PROJECT(
-                          ST_POINT(${gnssStnInInvest.gnssLon}, ${gnssStnInInvest.gnssLat}), 
-                          SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 5000,
-                          ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
-                        )
-                      )`.mapWith(JSON.parse),
+        geojson: sql<string>`ST_ASGEOJSON(ST_MAKELINE(${gnssStnInInvest.gnssGeom},${ellipses.projected}))`,
+        geometry: sql<string>`ST_MAKELINE(${gnssStnInInvest.gnssGeom},${ellipses.projected})`,
       },
       ellipse: {
         id: gnssVectorInInvest.vectorId,
         eastingUncertainty: gnssVectorInInvest.vectorEastingUnc,
         northingUncertainty: gnssVectorInInvest.vectorNorthingUnc,
         verticalUncertainty: gnssVectorInInvest.vectorVerticalUnc,
-        geojson: sql<string>`ST_ASGEOJSON(
-                              ST_Translate(
-                                ST_Scale(
-                                  ST_Buffer(
-                                      ST_SetSRID(ST_Point(0,0), 4326), 
-                                      0.2
-                                    ), 
-                                  ABS(${gnssVectorInInvest.vectorEastingUnc}), ABS(${gnssVectorInInvest.vectorNorthingUnc})
-                                ),
-                                ST_X(
-                                  ST_PROJECT(
-                                    ST_POINT(${gnssStnInInvest.gnssLon}, ${gnssStnInInvest.gnssLat}), 
-                                    SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 5000,
-                                    ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
-                                  )::geometry
-                                ), 
-                                ST_Y(
-                                  ST_PROJECT(
-                                    ST_POINT(${gnssStnInInvest.gnssLon}, ${gnssStnInInvest.gnssLat}), 
-                                    SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 5000,
-                                    ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
-                                  )::geometry
-                                )
-                              )
-                            )`,
+        geojson: sql<string>`ST_ASGEOJSON(${ellipses.ellipse})`,
+        geometry: ellipses.ellipse,
       },
     })
     .from(gnssStnInInvest)
@@ -378,6 +353,7 @@ export const LoadGNSS = async (
       gnssVectorInInvest,
       eq(gnssVectorInInvest.vectorGnssId, gnssStnInInvest.gnssId),
     )
+    .leftJoin(ellipses, eq(gnssVectorInInvest.vectorId, ellipses.vectorId))
     .leftJoin(
       biblInInvest,
       eq(biblInInvest.biblId, gnssVectorInInvest.vectorBiblId),
@@ -385,6 +361,7 @@ export const LoadGNSS = async (
     .where(and(...filters));
   const geojson = sqlToGeojson(data.map((val) => val.gnss));
   const vectorUnc = sqlToGeojson(data.map((val) => val.ellipse));
+  const vectorLine = sqlToGeojson(data.map((val) => val.vector));
   const units = defineUnits<
     ((typeof data)[number]["gnss"] &
       (typeof data)[number]["vector"] &
@@ -400,12 +377,7 @@ export const LoadGNSS = async (
     ...lngLatUnits,
   });
   // Adds the GNSS vectors into the geojson
-  geojson.features = geojson.features.concat(
-    createGNSSVectors(
-      data.map((val) => val.vector),
-      geojson.features as Feature<Point>[],
-    ),
-  );
+  geojson.features = geojson.features.concat(vectorLine.features);
   geojson.features = geojson.features.concat(vectorUnc.features);
 
   return {
