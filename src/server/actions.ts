@@ -652,14 +652,11 @@ export const LoadRock = async (
     .select({
       id: rockSampleInInvest.rockSampleId,
       name: rockSampleInInvest.rockSampleName,
-      locationComment: rockSampleInInvest.rockLocCmt,
-      rockName: rockSampleInInvest.rockName,
       mineral: rockSampleInInvest.rockMineral,
-      "si\\O₂": rockSampleInInvest.rockSio2, // Backslash so the camelCaseToWords function does not split it into Si O₂
-      "na₂\\O": rockSampleInInvest.rockNa2O,
-      "k₂\\O": rockSampleInInvest.rockK2O,
-      ageKa: rockSampleInInvest.rockAgeKa,
-      ageMa: rockSampleInInvest.rockAgeMa,
+      "si\\O₂": rockSampleInInvest.rockSio2Wt, // Backslash so the camelCaseToWords function does not split it into Si O₂
+      "na₂\\O": rockSampleInInvest.rockNa2OWt,
+      "k₂\\O": rockSampleInInvest.rockK2OWt,
+      geologicAge: rockSampleInInvest.rockGeologicalAge,
       source: biblInInvest.biblTitle,
       geojson: sql<string>`ST_ASGEOJSON(${rockSampleInInvest.rockGeom})`,
       geometry: sql.raw(rockSampleInInvest.rockGeom.name).mapWith(String),
@@ -672,8 +669,6 @@ export const LoadRock = async (
     "si\\O₂": "wt%",
     "na₂\\O": "wt%",
     "k₂\\O": "wt%",
-    ageKa: "Ka",
-    ageMa: "Ma",
   });
 
   return {
