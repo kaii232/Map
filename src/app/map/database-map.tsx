@@ -35,7 +35,13 @@ import {
 } from "react-map-gl/maplibre";
 import { GeoJSONStoreFeatures } from "terra-draw";
 import triangle from "../../../public/triangle.png";
-import { dataAtom, dataVisibilityAtom, drawingAtom, rangeAtom } from "./atoms";
+import {
+  colorsAtom,
+  dataAtom,
+  dataVisibilityAtom,
+  drawingAtom,
+  rangeAtom,
+} from "./atoms";
 import Basemaps from "./basemaps";
 import Controls from "./controls";
 import DownloadControl from "./download-control";
@@ -64,6 +70,7 @@ const drawOptionsModes: (
 const getSeisProps = (
   property: "none" | "mb" | "mw" | "ms",
   range: Range | undefined,
+  colors: string[],
 ): Exclude<LayerProps, { type: "custom" }> & { id: string } => ({
   id: property.charAt(0).toUpperCase() + property.substring(1),
   type: "circle",
@@ -80,22 +87,7 @@ const getSeisProps = (
       "interpolate",
       ["linear"],
       ["get", "depth"],
-      ...getInterpolateRange(
-        range ?? [2, 1024],
-        [
-          "#fff7ec",
-          "#fee8c8",
-          "#fdd49e",
-          "#fdbb84",
-          "#eb7c49",
-          "#db5235",
-          "#b52112",
-          "#750606",
-          "#360A07",
-          "#000000",
-        ],
-        0.5,
-      ),
+      ...getInterpolateRange(range ?? [2, 1024], colors, 0.5),
     ],
     "circle-radius":
       property !== "none"
@@ -356,6 +348,7 @@ export default function DatabaseMap({
 }) {
   const { map } = useMap();
   const mapData = useAtomValue(dataAtom);
+  const dataColors = useAtomValue(colorsAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
 
   const [hoverInfo, setHoverInfo] = useState<PopupFeature[]>([]);
@@ -524,29 +517,17 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "slip"],
-            ...getInterpolateRange(ranges.slip ?? [0, 1], [
-              "#FCFDBF",
-              "#FDDC9E",
-              "#FD9869",
-              "#F8765C",
-              "#D3436E",
-              "#B63779",
-              "#7B2382",
-              "#5F187F",
-              "#231151",
-              "#0C0927",
-              "#000004",
-            ]),
+            ...getInterpolateRange(ranges.slip ?? [0, 1], dataColors.slip),
           ],
         },
       },
       vlc: mapSymbolStyle(undefined, undefined, "triangle-sdf", {
-        "icon-color": "#1E293B",
+        "icon-color": dataColors.vlc,
         "icon-halo-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 10, 4],
         "icon-halo-color": "#f8fafc",
       }),
       smt: mapSymbolStyle(undefined, undefined, "triangle-sdf", {
-        "icon-color": "#854D0E",
+        "icon-color": dataColors.smt,
         "icon-halo-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 10, 4],
         "icon-halo-color": "#f8fafc",
       }),
@@ -582,7 +563,7 @@ export default function DatabaseMap({
               8,
               2,
             ],
-            "circle-color": "#E39F40",
+            "circle-color": dataColors.gnss.icon,
             "circle-stroke-color": "#f8fafc",
           },
           filter: ["==", "$type", "Point"],
@@ -598,7 +579,7 @@ export default function DatabaseMap({
             "line-cap": "round",
           },
           paint: {
-            "line-color": "#8b36d1",
+            "line-color": dataColors.gnss.vector,
             "line-width": [
               "interpolate",
               ["linear"],
@@ -640,7 +621,7 @@ export default function DatabaseMap({
           "line-cap": "round",
         },
         paint: {
-          "line-color": "#f43f5e",
+          "line-color": dataColors.flt,
           "line-width": [
             "interpolate",
             ["linear"],
@@ -663,14 +644,7 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "depth"],
-            ...getInterpolateRange(ranges.slab2 ?? [0, 800], [
-              "#ffffa4",
-              "#fca309",
-              "#db503b",
-              "#922568",
-              "#400a67",
-              "#fff",
-            ]),
+            ...getInterpolateRange(ranges.slab2 ?? [0, 800], dataColors.slab2),
           ],
           "line-width": [
             "interpolate",
@@ -685,10 +659,10 @@ export default function DatabaseMap({
         },
       },
       seis: [
-        getSeisProps("mw", ranges.seis),
-        getSeisProps("mb", ranges.seis),
-        getSeisProps("ms", ranges.seis),
-        getSeisProps("none", ranges.seis),
+        getSeisProps("mw", ranges.seis, dataColors.seis),
+        getSeisProps("mb", ranges.seis, dataColors.seis),
+        getSeisProps("ms", ranges.seis, dataColors.seis),
+        getSeisProps("none", ranges.seis, dataColors.seis),
       ],
       hf: [
         {
@@ -731,10 +705,7 @@ export default function DatabaseMap({
               "interpolate",
               ["linear"],
               ["get", "qval"],
-              ...getInterpolateRange(
-                [-400, 400],
-                ["#0c4a6e", "#0284c7", "#eeeeee", "#e11d48", "#4c0519"],
-              ),
+              ...getInterpolateRange([-400, 400], dataColors.hf),
             ],
           },
         },
@@ -767,7 +738,7 @@ export default function DatabaseMap({
               2,
             ],
             "circle-opacity": 0.7,
-            "circle-color": "#b85a1f",
+            "circle-color": dataColors.rock,
             "circle-stroke-color": "#f8fafc",
           },
         },
@@ -777,7 +748,7 @@ export default function DatabaseMap({
         },
       ],
     }),
-    [ranges],
+    [ranges, dataColors],
   );
 
   // Gets all the layer IDs for the map's interactiveLayerIds prop

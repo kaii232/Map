@@ -46,3 +46,41 @@ export const dataAtom = atom<
 export const rangeAtom = atom<
   Partial<Record<keyof typeof ALL_FILTERS_CLIENT, Range>>
 >({});
+
+export const colorsAtom = atom({
+  flt: "#f43f5e",
+  gnss: { icon: "#E39F40", vector: "#8b36d1" },
+  hf: ["#0c4a6e", "#0284c7", "#eeeeee", "#e11d48", "#4c0519"],
+  seis: [
+    "#fff7ec",
+    "#fee8c8",
+    "#fdd49e",
+    "#fdbb84",
+    "#eb7c49",
+    "#db5235",
+    "#b52112",
+    "#750606",
+    "#360A07",
+    "#000000",
+  ],
+  slab2: ["#ffffa4", "#fca309", "#db503b", "#922568", "#400a67", "#fff"],
+  smt: "#854D0E",
+  vlc: "#1E293B",
+  slip: [
+    "#FCFDBF",
+    "#FDDC9E",
+    "#FD9869",
+    "#F8765C",
+    "#D3436E",
+    "#B63779",
+    "#7B2382",
+    "#5F187F",
+    "#231151",
+    "#0C0927",
+    "#000004",
+  ],
+  rock: "#b85a1f",
+} satisfies Record<
+  keyof typeof ALL_FILTERS_CLIENT,
+  string | string[] | Record<string, string | string[]>
+>);

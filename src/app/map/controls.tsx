@@ -74,6 +74,7 @@ import {
   panelOpenAtom,
   rangeAtom,
 } from "./atoms";
+import ColorControl from "./color-control";
 import DataFormFilters from "./data-filter";
 import DataNoFilter from "./data-no-filter";
 
@@ -653,6 +654,7 @@ const Controls = ({
 
                     return (
                       <SelectTabsTab value={key} key={key + "tab"}>
+                        <ColorControl dataKey={key} />
                         <div className="my-6 flex items-center justify-between">
                           <label
                             htmlFor={key}
