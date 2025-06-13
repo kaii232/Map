@@ -1,6 +1,7 @@
 "use client";
 
 import { style } from "@/assets/map_style";
+import { Button } from "@/components/ui/button";
 import type { ALL_FILTERS, PopulateFilters } from "@/lib/data-definitions";
 import { Range } from "@/lib/filters";
 import {
@@ -12,6 +13,7 @@ import {
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Position } from "geojson";
 import { useAtomValue, useSetAtom } from "jotai";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Link from "next/link";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -206,6 +208,122 @@ const PopupContent = memo(
 
 PopupContent.displayName = "PopupContent";
 
+interface PopupFeature {
+  feature: MapGeoJSONFeature;
+  lng: number;
+  lat: number;
+}
+
+const PaginatedPopup = ({
+  features,
+  ...rest
+}:
+  | {
+      features: PopupFeature[];
+      close: true;
+      onClose: () => void;
+      clearHover: () => void;
+    }
+  | {
+      features: PopupFeature[];
+      close: false;
+    }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const mapData = useAtomValue(dataAtom);
+
+  // Because we set the key of the component, the currentIndex resets automatically. If no key is set, uncomment the below
+  // useLayoutEffect(() => {
+  //   //Reset to 0 whenever the features change
+  //   setCurrentIndex(0);
+  // }, [features]);
+
+  if (!features.length) return null;
+
+  const activeFeature = features[rest.close ? currentIndex : 0]; //Force index 0 for hover popup. It should never not be 0 since pointer events is none but just in case
+
+  if (!activeFeature) return null;
+
+  return (
+    <Popup
+      longitude={activeFeature.lng}
+      latitude={activeFeature.lat}
+      offset={{
+        top: [0, 12],
+        "top-left": [0, 12],
+        "top-right": [0, 12],
+        bottom: [0, -12],
+        "bottom-left": [0, -12],
+        "bottom-right": [0, -12],
+        left: [12, 0],
+        right: [-12, 0],
+        center: [0, 0],
+      }}
+      closeButton={rest.close}
+      style={rest.close ? undefined : { pointerEvents: "none" }}
+      onClose={rest.close ? rest.onClose : undefined}
+      closeOnClick={false}
+      className={`[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:p-0 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md ${!rest.close ? "[&_.maplibregl-popup-content]:pointer-events-none" : ""}`}
+    >
+      <div
+        className="px-4 py-3"
+        onMouseEnter={rest.close ? rest.clearHover : undefined}
+      >
+        {activeFeature.feature.properties.name && (
+          <div className="mb-2 text-lg font-semibold text-neutral-50">
+            {activeFeature.feature.properties.name}
+          </div>
+        )}
+        {Object.entries(activeFeature.feature.properties ?? {}).map(
+          ([key, value]) => {
+            if (key === "name" || !value) return;
+            return (
+              <PopupContent
+                key={key}
+                objKey={key}
+                value={value}
+                units={
+                  MAP_LAYER_UNITS[activeFeature.feature.source]?.[key] ??
+                  mapData[
+                    activeFeature.feature.source.slice(
+                      0,
+                      -6,
+                    ) as keyof typeof mapData
+                  ]?.units?.[key]
+                }
+              />
+            );
+          },
+        )}
+        {features.length > 1 && (
+          <div className="mt-2 flex items-center justify-end gap-2">
+            Feature {currentIndex + 1} of {features.length}
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Previous feature"
+              className="size-8"
+              disabled={currentIndex <= 0}
+              onClick={() => setCurrentIndex((prev) => prev - 1)}
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Next feature"
+              className="size-8"
+              disabled={currentIndex >= features.length - 1}
+              onClick={() => setCurrentIndex((prev) => prev + 1)}
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        )}
+      </div>
+    </Popup>
+  );
+};
+
 export default function DatabaseMap({
   initialData,
 }: {
@@ -216,17 +334,9 @@ export default function DatabaseMap({
   const mapData = useAtomValue(dataAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
 
-  const [hoverInfo, setHoverInfo] = useState<{
-    feature: MapGeoJSONFeature;
-    lng: number;
-    lat: number;
-  }>();
+  const [hoverInfo, setHoverInfo] = useState<PopupFeature[]>([]);
 
-  const [selectedFeature, setselectedFeature] = useState<{
-    feature: MapGeoJSONFeature;
-    lng: number;
-    lat: number;
-  }>();
+  const [selectedFeature, setSelectedFeature] = useState<PopupFeature[]>([]);
 
   const setDrawing = useSetAtom(drawingAtom);
   const ranges = useAtomValue(rangeAtom);
@@ -258,66 +368,83 @@ export default function DatabaseMap({
         features,
         lngLat: { lng, lat },
       } = event;
-      const hoveredFeature = features && features[0];
+      const hoveredFeatures = features;
       if (hoverInfo) {
-        // Old hover info
-        map.setFeatureState(
-          {
-            source: hoverInfo.feature.layer.source,
-            id: hoverInfo.feature.id,
-          },
-          { hover: false },
-        );
+        for (let i = 0, length = hoverInfo.length; i < length; i++) {
+          // Old hover info
+          map.setFeatureState(
+            {
+              source: hoverInfo[i].feature.layer.source,
+              id: hoverInfo[i].feature.id,
+            },
+            { hover: false },
+          );
+        }
       }
-      if (
-        !hoveredFeature ||
-        hoveredFeature.source === "platesSource" ||
-        hoveredFeature.source === "platesBoundariesSource" ||
-        hoveredFeature.source === "platesNewSource" ||
-        hoveredFeature.source === "platesNewBoundariesSource" ||
-        hoveredFeature.source === "crustThicknessSource"
-      ) {
-        setHoverInfo(undefined);
+      if (!hoveredFeatures) {
+        setHoverInfo([]);
         return;
       }
-      if (
-        !selectedFeature ||
-        (selectedFeature &&
-          (selectedFeature.feature.source !== hoveredFeature.source ||
-            selectedFeature.feature.id !== hoveredFeature.id)) // IDs are only unique within each source
-      ) {
+
+      const validFeatures: PopupFeature[] = [];
+      for (let i = 0, length = hoveredFeatures.length; i < length; i++) {
+        const currentFeature = hoveredFeatures[i];
+        if (
+          currentFeature.source === "platesSource" ||
+          currentFeature.source === "platesBoundariesSource" ||
+          currentFeature.source === "platesNewSource" ||
+          currentFeature.source === "platesNewBoundariesSource" ||
+          currentFeature.source === "crustThicknessSource"
+        ) {
+          continue;
+        }
+
+        // IDs are only unique within each source
+        if (
+          selectedFeature.some(
+            (val) =>
+              val.feature.id === currentFeature.id &&
+              val.feature.source === currentFeature.source,
+          )
+        ) {
+          continue;
+        }
+
         const popupLon =
-          hoveredFeature.geometry.type === "Point"
-            ? hoveredFeature.geometry.coordinates[0]
+          currentFeature.geometry.type === "Point"
+            ? currentFeature.geometry.coordinates[0]
             : lng;
         const popupLat =
-          hoveredFeature.geometry.type === "Point"
-            ? hoveredFeature.geometry.coordinates[1]
+          currentFeature.geometry.type === "Point"
+            ? currentFeature.geometry.coordinates[1]
             : lat;
-        setHoverInfo({
-          feature: hoveredFeature,
+        validFeatures.push({
+          feature: currentFeature,
           lng: popupLon,
           lat: popupLat,
         });
         map.setFeatureState(
-          { source: hoveredFeature.layer.source, id: hoveredFeature.id },
+          { source: currentFeature.layer.source, id: currentFeature.id },
           { hover: true },
         );
       }
+      setHoverInfo(validFeatures);
     },
     [hoverInfo, map, selectedFeature],
   );
 
   const clearHover = useCallback(() => {
     if (!map || !hoverInfo) return;
-    map.setFeatureState(
-      {
-        source: hoverInfo.feature.layer.source,
-        id: hoverInfo.feature.id,
-      },
-      { hover: false },
-    );
-    setHoverInfo(undefined);
+    for (let i = 0, length = hoverInfo.length; i < length; i++) {
+      map.setFeatureState(
+        {
+          source: hoverInfo[i].feature.layer.source,
+          id: hoverInfo[i].feature.id,
+        },
+        { hover: false },
+      );
+    }
+    setHoverInfo([]);
   }, [map, hoverInfo]);
 
   const onClick = useCallback(
@@ -326,19 +453,24 @@ export default function DatabaseMap({
         features,
         lngLat: { lng, lat },
       } = event;
-      const clicked = features && features[0];
-      if (clicked && map) {
+      const clickedFeatures = features;
+      if (!clickedFeatures || !map) return;
+
+      const out: PopupFeature[] = [];
+      for (let i = 0, length = clickedFeatures.length; i < length; i++) {
+        const currentFeature = clickedFeatures[i];
         const popupLon =
-          clicked.geometry.type === "Point"
-            ? clicked.geometry.coordinates[0]
+          currentFeature.geometry.type === "Point"
+            ? currentFeature.geometry.coordinates[0]
             : lng;
         const popupLat =
-          clicked.geometry.type === "Point"
-            ? clicked.geometry.coordinates[1]
+          currentFeature.geometry.type === "Point"
+            ? currentFeature.geometry.coordinates[1]
             : lat;
-        setselectedFeature({ feature: clicked, lng: popupLon, lat: popupLat });
-        clearHover();
+        out.push({ feature: currentFeature, lng: popupLon, lat: popupLat });
       }
+      setSelectedFeature(out);
+      clearHover();
     },
     [clearHover, map],
   );
@@ -701,110 +833,14 @@ export default function DatabaseMap({
             </Source>
           );
         })}
-        {hoverInfo && (
-          <Popup
-            longitude={hoverInfo.lng}
-            latitude={hoverInfo.lat}
-            offset={{
-              top: [0, 12],
-              "top-left": [0, 12],
-              "top-right": [0, 12],
-              bottom: [0, -12],
-              "bottom-left": [0, -12],
-              "bottom-right": [0, -12],
-              left: [12, 0],
-              right: [-12, 0],
-              center: [0, 0],
-            }}
-            style={{ pointerEvents: "none" }}
-            closeButton={false}
-            closeOnClick={true}
-            className={
-              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-content]:pointer-events-none [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
-            }
-          >
-            {hoverInfo.feature.properties.name && (
-              <div className="mb-2 text-lg font-semibold text-neutral-50">
-                {hoverInfo.feature.properties.name}
-              </div>
-            )}
-            {Object.entries(hoverInfo.feature.properties).map(
-              ([key, value]) => {
-                if (key === "name" || !value) return;
-                return (
-                  <PopupContent
-                    key={key}
-                    objKey={key}
-                    value={value}
-                    units={
-                      MAP_LAYER_UNITS[hoverInfo.feature.source]?.[key] ??
-                      mapData[
-                        hoverInfo.feature.source.slice(
-                          0,
-                          -6,
-                        ) as keyof typeof mapData
-                      ]?.units?.[key]
-                    }
-                  />
-                );
-              },
-            )}
-          </Popup>
-        )}
-        {selectedFeature && (
-          <Popup
-            longitude={selectedFeature.lng}
-            latitude={selectedFeature.lat}
-            offset={{
-              top: [0, 12],
-              "top-left": [0, 12],
-              "top-right": [0, 12],
-              bottom: [0, -12],
-              "bottom-left": [0, -12],
-              "bottom-right": [0, -12],
-              left: [12, 0],
-              right: [-12, 0],
-              center: [0, 0],
-            }}
-            closeButton={true}
-            onClose={() => setselectedFeature(undefined)}
-            closeOnClick={false}
-            className={
-              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:p-0 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
-            }
-          >
-            <div className="px-4 py-3" onMouseEnter={clearHover}>
-              {selectedFeature.feature.properties.name && (
-                <div className="mb-2 text-lg font-semibold text-neutral-50">
-                  {selectedFeature.feature.properties.name}
-                </div>
-              )}
-              {Object.entries(selectedFeature.feature.properties).map(
-                ([key, value]) => {
-                  if (key === "name" || !value) return;
-                  return (
-                    <PopupContent
-                      key={key}
-                      objKey={key}
-                      value={value}
-                      units={
-                        MAP_LAYER_UNITS[selectedFeature.feature.source]?.[
-                          key
-                        ] ??
-                        mapData[
-                          selectedFeature.feature.source.slice(
-                            0,
-                            -6,
-                          ) as keyof typeof mapData
-                        ]?.units?.[key]
-                      }
-                    />
-                  );
-                },
-              )}
-            </div>
-          </Popup>
-        )}
+        <PaginatedPopup features={hoverInfo} close={false} />
+        <PaginatedPopup
+          features={selectedFeature}
+          key={selectedFeature.toString()}
+          close
+          clearHover={clearHover}
+          onClose={() => setSelectedFeature([])}
+        />
       </Map>
     </>
   );
