@@ -1,11 +1,13 @@
 "use client";
 
 import { style } from "@/assets/map_style";
+import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import type { ALL_FILTERS, PopulateFilters } from "@/lib/data-definitions";
 import { Range } from "@/lib/filters";
 import {
   camelCaseToWords,
+  cn,
   formatUnits,
   getInterpolateRange,
   velocityStops,
@@ -262,7 +264,10 @@ const PaginatedPopup = ({
       style={rest.close ? undefined : { pointerEvents: "none" }}
       onClose={rest.close ? rest.onClose : undefined}
       closeOnClick={false}
-      className={`[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:p-0 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md ${!rest.close ? "[&_.maplibregl-popup-content]:pointer-events-none" : ""}`}
+      className={cn(
+        "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:p-0 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md",
+        !rest.close && "[&_.maplibregl-popup-content]:pointer-events-none",
+      )}
     >
       <div
         className="px-4 py-3"
@@ -293,6 +298,19 @@ const PaginatedPopup = ({
               />
             );
           },
+        )}
+        {features.length >= 5 && (
+          <div className="mt-2">
+            <DownloadButton
+              className="w-full"
+              label="Download Cluster Data"
+              data={{
+                type: "FeatureCollection",
+                features: features.map((val) => val.feature),
+              }}
+              fileName="cluster_data"
+            />
+          </div>
         )}
         {features.length > 1 && (
           <div className="mt-2 flex items-center justify-end gap-2">

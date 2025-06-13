@@ -33,10 +33,13 @@ export default function DownloadButton({
   data,
   fileName,
   className,
+  label = "Download Selected Data",
   ...rest
-}: { data?: FeatureCollection; fileName: string } & ComponentProps<
-  typeof Button
->) {
+}: {
+  data?: FeatureCollection;
+  fileName: string;
+  label?: string;
+} & ComponentProps<typeof Button>) {
   const downloadAsGeojson = () => {
     if (!data) return;
     const newFeatures: Feature[] = [];
@@ -74,7 +77,7 @@ export default function DownloadButton({
             )}
             {...rest}
           >
-            Download Selected Data
+            {label}
             <ChevronDown
               className="size-4 shrink-0 text-earth transition-transform group-data-[state=open]:rotate-180"
               strokeWidth="3px"
@@ -95,7 +98,7 @@ export default function DownloadButton({
           )}
           {...rest}
         >
-          Download Selected Data
+          {label}
           <ChevronDown
             className="size-4 shrink-0 text-earth transition-transform group-data-[state=open]:rotate-180"
             strokeWidth="3px"
