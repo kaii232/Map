@@ -6,7 +6,6 @@ const domain = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
 
 export const style: StyleSpecification = {
   version: 8,
-  metadata: {},
   sources: {
     ne2_shaded: {
       maxzoom: 6,

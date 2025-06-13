@@ -23,6 +23,7 @@ import {
   Layer,
   LayerProps,
   Map,
+  MapEvent,
   MapGeoJSONFeature,
   MapLayerMouseEvent,
   NavigationControl,
@@ -33,6 +34,7 @@ import {
   useMap,
 } from "react-map-gl/maplibre";
 import { GeoJSONStoreFeatures } from "terra-draw";
+import triangle from "../../../public/triangle.png";
 import { dataAtom, dataVisibilityAtom, drawingAtom, rangeAtom } from "./atoms";
 import Basemaps from "./basemaps";
 import Controls from "./controls";
@@ -130,6 +132,8 @@ const mapSymbolStyle = (
   get: string = "name",
   offset: number = 1.2,
   icon?: string,
+  paint?: Extract<LayerProps, { type: "symbol" }>["paint"],
+  layout?: Extract<LayerProps, { type: "symbol" }>["layout"],
 ): Extract<LayerProps, { type: "symbol" }> => {
   return {
     type: "symbol",
@@ -145,6 +149,7 @@ const mapSymbolStyle = (
         "icon-overlap": "always",
         "icon-image": icon,
       }),
+      ...layout,
     },
     paint: {
       "text-halo-color": "#F8FAFCCC",
@@ -156,6 +161,7 @@ const mapSymbolStyle = (
           [8, 1],
         ],
       },
+      ...paint,
     },
   };
 };
@@ -493,6 +499,12 @@ export default function DatabaseMap({
     [clearHover, map],
   );
 
+  const onLoad = useCallback(async (e: MapEvent) => {
+    const image = await e.target.loadImage(triangle.src);
+    if (e.target.hasImage("triangle-sdf")) return;
+    e.target.addImage("triangle-sdf", image.data, { sdf: true });
+  }, []);
+
   /** Defines the styles for each data type. Layout visibility, Source ID and Layer ID will be set automatically to
    * `key + Source` and `key` respectively.
    *  ID is required when source has multiple layers. For sources with multiple layers, the Layer IDs will be `key + id`.
@@ -528,8 +540,16 @@ export default function DatabaseMap({
           ],
         },
       },
-      vlc: mapSymbolStyle(undefined, undefined, "custom:volcano"),
-      smt: mapSymbolStyle(undefined, undefined, "custom:seamount"),
+      vlc: mapSymbolStyle(undefined, undefined, "triangle-sdf", {
+        "icon-color": "#1E293B",
+        "icon-halo-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 10, 4],
+        "icon-halo-color": "#f8fafc",
+      }),
+      smt: mapSymbolStyle(undefined, undefined, "triangle-sdf", {
+        "icon-color": "#854D0E",
+        "icon-halo-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 10, 4],
+        "icon-halo-color": "#f8fafc",
+      }),
       gnss: [
         {
           id: "Uncertainty",
@@ -788,6 +808,7 @@ export default function DatabaseMap({
           zoom: 4.6,
           padding: { left: 320 },
         }}
+        onLoad={onLoad}
         maxZoom={15}
         mapStyle={style}
         onMouseMove={onHover}
