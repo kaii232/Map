@@ -654,24 +654,26 @@ const Controls = ({
 
                     return (
                       <SelectTabsTab value={key} key={key + "tab"}>
-                        <ColorControl dataKey={key} />
-                        <div className="my-6 flex items-center justify-between">
-                          <label
-                            htmlFor={key}
-                            className="w-full text-sm font-normal text-neutral-300"
-                          >
-                            Visibility
-                          </label>
-                          <Switch
-                            id={key}
-                            checked={dataVisibility[key]}
-                            onCheckedChange={(e: boolean) =>
-                              setDataVisibility((prev) => ({
-                                ...prev,
-                                [key]: e,
-                              }))
-                            }
-                          />
+                        <div className="my-6 space-y-6">
+                          <ColorControl dataKey={key} />
+                          <div className="flex items-center">
+                            <label
+                              htmlFor={key}
+                              className="w-full text-sm font-normal text-neutral-300"
+                            >
+                              Visibility
+                            </label>
+                            <Switch
+                              id={key}
+                              checked={dataVisibility[key]}
+                              onCheckedChange={(e: boolean) =>
+                                setDataVisibility((prev) => ({
+                                  ...prev,
+                                  [key]: e,
+                                }))
+                              }
+                            />
+                          </div>
                         </div>
                         {ALL_FILTERS_CLIENT[key] &&
                         initialData[key as keyof PopulateFilters] ? (

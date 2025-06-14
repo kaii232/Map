@@ -11,7 +11,7 @@ import { CSSProperties, memo, useRef } from "react";
 import { HexColorPicker } from "react-colorful";
 import { colorsAtom } from "./atoms";
 
-type ColorConfig =
+type ColorConfig<T extends string = string> =
   | {
       type: "solid";
       default: string;
@@ -21,6 +21,10 @@ type ColorConfig =
       type: "gradient";
       default: string[];
       label: string;
+    }
+  | {
+      type: "multi";
+      pickers: Record<T, Exclude<ColorConfig, { type: "multi" }>>;
     };
 
 const SolidColorPicker = ({
@@ -39,7 +43,7 @@ const SolidColorPicker = ({
   const selectedColor = useRef<string>("");
 
   return (
-    <div className="my-6 flex items-center justify-between">
+    <div className="flex items-center">
       <label
         htmlFor={buttonId + "-color-picker"}
         className="w-full text-sm font-normal text-neutral-300"
@@ -49,9 +53,9 @@ const SolidColorPicker = ({
       <Popover>
         <PopoverTrigger
           id={buttonId + "-color-picker"}
-          className="size-8 rounded border-neutral-600 bg-[var(--selected-color)]"
+          className="size-8 shrink-0 rounded border border-neutral-600 bg-[var(--selected-color)]"
           style={{ "--selected-color": currentColor } as CSSProperties}
-        ></PopoverTrigger>
+        />
         <PopoverContent className="[&_.react-colorful]:w-auto">
           <HexColorPicker
             color={currentColor as string}
@@ -91,8 +95,11 @@ const ColorControl = ({
       string,
       string
     >
-      ? Record<keyof (typeof dataColors)[P], ColorConfig>
-      : ColorConfig;
+      ? Extract<
+          ColorConfig<keyof (typeof dataColors)[P] & string>,
+          { type: "multi" }
+        >
+      : Exclude<ColorConfig, { type: "multi" }>;
   }> = {
     vlc: {
       type: "solid",
@@ -105,15 +112,18 @@ const ColorControl = ({
       label: "icon",
     },
     gnss: {
-      icon: {
-        type: "solid",
-        default: "#E39F40",
-        label: "icon",
-      },
-      vector: {
-        type: "solid",
-        default: "#8b36d1",
-        label: "vector",
+      type: "multi",
+      pickers: {
+        icon: {
+          type: "solid",
+          default: "#E39F40",
+          label: "icon",
+        },
+        vector: {
+          type: "solid",
+          default: "#8b36d1",
+          label: "vector",
+        },
       },
     },
     rock: {
@@ -130,57 +140,56 @@ const ColorControl = ({
 
   if (!colorConfig[dataKey]) return null;
 
-  if ("type" in colorConfig[dataKey]) {
-    if (colorConfig[dataKey].type === "solid") {
-      const config = colorConfig[dataKey] as Extract<
-        ColorConfig,
-        { type: "solid" }
-      >;
-      return (
-        <SolidColorPicker
-          currentColor={dataColors[dataKey] as string}
-          buttonId={dataKey}
-          defaultColor={config.default}
-          label={config.label}
-          onSave={(color) =>
-            setDataColors((prev) => ({
-              ...prev,
-              [dataKey]: color,
-            }))
-          }
-        />
-      );
-    }
+  if (colorConfig[dataKey].type === "solid") {
+    const config = colorConfig[dataKey] as Extract<
+      ColorConfig,
+      { type: "solid" }
+    >;
+    return (
+      <SolidColorPicker
+        currentColor={dataColors[dataKey] as string}
+        buttonId={dataKey}
+        defaultColor={config.default}
+        label={config.label}
+        onSave={(color) =>
+          setDataColors((prev) => ({
+            ...prev,
+            [dataKey]: color,
+          }))
+        }
+      />
+    );
   }
-
-  return Object.entries(colorConfig[dataKey]).map(
-    ([colorKey, config]: [colorKey: string, config: ColorConfig]) => {
-      if (config.type === "solid") {
-        return (
-          <SolidColorPicker
-            key={colorKey}
-            currentColor={
-              dataColors[dataKey][
-                colorKey as keyof (typeof dataColors)[keyof typeof dataColors]
-              ]
-            }
-            buttonId={colorKey}
-            defaultColor={config.default as string}
-            label={config.label}
-            onSave={(color) =>
-              setDataColors((prev) => ({
-                ...prev,
-                [dataKey]: {
-                  ...(prev[dataKey] as object),
-                  [colorKey]: color,
-                },
-              }))
-            }
-          />
-        );
-      }
-    },
-  );
+  if (colorConfig[dataKey].type === "multi") {
+    return Object.entries(colorConfig[dataKey].pickers).map(
+      ([colorKey, config]) => {
+        if (config.type === "solid") {
+          return (
+            <SolidColorPicker
+              key={colorKey}
+              currentColor={
+                dataColors[dataKey][
+                  colorKey as keyof (typeof dataColors)[keyof typeof dataColors]
+                ]
+              }
+              buttonId={colorKey}
+              defaultColor={config.default}
+              label={config.label}
+              onSave={(color) =>
+                setDataColors((prev) => ({
+                  ...prev,
+                  [dataKey]: {
+                    ...(prev[dataKey] as object),
+                    [colorKey]: color,
+                  },
+                }))
+              }
+            />
+          );
+        }
+      },
+    );
+  }
 };
 
 export default memo(ColorControl);
