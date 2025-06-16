@@ -30,7 +30,7 @@ import { Simplify } from "./types";
 // 4. Update the labels and loaders in utils.ts
 // 5. Update map/page.tsx to fetch the data needed to populate the filter using the generateSQLSelect function. (skip this step if no filter)
 // 6. Update map/database-map.tsx mapDataLayers to specify the layer styles
-// 7. Update map/controls.tsx ColourRamps legends object if a legend is needed to display the data
+// 7. Update map/color-ramps.tsx ColorRamps legends object if a legend is needed to display the data
 
 // To add additional filters for data that already exists:
 // 2. Update the filter object of that data
