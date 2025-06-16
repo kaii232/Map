@@ -250,9 +250,7 @@ function cleanObjectForClient() {
     }
     const filterObj: (typeof out)[string] = {};
     Object.entries(val).map(([clientKey, clientVal]) => {
-      const obj = { ...clientVal };
-      delete obj.dbCol;
-      delete obj.nullCol;
+      const { dbCol, nullCol, ...obj } = clientVal;
       filterObj[clientKey] = obj;
     });
     out[key] = filterObj;

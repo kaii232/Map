@@ -65,15 +65,13 @@ const sqlToGeojson = (
     if (!input[i] || !input[i]!.id || added[input[i]!.id!]) continue; // Do not add duplicate rows again
     const currentVal = input[i]!;
     added[currentVal.id!] = true;
-    const properties: GeoJsonProperties = { ...currentVal };
-    delete properties.geojson;
-    delete properties.id;
+    const { geojson, id, ...properties } = currentVal;
     if (excludeKey) excludeKey.map((key) => delete properties[key]);
     features.push({
       type: "Feature",
-      id: currentVal.id!,
+      id: id!,
       properties,
-      geometry: JSON.parse(currentVal.geojson),
+      geometry: JSON.parse(geojson),
     });
   }
   return {
