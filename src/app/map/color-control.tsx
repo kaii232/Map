@@ -11,7 +11,8 @@ import { CSSProperties, memo, useRef } from "react";
 import { HexColorPicker } from "react-colorful";
 import { colorsAtom } from "./atoms";
 
-type ColorConfig<T extends string = string> =
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type ColorConfig<T extends Record<string, string | string[]> = {}> =
   | {
       type: "solid";
       default: string;
@@ -24,7 +25,13 @@ type ColorConfig<T extends string = string> =
     }
   | {
       type: "multi";
-      pickers: Record<T, Exclude<ColorConfig, { type: "multi" }>>;
+      pickers: {
+        [P in keyof T]: T[P] extends string[]
+          ? Extract<ColorConfig, { type: "gradient" }>
+          : T[P] extends string
+            ? Extract<ColorConfig, { type: "solid" }>
+            : never;
+      };
     };
 
 const SolidColorPicker = ({
@@ -93,13 +100,14 @@ const ColorControl = ({
   const colorConfig: Partial<{
     [P in keyof typeof ALL_FILTERS_CLIENT]: (typeof dataColors)[P] extends Record<
       string,
-      string
+      string | string[]
     >
-      ? Extract<
-          ColorConfig<keyof (typeof dataColors)[P] & string>,
-          { type: "multi" }
-        >
-      : Exclude<ColorConfig, { type: "multi" }>;
+      ? Extract<ColorConfig<(typeof dataColors)[P]>, { type: "multi" }>
+      : (typeof dataColors)[P] extends string[]
+        ? Extract<ColorConfig, { type: "gradient" }>
+        : (typeof dataColors)[P] extends string
+          ? Extract<ColorConfig, { type: "solid" }>
+          : never;
   }> = {
     vlc: {
       type: "solid",
@@ -135,6 +143,49 @@ const ColorControl = ({
       type: "solid",
       default: "#f43f5e",
       label: "line",
+    },
+    hf: {
+      type: "gradient",
+      default: ["#0c4a6e", "#0284c7", "#eeeeee", "#e11d48", "#4c0519"],
+      label: "point",
+    },
+    seis: {
+      type: "gradient",
+      default: [
+        "#fff7ec",
+        "#fee8c8",
+        "#fdd49e",
+        "#fdbb84",
+        "#eb7c49",
+        "#db5235",
+        "#b52112",
+        "#750606",
+        "#360A07",
+        "#000000",
+      ],
+      label: "point",
+    },
+    slab2: {
+      type: "gradient",
+      default: ["#ffffa4", "#fca309", "#db503b", "#922568", "#400a67", "#fff"],
+      label: "line",
+    },
+    slip: {
+      type: "gradient",
+      default: [
+        "#FCFDBF",
+        "#FDDC9E",
+        "#FD9869",
+        "#F8765C",
+        "#D3436E",
+        "#B63779",
+        "#7B2382",
+        "#5F187F",
+        "#231151",
+        "#0C0927",
+        "#000004",
+      ],
+      label: "patch",
     },
   };
 
