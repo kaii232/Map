@@ -53,10 +53,10 @@ const SolidColorPicker = ({
       <Popover>
         <PopoverTrigger
           id={buttonId + "-color-picker"}
-          className="size-8 shrink-0 rounded border border-neutral-600 bg-[var(--selected-color)]"
+          className="size-8 shrink-0 rounded-md border border-neutral-600 bg-[var(--selected-color)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2"
           style={{ "--selected-color": currentColor } as CSSProperties}
         />
-        <PopoverContent className="[&_.react-colorful]:w-auto">
+        <PopoverContent className="[&_.react-colorful\_\_hue]:mt-4 [&_.react-colorful\_\_hue]:h-3 [&_.react-colorful\_\_hue]:rounded-lg [&_.react-colorful\_\_saturation]:[clip-path:inset(0px_round_8px)] [&_.react-colorful]:w-auto">
           <HexColorPicker
             color={currentColor as string}
             onChange={(color) => (selectedColor.current = color)}
