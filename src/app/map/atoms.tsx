@@ -1,8 +1,8 @@
 import { ALL_FILTERS_CLIENT } from "@/lib/data-definitions";
-import { Range } from "@/lib/filters";
+import type { Range } from "@/lib/filters";
 import { BasemapNames } from "@/lib/types";
-import { ActionReturn } from "@/server/actions";
-import { MultiPolygon, Polygon } from "geojson";
+import { LoaderFilter } from "@/server/actions";
+import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
 
 /** Keeps track of which layers are visible */
@@ -37,7 +37,11 @@ export const dataAtom = atom<
   Partial<
     Record<
       keyof typeof ALL_FILTERS_CLIENT,
-      Extract<ActionReturn, { success: true }>["data"]
+      {
+        geojson: FeatureCollection;
+        units?: Record<string, string>;
+        params: LoaderFilter;
+      }
     >
   >
 >({});

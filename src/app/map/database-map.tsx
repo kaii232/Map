@@ -286,12 +286,8 @@ const PaginatedPopup = ({
                 value={value}
                 units={
                   MAP_LAYER_UNITS[activeFeature.feature.source]?.[key] ??
-                  mapData[
-                    activeFeature.feature.source.slice(
-                      0,
-                      -6,
-                    ) as keyof typeof mapData
-                  ]?.units?.[key]
+                  mapData[activeFeature.feature.source as keyof typeof mapData]
+                    ?.units?.[key]
                 }
               />
             );
@@ -302,8 +298,8 @@ const PaginatedPopup = ({
             <DownloadButton
               className="w-full"
               label="Download Cluster Data"
-              data={{
-                type: "FeatureCollection",
+              downloadType={{
+                type: "cluster",
                 features: features.map((val) => val.feature),
               }}
               fileName="cluster_data"
@@ -499,7 +495,7 @@ export default function DatabaseMap({
   }, []);
 
   /** Defines the styles for each data type. Layout visibility, Source ID and Layer ID will be set automatically to
-   * `key + Source` and `key` respectively.
+   * `key` and `key + 'Layer'` respectively.
    *  ID is required when source has multiple layers. For sources with multiple layers, the Layer IDs will be `key + id`.
    *  E.g. For seismic data, id specified of `Mw` will have a layer id of `seisMw`
    * */
@@ -760,7 +756,7 @@ export default function DatabaseMap({
             ids.push(val.map((valLayers) => `${key}${valLayers.id}`));
             return ids;
           }
-          ids.push(key);
+          ids.push(key + "Layer");
           return ids;
         },
         [],
@@ -809,7 +805,7 @@ export default function DatabaseMap({
 
           return (
             <Source
-              id={typedKey + "Source"}
+              id={typedKey}
               type="geojson"
               data={mapData[typedKey].geojson}
               key={typedKey}
@@ -833,7 +829,7 @@ export default function DatabaseMap({
               ) : (
                 <Layer
                   {...val}
-                  id={typedKey}
+                  id={typedKey + "Layer"}
                   layout={{
                     ...val.layout,
                     visibility: dataVisibility[typedKey] ? "visible" : "none",

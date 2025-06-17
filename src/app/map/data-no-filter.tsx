@@ -4,9 +4,8 @@ import DownloadButton from "@/components/download-button";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
 import type { ALL_FILTERS_CLIENT } from "@/lib/data-definitions";
-import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
-import { ActionReturn } from "@/server/actions";
-import { MultiPolygon, Polygon } from "geojson";
+import { TOAST_MESSAGE } from "@/lib/utils";
+import { ActionReturn, LoadData } from "@/server/actions";
 import { useAtom, useAtomValue } from "jotai";
 import { memo, ReactNode, useTransition } from "react";
 import { toast } from "sonner";
@@ -23,15 +22,10 @@ const DataNoFilter = ({
   /** Components to render below the Download button of each form */
   additionalActions?: ReactNode;
   /** Callback that is invoked when data is loaded successfully */
-  onDataLoad?: (
-    data: Extract<ActionReturn<unknown>, { success: true }>,
-  ) => void;
+  onDataLoad?: (data: Extract<ActionReturn, { success: true }>) => void;
 }) => {
   const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
-  const loadAction = LOADERS[dataKey] as (
-    drawing?: Polygon | MultiPolygon,
-  ) => Promise<ActionReturn<unknown>>;
 
   const [isPending, startTransition] = useTransition();
 
@@ -42,7 +36,12 @@ const DataNoFilter = ({
         duration: Infinity,
         id: `Load${dataKey}`,
       });
-      const data = await loadAction(drawing);
+      const data = await LoadData(dataKey, {
+        data: {
+          filter: false,
+          drawing,
+        },
+      });
       toast.dismiss(`Load${dataKey}`);
       if (data.success) {
         toast.success(
@@ -50,7 +49,13 @@ const DataNoFilter = ({
         );
         setMapData((prev) => ({
           ...prev,
-          [dataKey]: data.data,
+          [dataKey]: {
+            ...data.data,
+            params: {
+              filter: false,
+              drawing: drawing,
+            },
+          },
         }));
         if (onDataLoad) onDataLoad(data);
       } else toast.error(data.error);
@@ -65,7 +70,11 @@ const DataNoFilter = ({
         </Button>
         <DownloadButton
           className="w-full"
-          data={mapData[dataKey]?.geojson}
+          downloadType={{
+            dataKey: dataKey,
+            type: "full",
+            params: mapData[dataKey]?.params,
+          }}
           fileName={`${dataKey}_invest`}
         />
         {additionalActions && (

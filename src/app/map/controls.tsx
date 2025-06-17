@@ -190,9 +190,7 @@ const Controls = ({
     Record<
       keyof typeof ALL_FILTERS_CLIENT,
       {
-        onLoad?: (
-          data: Extract<ActionReturn<unknown>, { success: true }>,
-        ) => void;
+        onLoad?: (data: Extract<ActionReturn, { success: true }>) => void;
         additionalActions?: ReactNode;
       }
     >

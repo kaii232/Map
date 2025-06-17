@@ -26,8 +26,8 @@ import { Simplify } from "./types";
 //    nullCol: For select filters, if NULL is selected, the column that the IS NULL filter should be applied on
 //    Filters types like range, search and greaterThan have additional fields
 // 2. Update the ALL_FILTERS object with the filter defined in 1. or null if no filter
-// 3. Create server action to load the data in actions.ts
-// 4. Update the labels and loaders in utils.ts
+// 3. Update LOADER_DEFINITION in actions.ts
+// 4. Update the labels and in utils.ts
 // 5. Update map/page.tsx to fetch the data needed to populate the filter using the generateSQLSelect function. (skip this step if no filter)
 // 6. Update map/database-map.tsx mapDataLayers to specify the layer styles
 // 7. Update map/color-ramps.tsx ColorRamps legends object if a legend is needed to display the data
