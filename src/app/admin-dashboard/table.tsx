@@ -191,6 +191,7 @@ export default function DataTable({
                   size="icon"
                   variant="ghost"
                   className="size-8 hover:bg-neutral-400/20"
+                  aria-label="More actions"
                 >
                   <MoreHorizontal />
                 </Button>
@@ -816,16 +817,16 @@ const CreateUserDialog = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="bg-background sticky top-0">
+                    <TableHead className="sticky top-0 bg-background">
                       Email
                     </TableHead>
-                    <TableHead className="bg-background sticky top-0">
+                    <TableHead className="sticky top-0 bg-background">
                       Name
                     </TableHead>
-                    <TableHead className="bg-background sticky top-0">
+                    <TableHead className="sticky top-0 bg-background">
                       Password
                     </TableHead>
-                    <TableHead className="bg-background sticky top-0">
+                    <TableHead className="sticky top-0 bg-background">
                       Role
                     </TableHead>
                   </TableRow>
