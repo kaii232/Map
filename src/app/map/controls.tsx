@@ -50,9 +50,9 @@ import {
   ChevronDown,
   ChevronLeft,
   Database,
+  FilterX,
   Home,
   Map,
-  RotateCcw,
   Trash,
 } from "lucide-react";
 import Link from "next/link";
@@ -470,7 +470,7 @@ const Controls = ({
                         className="shrink-0"
                         onClick={resetFilters}
                       >
-                        <RotateCcw strokeWidth="3px" />
+                        <FilterX strokeWidth="3px" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Reset all filters</TooltipContent>
