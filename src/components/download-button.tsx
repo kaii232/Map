@@ -28,6 +28,23 @@ type DownloadType =
       features: MapGeoJSONFeature[];
     };
 
+/** Returns an array containing arrays with data keys in index 0 and unique IDs in index 1 */
+const getUniqueIds = (features: MapGeoJSONFeature[]): [string, number[]][] => {
+  const clusterIds: Record<string, Set<number>> = {};
+  for (let i = 0, length = features.length; i < length; i++) {
+    if (!clusterIds[features[i].source]) {
+      clusterIds[features[i].source] = new Set();
+    }
+    if (features[i].id) {
+      clusterIds[features[i].source].add(features[i].id as number);
+    }
+  }
+  return Object.keys(clusterIds).map((key) => [
+    key,
+    Array.from(clusterIds[key].keys()),
+  ]);
+};
+
 /**
  * Creates a download link for downloading the data passed in its `data` prop as a csv file
  */
@@ -44,23 +61,6 @@ export default function DownloadButton({
 } & ComponentProps<typeof Button>) {
   const [isLoading, startTransition] = useTransition();
 
-  const getUniqueIds = (features: MapGeoJSONFeature[]) => {
-    const clusterIds: Record<string, Set<number>> = {};
-    const returnObj: Record<string, number[]> = {};
-    for (let i = 0, length = features.length; i < length; i++) {
-      if (!clusterIds[features[i].source]) {
-        clusterIds[features[i].source] = new Set();
-      }
-      if (features[i].id) {
-        clusterIds[features[i].source].add(features[i].id as number);
-      }
-    }
-    Object.keys(clusterIds).forEach(
-      (key) => (returnObj[key] = Array.from(clusterIds[key].keys())),
-    );
-    return returnObj;
-  };
-
   const downloadAsGeojson = () => {
     if (downloadType.type === "full") {
       startTransition(async () => {
@@ -71,17 +71,20 @@ export default function DownloadButton({
             format: "geojson",
           },
         });
-        if (data.success) {
-          const blob = new Blob([JSON.stringify(data.data.geojson)], {
-            type: "application/geo+json",
-          });
-          downloadData(blob, fileName + ".geojson");
+        if (!data.success) {
+          toast.error(
+            `Error occurred while downloading ${TOAST_MESSAGE[downloadType.dataKey]}: ${data.error}`,
+          );
+          return;
         }
+        const blob = new Blob([JSON.stringify(data.data.geojson)], {
+          type: "application/geo+json",
+        });
+        downloadData(blob, fileName + ".geojson");
       });
       return;
     }
-    const uniqueIds = getUniqueIds(downloadType.features);
-    const entries = Object.entries(uniqueIds);
+    const entries = getUniqueIds(downloadType.features);
     startTransition(async () => {
       const data = await Promise.all(
         entries.map(([source, ids]) => {
@@ -123,15 +126,18 @@ export default function DownloadButton({
             format: "csv",
           },
         });
-        if (data.success) {
-          const blob = new Blob([data.data], { type: "text/csv" });
-          downloadData(blob, fileName + ".csv");
+        if (!data.success) {
+          toast.error(
+            `Error occurred while downloading ${TOAST_MESSAGE[downloadType.dataKey]}: ${data.error}`,
+          );
+          return;
         }
+        const blob = new Blob([data.data], { type: "text/csv" });
+        downloadData(blob, fileName + ".csv");
       });
       return;
     }
-    const uniqueIds = getUniqueIds(downloadType.features);
-    const entries = Object.entries(uniqueIds);
+    const entries = getUniqueIds(downloadType.features);
     startTransition(async () => {
       const data = await Promise.all(
         entries.map(([source, ids]) => {
