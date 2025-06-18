@@ -34,6 +34,7 @@ type ColorConfig<T extends Record<string, string | string[]> = {}> =
       };
     };
 
+/** Renders a solid colour picker. Only updates the colour on save */
 const SolidColorPicker = ({
   buttonId,
   label,
@@ -90,6 +91,7 @@ const SolidColorPicker = ({
   );
 };
 
+/** Allows the user to change the colours of map icons and lines */
 const ColorControl = ({
   dataKey,
 }: {
@@ -98,7 +100,7 @@ const ColorControl = ({
   const [dataColors, setDataColors] = useAtom(colorsAtom);
 
   const colorConfig: Partial<{
-    [P in keyof typeof ALL_FILTERS_CLIENT]: (typeof dataColors)[P] extends Record<
+    [P in keyof typeof dataColors]: (typeof dataColors)[P] extends Record<
       string,
       string | string[]
     >

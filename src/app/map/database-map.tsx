@@ -115,8 +115,8 @@ const getSeisProps = (
 
 /**
  * Convenience function to get the maps text and icon layer styles
- * @param get The property to get to display the text
- * @param offset The text offset from the icon/other layer
+ * @param get The property to get to display the text. Default of `"name"`
+ * @param offset The text offset from the icon/other layer. Default of `1.2`
  * @param icon Name of the icon to use
  * @returns An object which can be spread directly into the layer style definition
  */
@@ -214,6 +214,7 @@ interface PopupFeature {
   lat: number;
 }
 
+/** Popup displayed on the map with pages if the user is hovering over multiple map features. Allows the user to download data they are hovering over */
 const PaginatedPopup = ({
   features,
   ...rest
@@ -411,7 +412,7 @@ export default function DatabaseMap({
         ) {
           continue;
         }
-
+        // Do not show a hover popup for features that the user has clicked on already
         // IDs are only unique within each source
         if (
           selectedFeature.some(
@@ -488,6 +489,7 @@ export default function DatabaseMap({
     [clearHover, map],
   );
 
+  // The only way to add an SDF icon to the map is after the map has loaded
   const onLoad = useCallback(async (e: MapEvent) => {
     const image = await e.target.loadImage(triangle.src);
     if (e.target.hasImage("triangle-sdf")) return;

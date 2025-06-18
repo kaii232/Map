@@ -51,6 +51,7 @@ const DataNoFilter = ({
           ...prev,
           [dataKey]: {
             ...data.data,
+            // Save the params that were used to load this data for downloading of data
             params: {
               filter: false,
               drawing: drawing,

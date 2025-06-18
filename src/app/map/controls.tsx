@@ -112,6 +112,7 @@ export const LAYER_LABELS: Record<
   crustThickness: "Crust Thickness",
 };
 
+/** Button that fits the current map view to the bounding box currently loaded data for the specified data type */
 const FitDataToScreen = ({
   dataKey,
 }: {

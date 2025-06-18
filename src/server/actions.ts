@@ -58,14 +58,14 @@ const sqlToGeojson = (
   const features: Feature[] = [];
   const added: Record<string | number, boolean> = {};
   for (let i = 0; i < input.length; i++) {
-    if (!input[i] || !input[i]!.id || added[input[i]!.id!]) continue; // Do not add duplicate rows again
-    const currentVal = input[i]!;
-    added[currentVal.id!] = true;
+    const currentVal = input[i];
+    if (!currentVal || !currentVal.id || added[currentVal.id]) continue; // Do not add null rows or duplicate rows again
+    added[currentVal.id] = true;
     const { geojson, id, geometry, ...properties } = currentVal;
     if (excludeKey) excludeKey.map((key) => delete properties[key]);
     features.push({
       type: "Feature",
-      id: id!,
+      id: id,
       properties,
       geometry: JSON.parse(geojson),
     });
@@ -136,7 +136,7 @@ const generateFilters = async (
 };
 
 /** Object to spread for the longitude and latitude units */
-const lngLatUnits = {
+const LNG_LAT_UNITS = {
   longitude: "°",
   latitude: "°",
 };
@@ -429,9 +429,9 @@ const processSQLData = async (
 
 type Loaders = {
   [P in keyof typeof ALL_FILTERS]: {
-    /** Whether this data type has filters */
+    /** Whether this data type has filters. Needed to distinguish between the getFilters types */
     filter: (typeof ALL_FILTERS)[P] extends null ? false : true;
-    /** Returns the dynamic drizzle query (See: https://orm.drizzle.team/docs/dynamic-query-building) and the units for this data type.  */
+    /** Returns the dynamic drizzle query (See: https://orm.drizzle.team/docs/dynamic-query-building) based on whether the user is downloading data or not, and the units for this data type.  */
     getData: (download: boolean) => {
       units: Record<string, string>;
       dataQuery: PgSelect;
@@ -447,7 +447,19 @@ type Loaders = {
     getClusterFilters: (ids: number[]) => SQL;
     /** Default range for this data type used for the colour ramp */
     range?: Range;
-    /** Whether the structure of the data returned is nested. E.g. {rect: {id: number, col: string}, circ: {id: number, col: string}} (nested) vs {rectId: number, rectCol: string, circId: number, circCol: string} (not nested)*/
+    /** Whether the structure of the data returned from drizzle is nested.
+     * E.g. {
+     *        rect: { id: number, col: string},
+     *        circ: { id: number, col: string}
+     *      } (nested)
+     *      vs
+     *      {
+     *        rectId: number,
+     *        rectCol: string,
+     *        circId: number,
+     *        circCol: string
+     *      } (not nested)
+     * */
     expandNestedData?: true;
   };
 };
@@ -487,7 +499,7 @@ const LOADERS_DEFINITION: Loaders = {
         bw: "km",
         ba: "km",
         bl: "km²",
-        ...lngLatUnits,
+        ...LNG_LAT_UNITS,
       });
       return { units, dataQuery };
     },
@@ -615,7 +627,7 @@ const LOADERS_DEFINITION: Loaders = {
         eastingUncertainty: "m/yr",
         northingUncertainty: "m/yr",
         verticalUncertainty: "m/yr",
-        ...lngLatUnits,
+        ...LNG_LAT_UNITS,
       });
       return { units, dataQuery };
     },
@@ -652,7 +664,7 @@ const LOADERS_DEFINITION: Loaders = {
       const units = defineUnits<typeof hfSelect>({
         elevation: "m",
         qval: "W/m²",
-        ...lngLatUnits,
+        ...LNG_LAT_UNITS,
       });
       return { units, dataQuery };
     },
@@ -699,7 +711,7 @@ const LOADERS_DEFINITION: Loaders = {
       const dataQuery = retrieveVlc(vlcSelect);
       const units = defineUnits<typeof vlcSelect>({
         elevation: "m",
-        ...lngLatUnits,
+        ...LNG_LAT_UNITS,
       });
       return { units, dataQuery };
     },
@@ -737,7 +749,7 @@ const LOADERS_DEFINITION: Loaders = {
       const dataQuery = retrieveSeis(seisSelect);
       const units = defineUnits<typeof seisSelect>({
         depth: "km",
-        ...lngLatUnits,
+        ...LNG_LAT_UNITS,
       });
       return { units, dataQuery };
     },
@@ -826,7 +838,7 @@ const LOADERS_DEFINITION: Loaders = {
         rake: "°",
         dip: "°",
         slip: "m",
-        ...lngLatUnits,
+        ...LNG_LAT_UNITS,
       });
       return { units, dataQuery };
     },

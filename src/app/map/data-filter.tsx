@@ -76,6 +76,7 @@ const DataFormFilters = ({
           [dataKey]: {
             ...data.data,
             params: {
+              // Save the params that were used to load this data for downloading of data
               filter: true,
               values: values,
               drawing: drawing,

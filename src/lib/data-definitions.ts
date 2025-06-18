@@ -24,13 +24,13 @@ import { Simplify } from "./types";
 //    type:    The the type of filter it is
 //    dbCol:   The drizzle column that the filter will be applied on
 //    nullCol: For select filters, if NULL is selected, the column that the IS NULL filter should be applied on
-//    Filters types like range, search and greaterThan have additional fields
-// 2. Update the ALL_FILTERS object with the filter defined in 1. or null if no filter
-// 3. Update LOADER_DEFINITION in actions.ts
+//    others:  Filter types like range, search and greaterThan have additional fields
+// 2. Update the ALL_FILTERS object with the filter object defined in 1. or null if no filter
+// 3. Update LOADER_DEFINITION in actions.ts to specify how to load this new data type
 // 4. Update the labels and in utils.ts
 // 5. Update map/page.tsx to fetch the data needed to populate the filter using the generateSQLSelect function. (skip this step if no filter)
 // 6. Update map/database-map.tsx mapDataLayers to specify the layer styles
-// 7. Update map/color-ramps.tsx ColorRamps legends object if a legend is needed to display the data
+// 7. Update map/color-ramps.tsx legends object if a legend is needed to display the data
 
 // To add additional filters for data that already exists:
 // 2. Update the filter object of that data
