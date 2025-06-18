@@ -29,9 +29,12 @@ type DownloadType =
     };
 
 /** Returns an array containing arrays with data keys in index 0 and unique IDs in index 1 */
-const getUniqueIds = (features: MapGeoJSONFeature[]): [string, number[]][] => {
+const getUniqueIds = (
+  features: MapGeoJSONFeature[],
+): [keyof typeof ALL_FILTERS_CLIENT, number[]][] => {
   const clusterIds: Record<string, Set<number>> = {};
   for (let i = 0, length = features.length; i < length; i++) {
+    if (!(features[i].source in TOAST_MESSAGE)) continue; // Hacky way of checking if the source is a data layer
     if (!clusterIds[features[i].source]) {
       clusterIds[features[i].source] = new Set();
     }
@@ -40,7 +43,7 @@ const getUniqueIds = (features: MapGeoJSONFeature[]): [string, number[]][] => {
     }
   }
   return Object.keys(clusterIds).map((key) => [
-    key,
+    key as keyof typeof ALL_FILTERS_CLIENT,
     Array.from(clusterIds[key].keys()),
   ]);
 };
@@ -88,7 +91,7 @@ export default function DownloadButton({
     startTransition(async () => {
       const data = await Promise.all(
         entries.map(([source, ids]) => {
-          return LoadData(source as keyof typeof ALL_FILTERS_CLIENT, {
+          return LoadData(source, {
             downloadOpts: {
               type: "cluster",
               format: "geojson",
@@ -100,7 +103,7 @@ export default function DownloadButton({
       const filtered = data.filter((val, index) => {
         if (!val.success) {
           toast.error(
-            `Error downloading ${TOAST_MESSAGE[entries[index][0] as keyof typeof ALL_FILTERS_CLIENT]} in cluster`,
+            `Error downloading ${TOAST_MESSAGE[entries[index][0]]} in cluster`,
           );
         }
         return val.success;
@@ -141,7 +144,7 @@ export default function DownloadButton({
     startTransition(async () => {
       const data = await Promise.all(
         entries.map(([source, ids]) => {
-          return LoadData(source as keyof typeof ALL_FILTERS_CLIENT, {
+          return LoadData(source, {
             downloadOpts: {
               type: "cluster",
               format: "csv",
@@ -153,7 +156,7 @@ export default function DownloadButton({
       data.map((val, index) => {
         if (!val.success) {
           toast.error(
-            `Error downloading ${TOAST_MESSAGE[entries[index][0] as keyof typeof ALL_FILTERS_CLIENT]} in cluster`,
+            `Error downloading ${TOAST_MESSAGE[entries[index][0]]} in cluster`,
           );
           return;
         }
