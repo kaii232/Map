@@ -113,6 +113,25 @@ const getSeisProps = (
         ],
 });
 
+const commonMapLineStyles: Extract<LayerProps, { type: "line" }>["paint"] = {
+  "line-width": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    5,
+    ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
+    15,
+    ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
+  ],
+  "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 1, 15, 0.6],
+};
+
+const commonMapCircleStyles: Extract<LayerProps, { type: "circle" }>["paint"] =
+  {
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 3, 12, 12],
+    "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0, 8, 2],
+  };
+
 /**
  * Convenience function to get the maps text and icon layer styles
  * @param get The property to get to display the text. Default of `"name"`
@@ -543,24 +562,7 @@ export default function DatabaseMap({
           id: "Icon",
           type: "circle",
           paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              3,
-              12,
-              12,
-            ],
-            "circle-stroke-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              0,
-              8,
-              2,
-            ],
+            ...commonMapCircleStyles,
             "circle-color": dataColors.gnss.icon,
             "circle-stroke-color": "#f8fafc",
           },
@@ -578,24 +580,7 @@ export default function DatabaseMap({
           },
           paint: {
             "line-color": dataColors.gnss.vector,
-            "line-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
-              15,
-              ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
-            ],
-            "line-opacity": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              1,
-              15,
-              0.6,
-            ],
+            ...commonMapLineStyles,
           },
           filter: ["==", "$type", "LineString"],
         },
@@ -620,16 +605,7 @@ export default function DatabaseMap({
         },
         paint: {
           "line-color": dataColors.flt,
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            5,
-            ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
-            15,
-            ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
-          ],
-          "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 1, 15, 0.6],
+          ...commonMapLineStyles,
         },
       },
       slab2: {
@@ -644,16 +620,7 @@ export default function DatabaseMap({
             ["get", "depth"],
             ...getInterpolateRange(ranges.slab2 ?? [0, 800], dataColors.slab2),
           ],
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            5,
-            ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
-            15,
-            ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
-          ],
-          "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 1, 15, 0.6],
+          ...commonMapLineStyles,
         },
       },
       seis: [
@@ -667,24 +634,7 @@ export default function DatabaseMap({
           id: "Icon",
           type: "circle",
           paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              3,
-              12,
-              12,
-            ],
-            "circle-stroke-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              0,
-              8,
-              2,
-            ],
+            ...commonMapCircleStyles,
             "circle-stroke-color": [
               "interpolate",
               ["linear"],
@@ -717,24 +667,7 @@ export default function DatabaseMap({
           id: "Icon",
           type: "circle",
           paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              3,
-              12,
-              12,
-            ],
-            "circle-stroke-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              0,
-              8,
-              2,
-            ],
+            ...commonMapCircleStyles,
             "circle-opacity": 0.7,
             "circle-color": dataColors.rock,
             "circle-stroke-color": "#f8fafc",
