@@ -41,6 +41,7 @@ const ColorRamps = ({ className }: { className?: string }) => {
       color: createLinearGradient([
         "#ffffa4",
         "#f6d543",
+        "#fca309",
         "#f3761b",
         "#db503b",
         "#ba3655",
