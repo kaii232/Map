@@ -144,20 +144,16 @@ export default function DownloadButton({
           });
         }),
       );
-      const filtered = data.filter((val, index) => {
+      data.map((val, index) => {
         if (!val.success) {
           toast.error(
             `Error downloading ${TOAST_MESSAGE[entries[index][0] as keyof typeof ALL_FILTERS_CLIENT]} in cluster`,
           );
+          return;
         }
-        return val.success;
+        const blob = new Blob([val.data], { type: "text/csv" });
+        downloadData(blob, `${fileName}_${entries[index][0]}.csv`);
       });
-      filtered
-        .map((val) => val.data)
-        .forEach((csv, index) => {
-          const blob = new Blob([csv], { type: "text/csv" });
-          downloadData(blob, `${fileName}_${index + 1}.csv`);
-        });
     });
   };
 
