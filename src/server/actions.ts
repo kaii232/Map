@@ -62,12 +62,14 @@ const sqlToGeojson = (
     if (!currentVal || !currentVal.id || added[currentVal.id]) continue; // Do not add null rows or duplicate rows again
     added[currentVal.id] = true;
     const { geojson, id, geometry, ...properties } = currentVal;
+    const geom = JSON.parse(geojson);
+    if (!geom) continue; // If for some reason the geometry is null, do not add it to features
     if (excludeKey) excludeKey.map((key) => delete properties[key]);
     features.push({
       type: "Feature",
       id: id,
       properties,
-      geometry: JSON.parse(geojson),
+      geometry: geom,
     });
   }
   return {
@@ -226,14 +228,14 @@ const retrieveGnss = (
       },
       vector: {
         ...vectorSelect,
-        id: gnssStnInInvest.gnssId,
+        id: gnssVectorInInvest.vectorId,
         source: biblInInvest.biblTitle,
         geojson: sql<string>`ST_ASGEOJSON(ST_MAKELINE(${gnssStnInInvest.gnssGeom},${ellipses.projected}))`,
         geometry: sql<string>`ST_MAKELINE(${gnssStnInInvest.gnssGeom},${ellipses.projected})`,
       },
       ellipse: {
         ...ellipseSelect,
-        id: gnssStnInInvest.gnssId, // Since the ID of ellipse and vector and point is the same, hovering over any sets the feature state of the vectors to hover also.
+        id: gnssVectorInInvest.vectorId, // Since the ID of ellipse and vector and point is the same, hovering over any sets the feature state of the vectors to hover also.
         geojson: sql<string>`ST_ASGEOJSON(${ellipses.ellipse})`,
         geometry: ellipses.ellipse,
       },
@@ -606,12 +608,14 @@ const LOADERS_DEFINITION: Loaders = {
       const vectorSelect = download
         ? vectorDownloadCols
         : {
+            "gnssI\\D": gnssStnInInvest.gnssId,
             easting: gnssVectorInInvest.vectorEasting,
             northing: gnssVectorInInvest.vectorNorthing,
             vertical: gnssVectorInInvest.vectorVertical,
             timePeriod: gnssVectorInInvest.vectorTimePeriod,
           };
       const ellipseSelect = {
+        ...(!download && { "gnssI\\D": gnssStnInInvest.gnssId }),
         eastingUncertainty: gnssVectorInInvest.vectorEastingUnc,
         northingUncertainty: gnssVectorInInvest.vectorNorthingUnc,
         verticalUncertainty: gnssVectorInInvest.vectorVerticalUnc,
