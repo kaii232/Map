@@ -24,8 +24,8 @@ const xlsxToGeojson = (
       geometry: {
         type: "Point",
         coordinates: [
-          input[i].Longitude as number,
-          input[i].Latitude as number,
+          input[i].longitude as number,
+          input[i].latitude as number,
         ],
       },
     });
@@ -34,6 +34,24 @@ const xlsxToGeojson = (
     type: "FeatureCollection",
     features: features,
   };
+};
+
+/** Defines units for the properties of the map layers. Keys should be the source id and property respectively */
+export const MAP_LAYER_UNITS: Record<string, Record<string, string>> = {
+  platesNewBoundariesSource: {
+    length: "km",
+  },
+  crustThicknessSource: {
+    thickness: "km",
+  },
+  velocitySource: {
+    latitude: "°",
+    longitude: "°",
+    direction: "°",
+    velocity: "mm/yr",
+    northwardVelocity: "mm/yr",
+    eastwardVelocity: "mm/yr",
+  },
 };
 
 /** Lazy loads data needed for map layer */
@@ -343,13 +361,13 @@ export default function MapLayers() {
                         2,
                       ],
                       "icon-overlap": "always",
-                      "icon-rotate": ["get", "Direction"],
+                      "icon-rotate": ["get", "direction"],
                       visibility: visibility ? "visible" : "none",
                     }}
                     filter={[
                       "all",
-                      [">=", ["get", "Velocity (mm/yr)"], velocity],
-                      ["<", ["get", "Velocity (mm/yr)"], velocity + 10],
+                      [">=", ["get", "velocity"], velocity],
+                      ["<", ["get", "velocity"], velocity + 10],
                     ]}
                   />
                 );

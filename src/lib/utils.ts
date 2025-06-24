@@ -1,21 +1,7 @@
-import {
-  ActionReturn,
-  LoadFlt,
-  LoadGNSS,
-  LoadHf,
-  LoadRock,
-  LoadSeis,
-  LoadSlab2,
-  LoadSlip,
-  LoadSmt,
-  LoadVlc,
-} from "@/server/actions";
 import { clsx, type ClassValue } from "clsx";
-import { MultiPolygon, Polygon } from "geojson";
 import { twMerge } from "tailwind-merge";
-import { z } from "zod";
 import type { ALL_FILTERS_CLIENT } from "./data-definitions";
-import type { createZodSchema, Range } from "./filters";
+import type { Range } from "./filters";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -24,13 +10,20 @@ export function cn(...inputs: ClassValue[]) {
 /** Velocities for the plate movement vectors map layer */
 export const velocityStops = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
+/** Conditionally adds a space before the units depending on what the unit is */
+export function formatUnits(units: string | undefined) {
+  if (!units) return null;
+  if (["°"].includes(units)) return units; // Edit the array if other units doesn't need a space
+  return " " + units;
+}
+
 /**
  * Used for displaying the message on the toast when loading data
  * On successful load of data, a message of: "Successfully loaded `length` `TOAST_MESSAGE`" is shown
  */
 export const TOAST_MESSAGE: Record<keyof typeof ALL_FILTERS_CLIENT, string> = {
   flt: "faults",
-  gnss: "GNSS stations",
+  gnss: "GNSS features",
   hf: "heatflow data",
   seis: "seismicity data",
   slab2: "slab data",
@@ -53,30 +46,6 @@ export const DATA_LABELS: Record<keyof typeof ALL_FILTERS_CLIENT, string> = {
   slab2: "Slab",
   slip: "Slip Models",
   rock: "Rock Samples",
-};
-
-/**
- * This object contains the server actions used to load each data type
- */
-export const LOADERS: Record<
-  keyof typeof ALL_FILTERS_CLIENT,
-  | ((
-      values: z.infer<z.ZodObject<ReturnType<typeof createZodSchema>>>,
-      drawing?: MultiPolygon | Polygon,
-    ) => Promise<ActionReturn> | Promise<ActionReturn<unknown>>)
-  | ((
-      drawing?: MultiPolygon | Polygon,
-    ) => Promise<ActionReturn> | Promise<ActionReturn<unknown>>)
-> = {
-  smt: LoadSmt,
-  vlc: LoadVlc,
-  gnss: LoadGNSS,
-  flt: LoadFlt,
-  seis: LoadSeis,
-  hf: LoadHf,
-  slab2: LoadSlab2,
-  slip: LoadSlip,
-  rock: LoadRock,
 };
 
 /**

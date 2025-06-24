@@ -6,10 +6,9 @@ import { Form } from "@/components/ui/form";
 import Spinner from "@/components/ui/spinner";
 import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/data-definitions";
 import { createDefaultValues, createZodSchema } from "@/lib/filters";
-import { LOADERS, TOAST_MESSAGE } from "@/lib/utils";
-import { ActionReturn } from "@/server/actions";
+import { TOAST_MESSAGE } from "@/lib/utils";
+import { ActionReturn, LoadData } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MultiPolygon, Polygon } from "geojson";
 import { useAtom, useAtomValue } from "jotai";
 import { memo, ReactNode, useMemo, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -32,9 +31,7 @@ const DataFormFilters = ({
   /** Components to render below the Download button of each form */
   additionalActions?: ReactNode;
   /** Callback that is invoked when data is loaded successfully */
-  onDataLoad?: (
-    data: Extract<ActionReturn<unknown>, { success: true }>,
-  ) => void;
+  onDataLoad?: (data: Extract<ActionReturn, { success: true }>) => void;
 }) => {
   const [mapData, setMapData] = useAtom(dataAtom);
   const drawing = useAtomValue(drawingAtom);
@@ -49,10 +46,6 @@ const DataFormFilters = ({
     () => z.object(createZodSchema(filters)),
     [filters],
   );
-  const loadAction = LOADERS[dataKey] as (
-    values: z.infer<typeof formSchema>,
-    drawing?: Polygon | MultiPolygon,
-  ) => Promise<ActionReturn<unknown>>;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,7 +59,13 @@ const DataFormFilters = ({
         duration: Infinity,
         id: `Load${dataKey}`,
       });
-      const data = await loadAction(values, drawing);
+      const data = await LoadData(dataKey, {
+        data: {
+          filter: true,
+          values,
+          drawing,
+        },
+      });
       toast.dismiss(`Load${dataKey}`);
       if (data.success) {
         toast.success(
@@ -74,7 +73,15 @@ const DataFormFilters = ({
         );
         setMapData((prev) => ({
           ...prev,
-          [dataKey]: data.data,
+          [dataKey]: {
+            ...data.data,
+            params: {
+              // Save the params that were used to load this data for downloading of data
+              filter: true,
+              values: values,
+              drawing: drawing,
+            },
+          },
         }));
         if (onDataLoad) onDataLoad(data);
       } else toast.error(data.error);
@@ -99,7 +106,11 @@ const DataFormFilters = ({
       <div className="mt-2">
         <DownloadButton
           className="w-full"
-          data={mapData[dataKey]?.geojson}
+          downloadType={{
+            dataKey: dataKey,
+            type: "full",
+            params: mapData[dataKey]?.params,
+          }}
           fileName={`${dataKey}_invest`}
         />
         {additionalActions && (

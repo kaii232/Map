@@ -41,7 +41,7 @@ import {
 import { ALL_FILTERS_CLIENT, PopulateFilters } from "@/lib/data-definitions";
 import { Range } from "@/lib/filters";
 import { BasemapNames } from "@/lib/types";
-import { cn, DATA_LABELS, getInterpolateRange } from "@/lib/utils";
+import { cn, DATA_LABELS } from "@/lib/utils";
 import { ActionReturn } from "@/server/actions";
 import { bbox } from "@turf/bbox";
 import { ExtractAtomValue, useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -50,20 +50,13 @@ import {
   ChevronDown,
   ChevronLeft,
   Database,
+  FilterX,
   Home,
   Map,
-  RotateCcw,
   Trash,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  CSSProperties,
-  memo,
-  ReactNode,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { memo, ReactNode, useCallback, useMemo, useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import {
   dataAtom,
@@ -74,6 +67,8 @@ import {
   panelOpenAtom,
   rangeAtom,
 } from "./atoms";
+import ColorControl from "./color-control";
+import ColorRamps from "./color-ramps";
 import DataFormFilters from "./data-filter";
 import DataNoFilter from "./data-no-filter";
 
@@ -117,6 +112,7 @@ export const LAYER_LABELS: Record<
   crustThickness: "Crust Thickness",
 };
 
+/** Button that fits the current map view to the bounding box currently loaded data for the specified data type */
 const FitDataToScreen = ({
   dataKey,
 }: {
@@ -165,132 +161,6 @@ const FitDataToScreen = ({
   );
 };
 
-/** Displays the colour ramp legends for currently visible data on the map */
-const ColourRamps = ({ className }: { className?: string }) => {
-  const layers = useAtomValue(layersAtom);
-  const dataVisibility = useAtomValue(dataVisibilityAtom);
-  const mapData = useAtomValue(dataAtom);
-  const ranges = useAtomValue(rangeAtom);
-
-  /** Defines how to display the legend and when it should be visible */
-  const legends: {
-    name: string;
-    colour: string;
-    min: string;
-    max: string;
-    visible: boolean;
-  }[] = [
-    {
-      name: "Seafloor age",
-      colour:
-        "linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)",
-      min: "0",
-      max: "194Mya",
-      visible: layers.seafloorAge,
-    },
-    {
-      name: "Seismic depth",
-      colour: `linear-gradient(90deg${getInterpolateRange(
-        [0, 100],
-        [
-          "#fff7ec",
-          "#fee8c8",
-          "#fdd49e",
-          "#fdbb84",
-          "#eb7c49",
-          "#db5235",
-          "#b52112",
-          "#750606",
-          "#360A07",
-          "#000000",
-        ],
-        0.5,
-      ).reduce((prev, current, index, arr) => {
-        if (index % 2 === 0) return prev;
-        return `${prev}, ${current} ${arr[index - 1]}%`;
-      }, "")})`,
-      min: `${ranges.seis && ranges.seis[0]}km`,
-      max: `${ranges.seis && ranges.seis[1]}km`,
-      visible:
-        dataVisibility.seis &&
-        !!mapData.seis &&
-        mapData.seis.geojson.features.length > 0,
-    },
-    {
-      name: "Heatflow qval",
-      colour:
-        "linear-gradient(90deg,rgba(12,74,110,1)0%,rgba(2,132,199,1)25%,rgba(238,238,238,1)50%,rgba(225,29,72,1)75%,rgba(76,5,25,1)100%)",
-      min: "<-400W/m²",
-      max: ">400W/m²",
-      visible:
-        dataVisibility.hf &&
-        !!mapData.hf &&
-        mapData.hf.geojson.features.length > 0,
-    },
-    {
-      name: "Slab depth",
-      colour:
-        "linear-gradient(90deg,rgba(255,255,164,1)0%,rgba(246,213,67,1)10%,rgba(252,163,9,1)20%,rgba(243,118,27,1)30%,rgba(219,80,59,1)40%,rgba(186,54,85,1)50%,rgba(146,37,104,1)60%,rgba(106,23,110,1)70%,rgba(64,10,103,1)80%,rgba(21,11,55,1)90%,rgba(0,0,4,1)100%)",
-      min: `${ranges.slab2 && ranges.slab2[0]}km`,
-      max: `${ranges.slab2 && ranges.slab2[1]}km`,
-      visible:
-        dataVisibility.slab2 &&
-        !!mapData.slab2 &&
-        mapData.slab2.geojson.features.length > 0,
-    },
-    {
-      name: "Slip",
-      colour:
-        "linear-gradient(90deg, #FCFDBF 3.28%, #FDDC9E 10.05%, #FEBA80 16.71%, #FD9869 23.11%, #F8765C 30.04%, #EB5760 36.81%, #D3436E 43.23%, #B63779 50.1%, #982D80 56.61%, #7B2382 63.38%, #5F187F 70.41%, #410F74 76.57%, #231151 83.43%, #0C0927 90.09%, #000004 96.86%)",
-      min: `${ranges.slip && ranges.slip[0]}m`,
-      max: `${ranges.slip && ranges.slip[1]}m`,
-      visible:
-        dataVisibility.slip &&
-        !!mapData.slip &&
-        mapData.slip.geojson.features.length > 0,
-    },
-    {
-      name: "Crust Thickness",
-      colour:
-        "linear-gradient(90deg,#ffffff 0%,#e0dfde 10%,#c8c5b8 20%,#bdb596 30%,#b29f76 40%,#aa8665 50%,#a4705c 60%,#9b5850 70%,#883c3b 80%,#6b1f1e 90%,#4c0001 100%)",
-      min: "0km",
-      max: "80km",
-      visible: layers.crustThickness,
-    },
-  ];
-
-  const showColourRange = legends.some((legend) => legend.visible);
-
-  if (!showColourRange) return null;
-
-  return (
-    <div
-      className={cn(
-        "absolute bottom-2.5 mb-8 ml-2.5 flex w-32 flex-col gap-2 bg-background p-1 text-xs text-neutral-300",
-        className,
-      )}
-    >
-      {legends.map((legend) => {
-        if (!legend.visible) return null;
-        return (
-          <div key={legend.name}>
-            <span className="mb-0.5 block">{legend.name}</span>
-            <div
-              role="presentation"
-              className={`mb-1 h-6 w-full bg-[image:var(--gradient)]`}
-              style={{ "--gradient": legend.colour } as CSSProperties}
-            ></div>
-            <div className="flex w-full justify-between">
-              <span>{legend.min}</span>
-              <span>{legend.max}</span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
 /** Contains all the controls for the map */
 const Controls = ({
   initialData,
@@ -321,9 +191,7 @@ const Controls = ({
     Record<
       keyof typeof ALL_FILTERS_CLIENT,
       {
-        onLoad?: (
-          data: Extract<ActionReturn<unknown>, { success: true }>,
-        ) => void;
+        onLoad?: (data: Extract<ActionReturn, { success: true }>) => void;
         additionalActions?: ReactNode;
       }
     >
@@ -447,14 +315,14 @@ const Controls = ({
           />
         </Button>
       </TourStep>
-      <ColourRamps className="left-0 z-10 flex sm:hidden" />
+      <ColorRamps className="left-0 z-10 flex sm:hidden" />
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-20 max-h-screen w-full max-w-[320px] transition-transform duration-700 ease-map",
           !open && "-translate-x-full",
         )}
       >
-        <ColourRamps className="left-full hidden sm:flex" />
+        <ColorRamps className="left-full hidden sm:flex" />
         <div className="flex h-full max-h-full flex-col divide-y divide-neutral-600 overflow-auto bg-background pt-12 text-neutral-300 sm:pt-0">
           <div className="flex flex-col gap-1 p-4">
             <span className="mb-3 text-xs font-medium text-neutral-300">
@@ -602,7 +470,7 @@ const Controls = ({
                         className="shrink-0"
                         onClick={resetFilters}
                       >
-                        <RotateCcw strokeWidth="3px" />
+                        <FilterX strokeWidth="3px" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Reset all filters</TooltipContent>
@@ -653,23 +521,26 @@ const Controls = ({
 
                     return (
                       <SelectTabsTab value={key} key={key + "tab"}>
-                        <div className="my-6 flex items-center justify-between">
-                          <label
-                            htmlFor={key}
-                            className="w-full text-sm font-normal text-neutral-300"
-                          >
-                            Visibility
-                          </label>
-                          <Switch
-                            id={key}
-                            checked={dataVisibility[key]}
-                            onCheckedChange={(e: boolean) =>
-                              setDataVisibility((prev) => ({
-                                ...prev,
-                                [key]: e,
-                              }))
-                            }
-                          />
+                        <div className="my-6 space-y-6">
+                          <ColorControl dataKey={key} />
+                          <div className="flex items-center">
+                            <label
+                              htmlFor={key}
+                              className="w-full text-sm font-normal text-neutral-300"
+                            >
+                              Visibility
+                            </label>
+                            <Switch
+                              id={key}
+                              checked={dataVisibility[key]}
+                              onCheckedChange={(e: boolean) =>
+                                setDataVisibility((prev) => ({
+                                  ...prev,
+                                  [key]: e,
+                                }))
+                              }
+                            />
+                          </div>
                         </div>
                         {ALL_FILTERS_CLIENT[key] &&
                         initialData[key as keyof PopulateFilters] ? (

@@ -48,6 +48,7 @@ export default function LoginForm() {
                 variant="ghost"
                 type="button"
                 className="hover:bg-neutral-200"
+                aria-label="Toggle password visibility"
                 onClick={() => setShowPassword((prev) => !prev)}
               >
                 {showPassword ? <EyeOff /> : <Eye />}

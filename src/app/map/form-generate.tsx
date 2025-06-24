@@ -33,6 +33,7 @@ import {
   SELECT_DEFAULT,
 } from "@/lib/filters";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { formatUnits } from "@/lib/utils";
 import { CalendarDays, Search } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
@@ -126,12 +127,12 @@ export default function FormGenerate<
                       <>
                         <span>
                           {Number(field.value[0].toFixed(1))}
-                          {filter.units}
+                          {formatUnits(filter.units)}
                         </span>
                         <span>–</span>
                         <span>
                           {Number(field.value[1].toFixed(1))}
-                          {filter.units}
+                          {formatUnits(filter.units)}
                         </span>
                       </>
                     )}
@@ -184,7 +185,7 @@ export default function FormGenerate<
                       <>
                         {">"}
                         {Number(field.value[0].toFixed(1))}
-                        {filter.units}
+                        {formatUnits(filter.units)}
                       </>
                     )}
                   </FormDescription>

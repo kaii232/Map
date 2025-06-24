@@ -1,23 +1,29 @@
 "use client";
 
 import { style } from "@/assets/map_style";
+import DownloadButton from "@/components/download-button";
+import { Button } from "@/components/ui/button";
 import type { ALL_FILTERS, PopulateFilters } from "@/lib/data-definitions";
 import { Range } from "@/lib/filters";
 import {
   camelCaseToWords,
+  cn,
+  formatUnits,
   getInterpolateRange,
   velocityStops,
 } from "@/lib/utils";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import { Position } from "geojson";
 import { useAtomValue, useSetAtom } from "jotai";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   Layer,
   LayerProps,
   Map,
+  MapEvent,
   MapGeoJSONFeature,
   MapLayerMouseEvent,
   NavigationControl,
@@ -28,12 +34,19 @@ import {
   useMap,
 } from "react-map-gl/maplibre";
 import { GeoJSONStoreFeatures } from "terra-draw";
-import { dataAtom, dataVisibilityAtom, drawingAtom, rangeAtom } from "./atoms";
+import triangle from "../../../public/triangle.png";
+import {
+  colorsAtom,
+  dataAtom,
+  dataVisibilityAtom,
+  drawingAtom,
+  rangeAtom,
+} from "./atoms";
 import Basemaps from "./basemaps";
 import Controls from "./controls";
 import DownloadControl from "./download-control";
 import DrawControl from "./draw-control";
-import MapLayers from "./map-layers";
+import MapLayers, { MAP_LAYER_UNITS } from "./map-layers";
 import RestartTour from "./restart-tour";
 
 const drawOptionsModes: (
@@ -57,6 +70,7 @@ const drawOptionsModes: (
 const getSeisProps = (
   property: "none" | "mb" | "mw" | "ms",
   range: Range | undefined,
+  colors: string[],
 ): Exclude<LayerProps, { type: "custom" }> & { id: string } => ({
   id: property.charAt(0).toUpperCase() + property.substring(1),
   type: "circle",
@@ -73,22 +87,7 @@ const getSeisProps = (
       "interpolate",
       ["linear"],
       ["get", "depth"],
-      ...getInterpolateRange(
-        range ?? [2, 1024],
-        [
-          "#fff7ec",
-          "#fee8c8",
-          "#fdd49e",
-          "#fdbb84",
-          "#eb7c49",
-          "#db5235",
-          "#b52112",
-          "#750606",
-          "#360A07",
-          "#000000",
-        ],
-        0.5,
-      ),
+      ...getInterpolateRange(range ?? [2, 1024], colors, 0.5),
     ],
     "circle-radius":
       property !== "none"
@@ -114,10 +113,38 @@ const getSeisProps = (
         ],
 });
 
+const commonMapLineStyles: Extract<LayerProps, { type: "line" }>["paint"] = {
+  "line-width": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    5,
+    ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
+    15,
+    ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
+  ],
+  "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 1, 15, 0.6],
+};
+
+const commonMapCircleStyles: Extract<LayerProps, { type: "circle" }>["paint"] =
+  {
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 3, 12, 12],
+    "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0, 8, 2],
+  };
+
+/**
+ * Convenience function to get the maps text and icon layer styles
+ * @param get The property to get to display the text. Default of `"name"`
+ * @param offset The text offset from the icon/other layer. Default of `1.2`
+ * @param icon Name of the icon to use
+ * @returns An object which can be spread directly into the layer style definition
+ */
 const mapSymbolStyle = (
   get: string = "name",
   offset: number = 1.2,
   icon?: string,
+  paint?: Extract<LayerProps, { type: "symbol" }>["paint"],
+  layout?: Extract<LayerProps, { type: "symbol" }>["layout"],
 ): Extract<LayerProps, { type: "symbol" }> => {
   return {
     type: "symbol",
@@ -133,6 +160,7 @@ const mapSymbolStyle = (
         "icon-overlap": "always",
         "icon-image": icon,
       }),
+      ...layout,
     },
     paint: {
       "text-halo-color": "#F8FAFCCC",
@@ -144,51 +172,198 @@ const mapSymbolStyle = (
           [8, 1],
         ],
       },
+      ...paint,
     },
   };
 };
 
-const PopupContent = ({
-  objKey,
-  value,
-  units,
-}: {
-  objKey: string;
-  value: string | number;
-  units?: string;
-}) => {
-  if (objKey === "geometry") return null;
-  if (typeof value === "string" && value.includes("https://"))
+/** Displays a row in the map popup. Note that the geometry property is used for downloading in .csv. It is omitted from displaying here. */
+const PopupContent = memo(
+  ({
+    objKey,
+    value,
+    units,
+  }: {
+    objKey: string;
+    value: string | number | null;
+    units?: string;
+  }) => {
+    if (objKey === "geometry" || !value) return null;
+    if (typeof value === "string" && value.includes("https://"))
+      return (
+        <div className="text-sm text-neutral-300">
+          <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
+          <Link
+            href={value}
+            target="_blank"
+            className="text-blue-400 hover:underline"
+          >
+            {value}
+          </Link>
+        </div>
+      );
+    if (typeof value === "string" && value.includes("doi:"))
+      return (
+        <div className="text-sm text-neutral-300">
+          <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
+          <Link
+            href={value.replace("doi:", "https://doi.org/")}
+            target="_blank"
+            className="text-blue-400 hover:underline"
+          >
+            {value}
+          </Link>
+        </div>
+      );
     return (
       <div className="text-sm text-neutral-300">
         <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
-        <Link
-          href={value}
-          target="_blank"
-          className="text-blue-400 hover:underline"
-        >
-          {value}
-        </Link>
+        {value}
+        {formatUnits(units)}
       </div>
     );
-  if (typeof value === "string" && value.includes("doi:"))
-    return (
-      <div className="text-sm text-neutral-300">
-        <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
-        <Link
-          href={value.replace("doi:", "https://doi.org/")}
-          target="_blank"
-          className="text-blue-400 hover:underline"
-        >
-          {value}
-        </Link>
-      </div>
-    );
+  },
+);
+
+PopupContent.displayName = "PopupContent";
+
+interface PopupFeature {
+  feature: MapGeoJSONFeature;
+  lng: number;
+  lat: number;
+}
+
+/** Popup displayed on the map with pages if the user is hovering over multiple map features. Allows the user to download data they are hovering over */
+const PaginatedPopup = ({
+  features,
+  ...rest
+}:
+  | {
+      features: PopupFeature[];
+      close: true;
+      onClose: () => void;
+      clearHover: () => void;
+      onFeatureChange: (feature: MapGeoJSONFeature) => void;
+    }
+  | {
+      features: PopupFeature[];
+      close: false;
+    }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const mapData = useAtomValue(dataAtom);
+
+  // Because we set the key of the component, the currentIndex resets automatically. If no key is set, uncomment the below
+  // useLayoutEffect(() => {
+  //   //Reset to 0 whenever the features change
+  //   setCurrentIndex(0);
+  // }, [features]);
+
+  if (!features.length) return null;
+
+  const activeFeature = features[rest.close ? currentIndex : 0]; //Force index 0 for hover popup. It should never not be 0 since pointer events is none but just in case
+
+  if (!activeFeature) return null;
+
   return (
-    <div className="text-sm text-neutral-300">
-      <span className="font-semibold">{camelCaseToWords(objKey)}:</span> {value}
-      {units}
-    </div>
+    <Popup
+      longitude={activeFeature.lng}
+      latitude={activeFeature.lat}
+      offset={{
+        top: [0, 12],
+        "top-left": [0, 12],
+        "top-right": [0, 12],
+        bottom: [0, -12],
+        "bottom-left": [0, -12],
+        "bottom-right": [0, -12],
+        left: [12, 0],
+        right: [-12, 0],
+        center: [0, 0],
+      }}
+      closeButton={rest.close}
+      style={rest.close ? undefined : { pointerEvents: "none" }}
+      onClose={rest.close ? rest.onClose : undefined}
+      closeOnClick={false}
+      className={cn(
+        "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:p-0 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md",
+        !rest.close && "[&_.maplibregl-popup-content]:pointer-events-none",
+      )}
+    >
+      <div
+        className="px-4 py-3"
+        onMouseEnter={rest.close ? rest.clearHover : undefined}
+      >
+        {activeFeature.feature.properties.name && (
+          <div className="mb-2 text-lg font-semibold text-neutral-50">
+            {activeFeature.feature.properties.name}
+          </div>
+        )}
+        {Object.entries(activeFeature.feature.properties ?? {}).map(
+          ([key, value]) => {
+            if (key === "name" || !value) return;
+            return (
+              <PopupContent
+                key={key}
+                objKey={key}
+                value={value}
+                units={
+                  MAP_LAYER_UNITS[activeFeature.feature.source]?.[key] ??
+                  mapData[activeFeature.feature.source as keyof typeof mapData]
+                    ?.units?.[key]
+                }
+              />
+            );
+          },
+        )}
+        {features.length >= 5 && (
+          <div className="mt-2">
+            <DownloadButton
+              className="w-full"
+              label="Download Cluster Data"
+              downloadType={{
+                type: "cluster",
+                features: features.map((val) => val.feature),
+              }}
+              fileName="cluster_data"
+            />
+          </div>
+        )}
+        {features.length > 1 && (
+          <div className="mt-2 flex items-center justify-end gap-2">
+            Feature {currentIndex + 1} of {features.length}
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Previous feature"
+              className="size-8"
+              disabled={currentIndex <= 0}
+              onClick={() => {
+                setCurrentIndex((prev) => prev - 1);
+                if (rest.close) {
+                  rest.onFeatureChange(features[currentIndex - 1].feature);
+                }
+              }}
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Next feature"
+              className="size-8"
+              disabled={currentIndex >= features.length - 1}
+              onClick={() => {
+                setCurrentIndex((prev) => prev + 1);
+                if (rest.close) {
+                  rest.onFeatureChange(features[currentIndex + 1].feature);
+                }
+              }}
+            >
+              <ChevronRight />
+            </Button>
+          </div>
+        )}
+      </div>
+    </Popup>
   );
 };
 
@@ -200,19 +375,12 @@ export default function DatabaseMap({
 }) {
   const { map } = useMap();
   const mapData = useAtomValue(dataAtom);
+  const dataColors = useAtomValue(colorsAtom);
   const dataVisibility = useAtomValue(dataVisibilityAtom);
 
-  const [hoverInfo, setHoverInfo] = useState<{
-    feature: MapGeoJSONFeature;
-    lng: number;
-    lat: number;
-  }>();
+  const [hoverInfo, setHoverInfo] = useState<PopupFeature[]>([]);
 
-  const [selectedFeature, setselectedFeature] = useState<{
-    feature: MapGeoJSONFeature;
-    lng: number;
-    lat: number;
-  }>();
+  const [selectedFeature, setSelectedFeature] = useState<PopupFeature[]>([]);
 
   const setDrawing = useSetAtom(drawingAtom);
   const ranges = useAtomValue(rangeAtom);
@@ -244,67 +412,91 @@ export default function DatabaseMap({
         features,
         lngLat: { lng, lat },
       } = event;
-      const hoveredFeature = features && features[0];
+      const hoveredFeatures = features;
       if (hoverInfo) {
-        // Old hover info
-        map.setFeatureState(
-          {
-            source: hoverInfo.feature.layer.source,
-            id: hoverInfo.feature.id,
-          },
-          { hover: false },
-        );
+        for (let i = 0, length = hoverInfo.length; i < length; i++) {
+          // Old hover info
+          map.setFeatureState(
+            {
+              source: hoverInfo[i].feature.layer.source,
+              id: hoverInfo[i].feature.id,
+            },
+            { hover: false },
+          );
+        }
       }
-      if (
-        !hoveredFeature ||
-        hoveredFeature.source === "platesSource" ||
-        hoveredFeature.source === "platesBoundariesSource" ||
-        hoveredFeature.source === "platesNewSource" ||
-        hoveredFeature.source === "platesNewBoundariesSource" ||
-        hoveredFeature.source === "crustThicknessSource"
-      ) {
-        setHoverInfo(undefined);
+      if (!hoveredFeatures) {
+        setHoverInfo([]);
         return;
       }
-      if (
-        !selectedFeature ||
-        (selectedFeature &&
-          (selectedFeature.feature.source !== hoveredFeature.source ||
-            selectedFeature.feature.id !== hoveredFeature.id)) // IDs are only unique within each source
-      ) {
+
+      const validFeatures: PopupFeature[] = [];
+      for (let i = 0, length = hoveredFeatures.length; i < length; i++) {
+        const currentFeature = hoveredFeatures[i];
+        if (
+          currentFeature.source === "platesSource" ||
+          currentFeature.source === "platesBoundariesSource" ||
+          currentFeature.source === "platesNewSource" ||
+          currentFeature.source === "platesNewBoundariesSource" ||
+          currentFeature.source === "crustThicknessSource"
+        ) {
+          continue;
+        }
+        // Do not show a hover popup for features that the user has clicked on already
+        // IDs are only unique within each source
+        if (
+          selectedFeature.some(
+            (val) =>
+              val.feature.id === currentFeature.id &&
+              val.feature.source === currentFeature.source,
+          )
+        ) {
+          continue;
+        }
+
         const popupLon =
-          hoveredFeature.geometry.type === "Point"
-            ? hoveredFeature.geometry.coordinates[0]
+          currentFeature.geometry.type === "Point"
+            ? currentFeature.geometry.coordinates[0]
             : lng;
         const popupLat =
-          hoveredFeature.geometry.type === "Point"
-            ? hoveredFeature.geometry.coordinates[1]
+          currentFeature.geometry.type === "Point"
+            ? currentFeature.geometry.coordinates[1]
             : lat;
-        setHoverInfo({
-          feature: hoveredFeature,
+        validFeatures.push({
+          feature: currentFeature,
           lng: popupLon,
           lat: popupLat,
         });
         map.setFeatureState(
-          { source: hoveredFeature.layer.source, id: hoveredFeature.id },
+          { source: currentFeature.layer.source, id: currentFeature.id },
           { hover: true },
         );
       }
+      setHoverInfo(validFeatures);
     },
     [hoverInfo, map, selectedFeature],
   );
 
-  const clearHover = useCallback(() => {
-    if (!map || !hoverInfo) return;
-    map.setFeatureState(
-      {
-        source: hoverInfo.feature.layer.source,
-        id: hoverInfo.feature.id,
-      },
-      { hover: false },
-    );
-    setHoverInfo(undefined);
-  }, [map, hoverInfo]);
+  const clearHover = useCallback(
+    (features: PopupFeature[]) => {
+      if (!map || features.length <= 0) return;
+      for (let i = 0, length = features.length; i < length; i++) {
+        map.setFeatureState(features[i].feature, { hover: false });
+      }
+      setHoverInfo([]);
+    },
+    [map],
+  );
+
+  const onPopupFeatureChange = useCallback(
+    (feature: MapGeoJSONFeature) => {
+      if (!map) return;
+      // Clear all other feature hover states and set current popup feature hover state to true
+      clearHover(selectedFeature);
+      map.setFeatureState(feature, { hover: true });
+    },
+    [clearHover, map, selectedFeature],
+  );
 
   const onClick = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -312,25 +504,45 @@ export default function DatabaseMap({
         features,
         lngLat: { lng, lat },
       } = event;
-      const clicked = features && features[0];
-      if (clicked && map) {
+      const clickedFeatures = features;
+      if (selectedFeature.length > 0) {
+        // Get rid of hover state for old popup
+        clearHover(selectedFeature);
+      }
+      if (!clickedFeatures || !map) return;
+      const out: PopupFeature[] = [];
+      for (let i = 0, length = clickedFeatures.length; i < length; i++) {
+        const currentFeature = clickedFeatures[i];
         const popupLon =
-          clicked.geometry.type === "Point"
-            ? clicked.geometry.coordinates[0]
+          currentFeature.geometry.type === "Point"
+            ? currentFeature.geometry.coordinates[0]
             : lng;
         const popupLat =
-          clicked.geometry.type === "Point"
-            ? clicked.geometry.coordinates[1]
+          currentFeature.geometry.type === "Point"
+            ? currentFeature.geometry.coordinates[1]
             : lat;
-        setselectedFeature({ feature: clicked, lng: popupLon, lat: popupLat });
-        clearHover();
+        out.push({ feature: currentFeature, lng: popupLon, lat: popupLat });
+      }
+      setSelectedFeature(out);
+      // Get rid of hover state for currently hovered features
+      clearHover(hoverInfo);
+      if (out.length > 0) {
+        // Highlight the current feature in the popup
+        map.setFeatureState(out[0].feature, { hover: true });
       }
     },
-    [clearHover, map],
+    [clearHover, hoverInfo, map, selectedFeature],
   );
 
+  // The only way to add an SDF icon to the map is after the map has loaded
+  const onLoad = useCallback(async (e: MapEvent) => {
+    const image = await e.target.loadImage(triangle.src);
+    if (e.target.hasImage("triangle-sdf")) return;
+    e.target.addImage("triangle-sdf", image.data, { sdf: true });
+  }, []);
+
   /** Defines the styles for each data type. Layout visibility, Source ID and Layer ID will be set automatically to
-   * `key + Source` and `key` respectively.
+   * `key` and `key + 'Layer'` respectively.
    *  ID is required when source has multiple layers. For sources with multiple layers, the Layer IDs will be `key + id`.
    *  E.g. For seismic data, id specified of `Mw` will have a layer id of `seisMw`
    * */
@@ -348,54 +560,73 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "slip"],
-            ...getInterpolateRange(ranges.slip ?? [0, 1], [
-              "#FCFDBF",
-              "#FDDC9E",
-              "#FD9869",
-              "#F8765C",
-              "#D3436E",
-              "#B63779",
-              "#7B2382",
-              "#5F187F",
-              "#231151",
-              "#0C0927",
-              "#000004",
-            ]),
+            ...getInterpolateRange(ranges.slip ?? [0, 1], dataColors.slip),
           ],
         },
       },
-      vlc: mapSymbolStyle(undefined, undefined, "custom:volcano"),
-      smt: mapSymbolStyle(undefined, undefined, "custom:seamount"),
+      vlc: mapSymbolStyle(undefined, undefined, "triangle-sdf", {
+        "icon-color": dataColors.vlc,
+        "icon-halo-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 10, 4],
+        "icon-halo-color": "#f8fafc",
+      }),
+      smt: mapSymbolStyle(undefined, undefined, "triangle-sdf", {
+        "icon-color": dataColors.smt,
+        "icon-halo-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 10, 4],
+        "icon-halo-color": "#f8fafc",
+      }),
       gnss: [
+        {
+          id: "Uncertainty",
+          type: "fill",
+          paint: {
+            "fill-color": [
+              "case",
+              ["boolean", ["feature-state", "hover"], false],
+              "#0000001A",
+              "transparent",
+            ],
+            "fill-outline-color": "#000",
+          },
+          filter: ["==", "$type", "Polygon"],
+        },
         {
           id: "Icon",
           type: "circle",
           paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              3,
-              12,
-              12,
-            ],
-            "circle-stroke-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              0,
-              8,
-              2,
-            ],
-            "circle-color": "#E39F40",
+            ...commonMapCircleStyles,
+            "circle-color": dataColors.gnss.icon,
             "circle-stroke-color": "#f8fafc",
           },
+          filter: ["==", "$type", "Point"],
         },
         {
           id: "Label",
           ...mapSymbolStyle(undefined, 1.5),
+        },
+        {
+          id: "Vector",
+          type: "line",
+          layout: {
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": dataColors.gnss.vector,
+            ...commonMapLineStyles,
+          },
+          filter: ["==", "$type", "LineString"],
+        },
+        {
+          id: "VectorArrow",
+          type: "symbol",
+          layout: {
+            "symbol-placement": "line-center",
+            "icon-allow-overlap": true,
+            "icon-size": ["interpolate", ["linear"], ["zoom"], 5, 0.3, 10, 1],
+            "icon-overlap": "always",
+            "icon-image": "custom:arrow_9",
+            "icon-rotate": 90,
+          },
+          filter: ["==", "$type", "LineString"],
         },
       ],
       flt: {
@@ -404,17 +635,8 @@ export default function DatabaseMap({
           "line-cap": "round",
         },
         paint: {
-          "line-color": "#f43f5e",
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            5,
-            ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
-            15,
-            ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
-          ],
-          "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 1, 15, 0.6],
+          "line-color": dataColors.flt,
+          ...commonMapLineStyles,
         },
       },
       slab2: {
@@ -427,56 +649,23 @@ export default function DatabaseMap({
             "interpolate",
             ["linear"],
             ["get", "depth"],
-            ...getInterpolateRange(ranges.slab2 ?? [0, 800], [
-              "#ffffa4",
-              "#fca309",
-              "#db503b",
-              "#922568",
-              "#400a67",
-              "#fff",
-            ]),
+            ...getInterpolateRange(ranges.slab2 ?? [0, 800], dataColors.slab2),
           ],
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            5,
-            ["case", ["boolean", ["feature-state", "hover"], false], 6, 1],
-            15,
-            ["case", ["boolean", ["feature-state", "hover"], false], 16, 6],
-          ],
-          "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 1, 15, 0.6],
+          ...commonMapLineStyles,
         },
       },
       seis: [
-        getSeisProps("mw", ranges.seis),
-        getSeisProps("mb", ranges.seis),
-        getSeisProps("ms", ranges.seis),
-        getSeisProps("none", ranges.seis),
+        getSeisProps("mw", ranges.seis, dataColors.seis),
+        getSeisProps("mb", ranges.seis, dataColors.seis),
+        getSeisProps("ms", ranges.seis, dataColors.seis),
+        getSeisProps("none", ranges.seis, dataColors.seis),
       ],
       hf: [
         {
           id: "Icon",
           type: "circle",
           paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              3,
-              12,
-              12,
-            ],
-            "circle-stroke-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              0,
-              8,
-              2,
-            ],
+            ...commonMapCircleStyles,
             "circle-stroke-color": [
               "interpolate",
               ["linear"],
@@ -495,10 +684,7 @@ export default function DatabaseMap({
               "interpolate",
               ["linear"],
               ["get", "qval"],
-              ...getInterpolateRange(
-                [-400, 400],
-                ["#0c4a6e", "#0284c7", "#eeeeee", "#e11d48", "#4c0519"],
-              ),
+              ...getInterpolateRange([-400, 400], dataColors.hf),
             ],
           },
         },
@@ -512,26 +698,9 @@ export default function DatabaseMap({
           id: "Icon",
           type: "circle",
           paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              3,
-              12,
-              12,
-            ],
-            "circle-stroke-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              5,
-              0,
-              8,
-              2,
-            ],
+            ...commonMapCircleStyles,
             "circle-opacity": 0.7,
-            "circle-color": "#b85a1f",
+            "circle-color": dataColors.rock,
             "circle-stroke-color": "#f8fafc",
           },
         },
@@ -541,7 +710,7 @@ export default function DatabaseMap({
         },
       ],
     }),
-    [ranges],
+    [ranges, dataColors],
   );
 
   // Gets all the layer IDs for the map's interactiveLayerIds prop
@@ -553,7 +722,7 @@ export default function DatabaseMap({
             ids.push(val.map((valLayers) => `${key}${valLayers.id}`));
             return ids;
           }
-          ids.push(key);
+          ids.push(key + "Layer");
           return ids;
         },
         [],
@@ -572,6 +741,7 @@ export default function DatabaseMap({
           zoom: 4.6,
           padding: { left: 320 },
         }}
+        onLoad={onLoad}
         maxZoom={15}
         mapStyle={style}
         onMouseMove={onHover}
@@ -601,7 +771,7 @@ export default function DatabaseMap({
 
           return (
             <Source
-              id={typedKey + "Source"}
+              id={typedKey}
               type="geojson"
               data={mapData[typedKey].geojson}
               key={typedKey}
@@ -625,7 +795,7 @@ export default function DatabaseMap({
               ) : (
                 <Layer
                   {...val}
-                  id={typedKey}
+                  id={typedKey + "Layer"}
                   layout={{
                     ...val.layout,
                     visibility: dataVisibility[typedKey] ? "visible" : "none",
@@ -635,107 +805,15 @@ export default function DatabaseMap({
             </Source>
           );
         })}
-        {hoverInfo && (
-          <Popup
-            longitude={hoverInfo.lng}
-            latitude={hoverInfo.lat}
-            offset={{
-              top: [0, 12],
-              "top-left": [0, 12],
-              "top-right": [0, 12],
-              bottom: [0, -12],
-              "bottom-left": [0, -12],
-              "bottom-right": [0, -12],
-              left: [12, 0],
-              right: [-12, 0],
-              center: [0, 0],
-            }}
-            style={{ pointerEvents: "none" }}
-            closeButton={false}
-            closeOnClick={true}
-            className={
-              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-content]:pointer-events-none [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:px-4 [&_.maplibregl-popup-content]:py-3 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
-            }
-          >
-            {hoverInfo.feature.properties.name && (
-              <div className="mb-2 text-lg font-semibold text-neutral-50">
-                {hoverInfo.feature.properties.name}
-              </div>
-            )}
-            {Object.entries(hoverInfo.feature.properties).map(
-              ([key, value]) => {
-                if (key === "name" || !value) return;
-                return (
-                  <PopupContent
-                    key={key}
-                    objKey={key}
-                    value={value}
-                    units={
-                      mapData[
-                        hoverInfo.feature.source.slice(
-                          0,
-                          -6,
-                        ) as keyof typeof mapData
-                      ]?.units?.[key]
-                    }
-                  />
-                );
-              },
-            )}
-          </Popup>
-        )}
-        {selectedFeature && (
-          <Popup
-            key={`${selectedFeature.feature.id}click`}
-            longitude={selectedFeature.lng}
-            latitude={selectedFeature.lat}
-            offset={{
-              top: [0, 12],
-              "top-left": [0, 12],
-              "top-right": [0, 12],
-              bottom: [0, -12],
-              "bottom-left": [0, -12],
-              "bottom-right": [0, -12],
-              left: [12, 0],
-              right: [-12, 0],
-              center: [0, 0],
-            }}
-            closeButton={true}
-            onClose={() => setselectedFeature(undefined)}
-            closeOnClick={false}
-            className={
-              "[&.maplibregl-popup-anchor-bottom-left_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom-right_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-bottom_.maplibregl-popup-tip]:border-t-background [&.maplibregl-popup-anchor-left_.maplibregl-popup-tip]:border-r-background [&.maplibregl-popup-anchor-right_.maplibregl-popup-tip]:border-l-background [&.maplibregl-popup-anchor-top-left_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top-right_.maplibregl-popup-tip]:border-b-background [&.maplibregl-popup-anchor-top_.maplibregl-popup-tip]:border-b-background [&_.maplibregl-popup-close-button:hover]:bg-neutral-800 [&_.maplibregl-popup-close-button]:px-1.5 [&_.maplibregl-popup-content]:bg-background [&_.maplibregl-popup-content]:p-0 [&_.maplibregl-popup-content]:font-sans [&_.maplibregl-popup-content]:shadow-md"
-            }
-          >
-            <div className="px-4 py-3" onMouseEnter={clearHover}>
-              {selectedFeature.feature.properties.name && (
-                <div className="mb-2 text-lg font-semibold text-neutral-50">
-                  {selectedFeature.feature.properties.name}
-                </div>
-              )}
-              {Object.entries(selectedFeature.feature.properties).map(
-                ([key, value]) => {
-                  if (key === "name" || !value) return;
-                  return (
-                    <PopupContent
-                      key={key}
-                      objKey={key}
-                      value={value}
-                      units={
-                        mapData[
-                          selectedFeature.feature.source.slice(
-                            0,
-                            -6,
-                          ) as keyof typeof mapData
-                        ]?.units?.[key]
-                      }
-                    />
-                  );
-                },
-              )}
-            </div>
-          </Popup>
-        )}
+        <PaginatedPopup features={hoverInfo} close={false} />
+        <PaginatedPopup
+          features={selectedFeature}
+          key={selectedFeature.toString()}
+          close
+          clearHover={() => clearHover(hoverInfo)}
+          onClose={() => setSelectedFeature([])}
+          onFeatureChange={onPopupFeatureChange}
+        />
       </Map>
     </>
   );

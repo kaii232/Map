@@ -1,8 +1,8 @@
 import { ALL_FILTERS_CLIENT } from "@/lib/data-definitions";
-import { Range } from "@/lib/filters";
+import type { Range } from "@/lib/filters";
 import { BasemapNames } from "@/lib/types";
-import { ActionReturn } from "@/server/actions";
-import { MultiPolygon, Polygon } from "geojson";
+import { LoaderFilter } from "@/server/actions";
+import { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { atom } from "jotai";
 
 /** Keeps track of which layers are visible */
@@ -37,7 +37,11 @@ export const dataAtom = atom<
   Partial<
     Record<
       keyof typeof ALL_FILTERS_CLIENT,
-      Extract<ActionReturn, { success: true }>["data"]
+      {
+        geojson: FeatureCollection;
+        units?: Record<string, string>;
+        params: LoaderFilter;
+      }
     >
   >
 >({});
@@ -46,3 +50,53 @@ export const dataAtom = atom<
 export const rangeAtom = atom<
   Partial<Record<keyof typeof ALL_FILTERS_CLIENT, Range>>
 >({});
+
+export const colorsAtom = atom({
+  flt: "#f43f5e",
+  gnss: { icon: "#E39F40", vector: "#8b36d1" },
+  hf: ["#0c4a6e", "#0284c7", "#eeeeee", "#e11d48", "#4c0519"],
+  seis: [
+    "#fff7ec",
+    "#fee8c8",
+    "#fdd49e",
+    "#fdbb84",
+    "#eb7c49",
+    "#db5235",
+    "#b52112",
+    "#750606",
+    "#360A07",
+    "#000000",
+  ],
+  slab2: [
+    "#ffffa4",
+    "#f6d543",
+    "#fca309",
+    "#f3761b",
+    "#db503b",
+    "#ba3655",
+    "#922568",
+    "#6a176e",
+    "#400a67",
+    "#150b37",
+    "#000004",
+  ],
+  smt: "#854D0E",
+  vlc: "#1E293B",
+  slip: [
+    "#FCFDBF",
+    "#FDDC9E",
+    "#FD9869",
+    "#F8765C",
+    "#D3436E",
+    "#B63779",
+    "#7B2382",
+    "#5F187F",
+    "#231151",
+    "#0C0927",
+    "#000004",
+  ],
+  rock: "#b85a1f",
+} satisfies Record<
+  keyof typeof ALL_FILTERS_CLIENT,
+  string | string[] | Record<string, string | string[]>
+>);

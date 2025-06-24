@@ -12,6 +12,7 @@ import {
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { PopoverAnchor } from "@radix-ui/react-popover";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { X } from "lucide-react";
 import {
   ComponentProps,
   createContext,
@@ -24,6 +25,7 @@ import {
   useRef,
 } from "react";
 import { createPortal } from "react-dom";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const stepAtom = atom(0);
 const tourHighlightDimsAtom = atom<{
@@ -48,6 +50,7 @@ export type Steps = {
   goBackStep?: () => void;
 }[];
 
+// Using context instead of atom so the steps is set to the prop when the component is rendered. Is it cursed to mix the two? Yes. Does it also work? Yes.
 const TourContext = createContext<{
   steps: Steps;
   onComplete?: () => void;
@@ -82,12 +85,19 @@ const TourRoot = memo(
         setStep(1);
         return;
       }
-      const pastCompletion = localStorage.getItem(`tour-complete-${tourId}`);
-      if (!pastCompletion) {
+
+      if (!localStorage.getItem(`tour-complete-${tourId}`)) {
         setStep(1);
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [setStep, shouldRememberCompletion, tourId]);
+
+    // Only run the beforeStep function for dialog types as the TourStep component runs it for tooltip types
+    useEffect(() => {
+      if (step <= 0 || step >= steps.length) return;
+      if (steps[step].type === "dialog" && steps[step].beforeStep) {
+        steps[step].beforeStep();
+      }
+    }, [step, steps]);
 
     const value = useMemo(
       () => ({
@@ -133,12 +143,26 @@ const TourRoot = memo(
                   onClick={() => {
                     if (steps[step - 1].afterStep) steps[step - 1].afterStep!();
                     if (step < steps.length) setStep((prev) => prev + 1);
-                    else if (onComplete) onComplete();
+                    else onComplete();
                   }}
                 >
                   {step === steps.length ? "End Tour" : "Next"}
                 </Button>
               </DialogFooter>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-4 top-4 size-6"
+                    aria-label="Skip tour"
+                    onClick={onComplete}
+                  >
+                    <X />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Skip tour</TooltipContent>
+              </Tooltip>
             </DialogContent>
           </Dialog>
         )}
@@ -147,7 +171,7 @@ const TourRoot = memo(
             <div
               className="fixed inset-0 z-50 bg-neutral-800/80"
               style={
-                dimensions && steps[step - 1].type === "tooltip"
+                dimensions && steps[step - 1].type === "tooltip" // Paste into https://yqnn.github.io/svg-path-editor/ for a visualisation of what this is doing
                   ? {
                       clipPath: `path("M ${window.innerWidth} ${window.innerHeight} H 0 V 0 H ${window.innerWidth} V ${window.innerHeight} Z M ${dimensions.left} ${dimensions.top - 8} a 8 8 0 0 0 -8 8 v ${dimensions.height} a 8 8 0 0 0 8 8 h ${dimensions.width} a 8 8 0 0 0 8 -8 v ${-dimensions.height} a 8 8 0 0 0 -8 -8 Z")`,
                     }
@@ -194,31 +218,33 @@ const TourStep = ({
     const container = containerRef.current;
     const onResize = () => {
       if (ticking.current) return;
-      // Calling getBoundingClientRect on scroll is not very performant
-      // This throttles the event so less calls are fired
-      // See: https://developer.mozilla.org/en-US/docs/Web/API/Document/scroll_event#scroll_event_throttling
       if (!container) return;
       setDimensions(container.getBoundingClientRect());
-      // About 60fps
-      setTimeout(() => (ticking.current = false), 16);
+      // This throttles the event so less calls are fired at about 60fps (16.67ms per frame)
+      setTimeout(() => (ticking.current = false), 16.67);
       ticking.current = true;
     };
+
+    // This function constantly runs to update the position of the highlight
     const frameLoop = () => {
       onResize();
       frameId.current = requestAnimationFrame(frameLoop);
     };
+
     if (currentStep === step) {
+      // Scroll the element to vertical center of the screen
       container.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
       frameLoop();
+      // Run before steps if any
       if (steps[step - 1].beforeStep) steps[step - 1].beforeStep!();
       if (localBeforeStep) localBeforeStep();
     }
 
     return () => {
-      cancelAnimationFrame(frameId.current);
+      cancelAnimationFrame(frameId.current); // Stop running the frameLoop function
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
@@ -231,7 +257,7 @@ const TourStep = ({
         {children}
       </PopoverAnchor>
       <PopoverContent
-        className="space-y-2 data-[side=left]:-translate-x-[min(0px,var(--radix-popover-content-available-width)-18rem)] data-[side=right]:translate-x-[min(0px,var(--radix-popover-content-available-width)-18rem)]"
+        className="flex flex-col gap-2 data-[side=left]:-translate-x-[min(0px,var(--radix-popover-content-available-width)-18rem)] data-[side=right]:translate-x-[min(0px,var(--radix-popover-content-available-width)-18rem)]"
         sideOffset={12}
         side="right"
         sticky="always"
@@ -275,11 +301,26 @@ const TourStep = ({
             {step === steps.length ? "End Tour" : "Next"}
           </Button>
         </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-4 size-6"
+              aria-label="Skip tour"
+              onClick={onComplete}
+            >
+              <X />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Skip tour</TooltipContent>
+        </Tooltip>
       </PopoverContent>
     </Popover>
   );
 };
 
+/** Button to start the tour. Using a raw button instead of button component because it's easier to make it into the map control style */
 const TourStart = (props: ComponentProps<"button">) => {
   const setStep = useSetAtom(stepAtom);
   return (

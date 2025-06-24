@@ -3,6 +3,7 @@ import {
   countryInInvest,
   fltInInvest,
   gnssStnInInvest,
+  gnssVectorInInvest,
   seisInInvest,
   slab2InInvest,
   slipModelInInvest,
@@ -23,13 +24,13 @@ import { Simplify } from "./types";
 //    type:    The the type of filter it is
 //    dbCol:   The drizzle column that the filter will be applied on
 //    nullCol: For select filters, if NULL is selected, the column that the IS NULL filter should be applied on
-//    Filters types like range, search and greaterThan have additional fields
-// 2. Update the ALL_FILTERS object with the filter defined in 1. or null if no filter
-// 3. Create server action to load the data in actions.ts
-// 4. Update the labels and loaders in utils.ts
+//    others:  Filter types like range, search and greaterThan have additional fields
+// 2. Update the ALL_FILTERS object with the filter object defined in 1. or null if no filter
+// 3. Update LOADER_DEFINITION in actions.ts to specify how to load this new data type
+// 4. Update the labels and in utils.ts
 // 5. Update map/page.tsx to fetch the data needed to populate the filter using the generateSQLSelect function. (skip this step if no filter)
 // 6. Update map/database-map.tsx mapDataLayers to specify the layer styles
-// 7. Update map/controls.tsx ColourRamps legends object if a legend is needed to display the data
+// 7. Update map/color-ramps.tsx legends object if a legend is needed to display the data
 
 // To add additional filters for data that already exists:
 // 2. Update the filter object of that data
@@ -88,11 +89,6 @@ const seisFilters = createDataFilter({
     name: "Mw",
     type: "range",
   },
-  dateRange: {
-    dbCol: seisInInvest.seisDate,
-    name: "Date",
-    type: "date",
-  },
   catalogs: {
     dbCol: biblInInvest.biblTitle,
     nullCol: seisInInvest.seisCatId,
@@ -135,12 +131,6 @@ const smtFilters = createDataFilter({
 });
 
 const gnssFilters = createDataFilter({
-  elevRange: {
-    dbCol: gnssStnInInvest.gnssElev,
-    name: "Elevation",
-    type: "range",
-    units: "m",
-  },
   dateRange: {
     dbCol: gnssStnInInvest.gnssInstDate,
     name: "Install Date",
@@ -163,6 +153,12 @@ const gnssFilters = createDataFilter({
     nullCol: gnssStnInInvest.stnTypeId,
     type: "select",
     name: "Station Type",
+  },
+  vector: {
+    dbCol: biblInInvest.biblTitle,
+    nullCol: gnssVectorInInvest.vectorBiblId,
+    type: "select",
+    name: "GNSS Vector",
   },
 });
 
@@ -254,9 +250,7 @@ function cleanObjectForClient() {
     }
     const filterObj: (typeof out)[string] = {};
     Object.entries(val).map(([clientKey, clientVal]) => {
-      const obj = { ...clientVal };
-      delete obj.dbCol;
-      delete obj.nullCol;
+      const { dbCol, nullCol, ...obj } = clientVal;
       filterObj[clientKey] = obj;
     });
     out[key] = filterObj;
