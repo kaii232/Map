@@ -243,6 +243,7 @@ const PaginatedPopup = ({
       close: true;
       onClose: () => void;
       clearHover: () => void;
+      onFeatureChange: (feature: MapGeoJSONFeature) => void;
     }
   | {
       features: PopupFeature[];
@@ -335,7 +336,12 @@ const PaginatedPopup = ({
               aria-label="Previous feature"
               className="size-8"
               disabled={currentIndex <= 0}
-              onClick={() => setCurrentIndex((prev) => prev - 1)}
+              onClick={() => {
+                setCurrentIndex((prev) => prev - 1);
+                if (rest.close) {
+                  rest.onFeatureChange(features[currentIndex - 1].feature);
+                }
+              }}
             >
               <ChevronLeft />
             </Button>
@@ -345,7 +351,12 @@ const PaginatedPopup = ({
               aria-label="Next feature"
               className="size-8"
               disabled={currentIndex >= features.length - 1}
-              onClick={() => setCurrentIndex((prev) => prev + 1)}
+              onClick={() => {
+                setCurrentIndex((prev) => prev + 1);
+                if (rest.close) {
+                  rest.onFeatureChange(features[currentIndex + 1].feature);
+                }
+              }}
             >
               <ChevronRight />
             </Button>
@@ -466,19 +477,26 @@ export default function DatabaseMap({
     [hoverInfo, map, selectedFeature],
   );
 
-  const clearHover = useCallback(() => {
-    if (!map || !hoverInfo) return;
-    for (let i = 0, length = hoverInfo.length; i < length; i++) {
-      map.setFeatureState(
-        {
-          source: hoverInfo[i].feature.layer.source,
-          id: hoverInfo[i].feature.id,
-        },
-        { hover: false },
-      );
-    }
-    setHoverInfo([]);
-  }, [map, hoverInfo]);
+  const clearHover = useCallback(
+    (features: PopupFeature[]) => {
+      if (!map || features.length <= 0) return;
+      for (let i = 0, length = features.length; i < length; i++) {
+        map.setFeatureState(features[i].feature, { hover: false });
+      }
+      setHoverInfo([]);
+    },
+    [map],
+  );
+
+  const onPopupFeatureChange = useCallback(
+    (feature: MapGeoJSONFeature) => {
+      if (!map) return;
+      // Clear all other feature hover states and set current popup feature hover state to true
+      clearHover(selectedFeature);
+      map.setFeatureState(feature, { hover: true });
+    },
+    [clearHover, map, selectedFeature],
+  );
 
   const onClick = useCallback(
     (event: MapLayerMouseEvent) => {
@@ -487,8 +505,11 @@ export default function DatabaseMap({
         lngLat: { lng, lat },
       } = event;
       const clickedFeatures = features;
+      if (selectedFeature.length > 0) {
+        // Get rid of hover state for old popup
+        clearHover(selectedFeature);
+      }
       if (!clickedFeatures || !map) return;
-
       const out: PopupFeature[] = [];
       for (let i = 0, length = clickedFeatures.length; i < length; i++) {
         const currentFeature = clickedFeatures[i];
@@ -503,9 +524,14 @@ export default function DatabaseMap({
         out.push({ feature: currentFeature, lng: popupLon, lat: popupLat });
       }
       setSelectedFeature(out);
-      clearHover();
+      // Get rid of hover state for currently hovered features
+      clearHover(hoverInfo);
+      if (out.length > 0) {
+        // Highlight the current feature in the popup
+        map.setFeatureState(out[0].feature, { hover: true });
+      }
     },
-    [clearHover, map],
+    [clearHover, hoverInfo, map, selectedFeature],
   );
 
   // The only way to add an SDF icon to the map is after the map has loaded
@@ -553,7 +579,12 @@ export default function DatabaseMap({
           id: "Uncertainty",
           type: "fill",
           paint: {
-            "fill-color": "transparent",
+            "fill-color": [
+              "case",
+              ["boolean", ["feature-state", "hover"], false],
+              "#0000001A",
+              "transparent",
+            ],
             "fill-outline-color": "#000",
           },
           filter: ["==", "$type", "Polygon"],
@@ -779,8 +810,9 @@ export default function DatabaseMap({
           features={selectedFeature}
           key={selectedFeature.toString()}
           close
-          clearHover={clearHover}
+          clearHover={() => clearHover(hoverInfo)}
           onClose={() => setSelectedFeature([])}
+          onFeatureChange={onPopupFeatureChange}
         />
       </Map>
     </>
