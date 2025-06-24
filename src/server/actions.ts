@@ -188,7 +188,7 @@ const retrieveGnss = (
       northingUncertainty: gnssVectorInInvest.vectorNorthingUnc,
       projected: sql<string>`ST_PROJECT(
                               ST_POINT(${gnssStnInInvest.gnssLon}, ${gnssStnInInvest.gnssLat}), 
-                              SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 5000,
+                              SQRT(POWER(${gnssVectorInInvest.vectorEasting},2) + POWER(${gnssVectorInInvest.vectorNorthing},2)) * 1000,
                               ATAN2(${gnssVectorInInvest.vectorEasting}, ${gnssVectorInInvest.vectorNorthing})
                             )::geometry`.as("projected"),
     })
@@ -206,9 +206,9 @@ const retrieveGnss = (
                               ST_Scale(
                                 ST_Buffer(
                                     ST_SetSRID(ST_Point(0,0), 4326), 
-                                    0.2
+                                    0.025
                                   ), 
-                                ABS(${endPoint.eastingUncertainty}), ABS(${endPoint.northingUncertainty})
+                                1 + 0.2 * ${endPoint.eastingUncertainty}, 1 + 0.2 * ${endPoint.northingUncertainty}
                               ),
                               ST_X(${endPoint.projected}), 
                               ST_Y(${endPoint.projected})
