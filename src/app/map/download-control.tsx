@@ -98,22 +98,26 @@ function getRoundNum(num: number) {
   return pow10 * d;
 }
 
-const getMapScale = (map: maplibregl.Map | MapRef, width: number = 512) => {
-  const y = map._container.clientHeight / 2;
-  const x = map._container.clientWidth / 2;
+const getMapScale = (map: maplibregl.Map | MapRef, width: number = 128) => {
+  const y = map._containerDimensions()[1] / 2;
+  const x = map._containerDimensions()[0] / 2;
   const left = map.unproject([x - width / 2, y]);
   const right = map.unproject([x + width / 2, y]);
-
   const globeWidth = Math.round(map.project(right).x - map.project(left).x);
-  const maxWidth = Math.min(width, globeWidth, map._container.clientWidth);
+  const maxWidth = Math.min(width, globeWidth, map._containerDimensions()[0]);
   const maxMeters = left.distanceTo(right);
   const maxDistance = maxMeters >= 1000 ? maxMeters / 1000 : maxMeters;
   const unit = maxMeters >= 1000 ? "km" : "m";
 
   const distance = getRoundNum(maxDistance);
   const ratio = distance / maxDistance;
-
-  return { width: ratio * maxWidth, label: `${distance} ${unit}` };
+  return {
+    width:
+      ratio *
+      maxWidth *
+      (map.getCanvas().width / map._containerDimensions()[0]), // Scale the width based on the pixel ratio
+    label: `${distance} ${unit}`,
+  };
 };
 
 const SCALE_OUTER_PADDING = 16;
