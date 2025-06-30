@@ -132,7 +132,7 @@ const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
   if (!ctx) return;
   const mapScaleInfo = getMapScale(map);
   ctx.font = "24px/32px Arial";
-  // Draw a rectangle with 8px padding around mapScaleInfo.width
+  // Draw a rectangle with some padding
   ctx.fillStyle = "#FFFFFF80";
   ctx.fillRect(
     64,
@@ -140,7 +140,7 @@ const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
     mapScaleInfo.width + SCALE_OUTER_PADDING * 2,
     SCALE_HEIGHT,
   );
-  // Draw a black rectangle
+  // Draw a black rectangle within the previous rectangle
   ctx.fillStyle = "#000000";
   ctx.fillRect(
     64 + SCALE_OUTER_PADDING,
@@ -148,20 +148,22 @@ const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
     mapScaleInfo.width,
     SCALE_HEIGHT - 2 * SCALE_OUTER_PADDING,
   );
-  // Draw inner white rectangle so the black rectangle becomes a border
   ctx.fillStyle = "#FFFFFF80";
+  // Clear a rectangle to leave a shape like |______| in black
   ctx.clearRect(
     64 + SCALE_OUTER_PADDING + SCALE_BORDER_WIDTH,
     mapLabels.height - 64 - SCALE_HEIGHT + SCALE_OUTER_PADDING,
     mapScaleInfo.width - SCALE_BORDER_WIDTH * 2,
     SCALE_HEIGHT - 2 * SCALE_OUTER_PADDING - SCALE_BORDER_WIDTH,
   );
+  // Fill in the pixels we just cleared
   ctx.fillRect(
     64 + SCALE_OUTER_PADDING + SCALE_BORDER_WIDTH,
     mapLabels.height - 64 - SCALE_HEIGHT + SCALE_OUTER_PADDING,
     mapScaleInfo.width - SCALE_BORDER_WIDTH * 2,
     SCALE_HEIGHT - 2 * SCALE_OUTER_PADDING - SCALE_BORDER_WIDTH,
   );
+  // Add in the text for the scale
   ctx.fillStyle = "#000000";
   ctx.fillText(
     mapScaleInfo.label,
@@ -175,7 +177,7 @@ const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
         mapLabels.width - 64 - northArrow.width / 2,
         mapLabels.height - 64 - northArrow.height / 2,
       );
-      ctx.rotate((map.getBearing() * -Math.PI) / 180);
+      ctx.rotate((map.getBearing() * -Math.PI) / 180); // If you add in stuff to this canvas after this they will be rotated, rotate back if you need to add more things
       ctx.translate(
         -(mapLabels.width - 64 - northArrow.width / 2),
         -(mapLabels.height - 64 - northArrow.height / 2),
@@ -192,6 +194,7 @@ const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
   return mapLabels;
 };
 
+/** Combined the labels with the map. Since the label canvas and the maplibre canvas has different canvas contexts (webgl vs 2d), need to convert maplibre canvas to image first then combine */
 const combineCanvases = async (
   map: maplibregl.Map | MapRef,
   labels: HTMLCanvasElement,
@@ -206,7 +209,10 @@ const combineCanvases = async (
     mapImage.onload = () => {
       ctx.drawImage(mapImage, 0, 0);
       ctx.drawImage(labels, 0, 0);
-      combinedCanvas.toBlob((blob) => resolve(blob));
+      combinedCanvas.toBlob((blob) => {
+        combinedCanvas.remove();
+        resolve(blob);
+      });
     };
     mapImage.src = map.getCanvas().toDataURL();
   });
