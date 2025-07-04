@@ -85,9 +85,9 @@ const getSeisProps = (
     "circle-opacity": 0.7,
     "circle-color": [
       "interpolate",
-      ["linear"],
+      ["linear"], // We do not set it to exponential here because it will interpolate exponentially between EACH stop instead of a smooth exponential curve through all stops
       ["get", "depth"],
-      ...getInterpolateRange(range ?? [2, 1024], colors, 0.5),
+      ...getInterpolateRange(range ?? [2, 1024], colors, 0.5), // This function will calculate the appropriate stops such that joining the points linearly approximates an exponential curve through the points
     ],
     "circle-radius":
       property !== "none"

@@ -29,8 +29,9 @@ import { Simplify } from "./types";
 // 3. Update LOADER_DEFINITION in actions.ts to specify how to load this new data type
 // 4. Update the labels and in utils.ts
 // 5. Update map/page.tsx to fetch the data needed to populate the filter using the generateSQLSelect function. (skip this step if no filter)
-// 6. Update map/database-map.tsx mapDataLayers to specify the layer styles
-// 7. Update map/color-ramps.tsx legends object if a legend is needed to display the data
+// 6. Update colorsAtom in map/atoms.ts with the colors of this data type
+// 7. Update map/database-map.tsx mapDataLayers to specify the layer styles, be sure to use the color from the colorsAtom
+// 8. Update map/color-ramps.tsx legends object if a legend is needed to display the data, use the colorsAtom as well
 
 // To add additional filters for data that already exists:
 // 2. Update the filter object of that data
@@ -104,18 +105,18 @@ const smtFilters = createDataFilter({
     type: "range",
     units: "m",
   },
-  baseRange: {
-    dbCol: smtInInvest.smtBase,
-    name: "Base",
-    type: "range",
-    units: "m",
-  },
-  summitRange: {
-    dbCol: smtInInvest.smtSummit,
-    name: "Summit",
-    type: "range",
-    units: "m",
-  },
+  // baseRange: {
+  //   dbCol: smtInInvest.smtBase,
+  //   name: "Base",
+  //   type: "range",
+  //   units: "m",
+  // },
+  // summitRange: {
+  //   dbCol: smtInInvest.smtSummit,
+  //   name: "Summit",
+  //   type: "range",
+  //   units: "m",
+  // },
   classes: {
     dbCol: smtInInvest.smtClass,
     nullCol: smtInInvest.smtClass,
@@ -131,11 +132,11 @@ const smtFilters = createDataFilter({
 });
 
 const gnssFilters = createDataFilter({
-  dateRange: {
-    dbCol: gnssStnInInvest.gnssInstDate,
-    name: "Install Date",
-    type: "date",
-  },
+  // dateRange: {
+  //   dbCol: gnssStnInInvest.gnssInstDate,
+  //   name: "Install Date",
+  //   type: "date",
+  // },
   countries: {
     dbCol: countryInInvest.countryName,
     nullCol: gnssStnInInvest.countryId,
@@ -163,24 +164,24 @@ const gnssFilters = createDataFilter({
 });
 
 const fltFilters = createDataFilter({
-  lengthRange: {
-    dbCol: fltInInvest.fltLen,
-    name: "Length",
-    type: "range",
-    units: "km",
-  },
-  sliprateRange: {
-    dbCol: fltInInvest.fltSliprate,
-    name: "Sliprate",
-    type: "range",
-    units: "mm/yr",
-  },
-  depthRange: {
-    dbCol: fltInInvest.fltLockDepth,
-    name: "Locking Depth",
-    type: "range",
-    units: "km",
-  },
+  // lengthRange: {
+  //   dbCol: fltInInvest.fltLen,
+  //   name: "Length",
+  //   type: "range",
+  //   units: "km",
+  // },
+  // sliprateRange: {
+  //   dbCol: fltInInvest.fltSliprate,
+  //   name: "Sliprate",
+  //   type: "range",
+  //   units: "mm/yr",
+  // },
+  // depthRange: {
+  //   dbCol: fltInInvest.fltLockDepth,
+  //   name: "Locking Depth",
+  //   type: "range",
+  //   units: "km",
+  // },
   types: {
     dbCol: fltInInvest.fltType,
     nullCol: fltInInvest.fltType,
