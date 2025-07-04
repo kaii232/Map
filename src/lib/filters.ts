@@ -9,7 +9,7 @@ import type {
 } from "./data-definitions";
 
 // To add new types of filter:
-// 1. Define the type of the data needed to populate the filter in types.ts
+// 1. Define the type of the data needed to populate the filter in this file
 // 2. Update GenericFiltersInfo (skip if does not need to be populated with data from server), FiltersType and
 //    NarrowFilterType (skip if does not need to be populated with data from server) in types.ts to reflect this new filter
 // 3. If the new filter does not need to be populated with data from the server, adjust FilterServerPopulated type to reflect that

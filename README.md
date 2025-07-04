@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InVEST Data Portal
 
-## Getting Started
+Repository for the InVEST Data Portal, built using [Next.js](https://nextjs.org/). The stack is as follows:
 
-First, run the development server:
+- UI library: [ShadCN](https://ui.shadcn.com/) (Still using Tailwind V3)
+- Database: PostgreSQL with PostGIS extension. Temp database hosted on [Supabase](https://supabase.com/)
+- ORM: [Drizzle](https://orm.drizzle.team/)
+- Authentication: [Better Auth](https://www.better-auth.com/)
+- Map: [React Map GL](https://visgl.github.io/react-map-gl/) using [Maplibre](https://maplibre.org/)
+- Input validation: [Zod](https://zod.dev/)
+- State manager: [Jotai](https://jotai.org/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Portal Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### Map Page
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Filter, display and download various types of data
+- Download a picture of the map with different layers
+- Customise the colours of the features on the map
+- Choose from a variety of basemaps
+- View feature data on hover
+- Download cluster data
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### Database Page
 
-## Learn More
+- List sources of all the different types of data
 
-To learn more about Next.js, take a look at the following resources:
+#### Publications Page
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Search from a list of publications within the database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### Login System
 
-## Deploy on Vercel
+- Logging in will allow the user to view data from restricted sources
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+#### Admin Dashboard
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Set roles, passwords, change names for existing users
+- Add new users
+- Search for users
+
+## Updating the Portal
+
+Adding new filter types: Refer to comments in `@/lib/filters.ts`
+
+Adding new data types/filters for existing data: Refer to comments in `@/lib/data-definitions.ts`
+
+Updating the database: The database isn't directly managed by Drizzle, so we pull the database config from Postgres:
+
+1. Set `DATABASE_URL` env variable to port `5432` (The following command won't work otherwise)
+2. Run `npx drizzle-kit pull` command
+3. Update `@/server/db/schema.ts` with the changes. Note that you may have to edit some of the generated code if the data types are unsupported
+4. Set `DATABASE_URL` env variable back to port `6543`
