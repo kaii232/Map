@@ -96,6 +96,11 @@ const seisFilters = createDataFilter({
     name: "Catalog",
     type: "select",
   },
+  date: {
+    dbCol: seisInInvest.seisDate,
+    name: "Date",
+    type: "date",
+  }
 });
 
 const smtFilters = createDataFilter({
