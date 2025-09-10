@@ -12,7 +12,7 @@ import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MapRef, useMap } from "react-map-gl/maplibre";
 import { toast } from "sonner";
-import { layersAtom, panelOpenAtom } from "./atoms";
+import { layersAtom, panelOpenAtom, dataVisibilityAtom } from "./atoms";
 
 /** Layer IDs for each map layer for separating when downloading */
 const SOURCES_LAYERS: Record<
@@ -124,6 +124,39 @@ const SCALE_OUTER_PADDING = 16;
 const SCALE_BORDER_WIDTH = 4;
 const SCALE_HEIGHT = 80;
 
+/** Return all layer ids whose `source` matches any in `sourceIds` */
+function findLayersForSources(m: maplibregl.Map | MapRef, sourceIds: string[]) {
+  const style = m.getStyle();
+  const ids: string[] = [];
+  for (const lyr of style.layers ?? []) {
+    // @ts-ignore
+    const src = lyr.source as string | undefined;
+    if (!src) continue;
+    if (sourceIds.includes(src)) ids.push(lyr.id);
+  }
+  return ids;
+}
+
+/** Return only the visible layer ids from a list on the given map */
+function filterVisibleLayers(m: maplibregl.Map | MapRef, layerIds: string[]) {
+  return layerIds.filter((id) => m.getLayoutProperty(id, "visibility") !== "none");
+}
+
+/** Copy a runtime-added image from the live map -> offscreen map */
+function copyImageById(map: maplibregl.Map | MapRef, newMap: maplibregl.Map, id: string) {
+  // @ts-ignore
+  const img = map.getImage?.(id);
+  if (!img) return;
+  // @ts-ignore
+  const data = img.data ?? img;
+  // @ts-ignore
+  const pixelRatio = img.pixelRatio ?? 1;
+  // @ts-ignore
+  const sdf = !!img.sdf;
+  if (!newMap.hasImage(id)) newMap.addImage(id, data, { pixelRatio, sdf });
+}
+
+
 const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
   const mapLabels = document.createElement("canvas");
   mapLabels.width = map.getCanvas().width;
@@ -225,6 +258,7 @@ const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
     null,
   );
   const { map } = useMap();
+  const dataVisibility = useAtomValue(dataVisibilityAtom);
   const [isDrawing, setIsDrawing] = useState(false);
   const setPanelOpen = useSetAtom(panelOpenAtom);
 
@@ -262,6 +296,12 @@ const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
       fadeDuration: 0,
       attributionControl: false,
     });
+    // Copy any runtime-added images (ensures volcano/seamount icons render on offscreen map)
+newMap.on("styleimagemissing", (e: any) => copyImageById(map!, newMap, e.id));
+// Eager copy all already-registered images
+const existing = (map as any).listImages?.() ?? [];
+existing.forEach((id: string) => copyImageById(map!, newMap, id));
+
     const imagePromises: Promise<{ name: string; blob: Blob | null }>[] = [];
     const layersToExport: (string | string[])[] = [];
     const isTerrainEnabled = !!map.getTerrain();
@@ -345,6 +385,26 @@ const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
             newMap.setLayoutProperty(layer, "visibility", "none");
           }
         });
+
+        // === Add volcano (vlc) & seamount (smt) layers by source id ===
+        const volcanoSourceIds = ["vlc", "vlcInInvest"];
+        const seamountSourceIds = ["smt", "smtInInvest"];
+
+        if (dataVisibility.vlc) {
+          const vlcLayers = filterVisibleLayers(newMap, findLayersForSources(newMap, volcanoSourceIds));
+          if (vlcLayers.length) {
+            layersToExport.push(vlcLayers);
+            vlcLayers.forEach((id) => newMap.setLayoutProperty(id, "visibility", "none"));
+          }
+        }
+
+        if (dataVisibility.smt) {
+          const smtLayers = filterVisibleLayers(newMap, findLayersForSources(newMap, seamountSourceIds));
+          if (smtLayers.length) {
+            layersToExport.push(smtLayers);
+            smtLayers.forEach((id) => newMap.setLayoutProperty(id, "visibility", "none"));
+          }
+        }
 
         // For additional data layers
         Object.entries(layers).map(([src, visible]) => {

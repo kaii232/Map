@@ -414,16 +414,32 @@ export default function DatabaseMap({
       } = event;
       const hoveredFeatures = features;
       if (hoverInfo) {
-        for (let i = 0, length = hoverInfo.length; i < length; i++) {
-          // Old hover info
-          map.setFeatureState(
-            {
-              source: hoverInfo[i].feature.layer.source,
-              id: hoverInfo[i].feature.id,
-            },
-            { hover: false },
-          );
+       for (let i = 0, length = hoverInfo.length; i < length; i++) {
+          const f = hoverInfo[i]?.feature;
+          if (!f) continue;
+
+          const src = (f as any)?.layer?.source as string | undefined;
+          if (!src) continue;
+
+          // Skip if the source is gone (dataset toggled off / style changed)
+          if (!map.getSource(src)) continue;
+
+          const params: any = { source: src, id: f.id };
+
+          // If vector tiles are used, include the source layer
+          const sourceLayer = (f as any)?.layer?.["source-layer"];
+          if (sourceLayer) params.sourceLayer = sourceLayer;
+
+          // If id might be missing, bail safely
+          if (params.id == null) continue;
+
+          try {
+            map.setFeatureState(params, { hover: false });
+          } catch {
+            // no-op: the layer/source could have been torn down mid-frame
+          }
         }
+
       }
       if (!hoveredFeatures) {
         setHoverInfo([]);
