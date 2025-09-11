@@ -244,10 +244,10 @@ const ColorControl = ({
   }
   if (colorConfig[dataKey].type === "multi") {
     // explicitly narrow once and reuse
-    const cfgMulti = colorConfig[dataKey] as Extract<
-      ColorConfig,
-      { type: "multi" }
-    >;
+    // const cfgMulti = colorConfig[dataKey] as Extract<
+    //   ColorConfig,
+    //   { type: "multi" }
+    // >;
 
     // ---- GNSS ONLY: dropdown + render only the relevant pickers
     if (dataKey === "gnss") {
