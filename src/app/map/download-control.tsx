@@ -306,7 +306,9 @@ const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
       copyImageById(map!, newMap, e.id),
     );
     // Eager copy all already-registered images
-    const existing = (map as any).listImages?.() ?? [];
+    const existing =
+      (map as unknown as { listImages?: () => string[] }).listImages?.() ?? [];
+
     existing.forEach((id: string) => copyImageById(map!, newMap, id));
 
     const imagePromises: Promise<{ name: string; blob: Blob | null }>[] = [];
