@@ -408,86 +408,103 @@ export default function DatabaseMap({
   const onHover = useCallback(
     (event: MapLayerMouseEvent) => {
       if (!map) return;
+
       const {
         features,
         lngLat: { lng, lat },
       } = event;
-      const hoveredFeatures = features;
-      if (hoverInfo) {
-       for (let i = 0, length = hoverInfo.length; i < length; i++) {
+
+      // --- small helper types (local; no imports needed) ---
+      type FeatureStateTarget = {
+        source: string;
+        id: string | number;
+        sourceLayer?: string;
+      };
+
+      // Builds a safe FeatureStateTarget from a Map feature (returns null if not targetable)
+      const toTarget = (f: unknown): FeatureStateTarget | null => {
+        const src = (f as { layer?: { source?: string } })?.layer?.source;
+        const id = (f as { id?: string | number })?.id;
+        if (!src || id == null) return null;
+        if (!map.getSource(src)) return null;
+
+        const sourceLayer = (f as { layer?: { ["source-layer"]?: string } })
+          ?.layer?.["source-layer"];
+        const target: FeatureStateTarget = { source: src, id };
+        if (sourceLayer) target.sourceLayer = sourceLayer;
+        return target;
+      };
+
+      // --- 1) clear previous hover states safely ---
+      if (hoverInfo && hoverInfo.length) {
+        for (let i = 0; i < hoverInfo.length; i++) {
           const f = hoverInfo[i]?.feature;
           if (!f) continue;
 
-          const src = (f as any)?.layer?.source as string | undefined;
-          if (!src) continue;
-
-          // Skip if the source is gone (dataset toggled off / style changed)
-          if (!map.getSource(src)) continue;
-
-          const params: any = { source: src, id: f.id };
-
-          // If vector tiles are used, include the source layer
-          const sourceLayer = (f as any)?.layer?.["source-layer"];
-          if (sourceLayer) params.sourceLayer = sourceLayer;
-
-          // If id might be missing, bail safely
-          if (params.id == null) continue;
+          const target = toTarget(f);
+          if (!target) continue;
 
           try {
-            map.setFeatureState(params, { hover: false });
+            map.setFeatureState(target, { hover: false });
           } catch {
-            // no-op: the layer/source could have been torn down mid-frame
+            // source/layer might have been removed mid-frame; ignore
           }
         }
-
       }
-      if (!hoveredFeatures) {
+
+      // --- 2) if nothing is currently hovered, clear and exit ---
+      if (!features?.length) {
         setHoverInfo([]);
         return;
       }
 
+      // --- 3) build new hover info and set hover state ---
       const validFeatures: PopupFeature[] = [];
-      for (let i = 0, length = hoveredFeatures.length; i < length; i++) {
-        const currentFeature = hoveredFeatures[i];
+      for (let i = 0; i < features.length; i++) {
+        const current = features[i];
+
+        // skip layers we never want to hover
         if (
-          currentFeature.source === "platesSource" ||
-          currentFeature.source === "platesBoundariesSource" ||
-          currentFeature.source === "platesNewSource" ||
-          currentFeature.source === "platesNewBoundariesSource" ||
-          currentFeature.source === "crustThicknessSource"
-        ) {
-          continue;
-        }
-        // Do not show a hover popup for features that the user has clicked on already
-        // IDs are only unique within each source
-        if (
-          selectedFeature.some(
-            (val) =>
-              val.feature.id === currentFeature.id &&
-              val.feature.source === currentFeature.source,
-          )
+          current.source === "platesSource" ||
+          current.source === "platesBoundariesSource" ||
+          current.source === "platesNewSource" ||
+          current.source === "platesNewBoundariesSource" ||
+          current.source === "crustThicknessSource"
         ) {
           continue;
         }
 
+        // skip features already selected (IDs are only unique within a source)
+        const alreadySelected = selectedFeature.some(
+          (val) =>
+            val.feature.id === current.id &&
+            val.feature.source === current.source,
+        );
+        if (alreadySelected) continue;
+
+        // popup anchoring
         const popupLon =
-          currentFeature.geometry.type === "Point"
-            ? currentFeature.geometry.coordinates[0]
+          current.geometry.type === "Point"
+            ? current.geometry.coordinates[0]
             : lng;
         const popupLat =
-          currentFeature.geometry.type === "Point"
-            ? currentFeature.geometry.coordinates[1]
+          current.geometry.type === "Point"
+            ? current.geometry.coordinates[1]
             : lat;
-        validFeatures.push({
-          feature: currentFeature,
-          lng: popupLon,
-          lat: popupLat,
-        });
-        map.setFeatureState(
-          { source: currentFeature.layer.source, id: currentFeature.id },
-          { hover: true },
-        );
+
+        validFeatures.push({ feature: current, lng: popupLon, lat: popupLat });
+
+        // set new hover state (guarded + vector-tile aware)
+        const target = toTarget(current);
+        if (!target) continue;
+
+        try {
+          map.setFeatureState(target, { hover: true });
+        } catch {
+          // ignore race conditions
+        }
       }
+
       setHoverInfo(validFeatures);
     },
     [hoverInfo, map, selectedFeature],

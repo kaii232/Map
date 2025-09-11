@@ -139,11 +139,17 @@ function findLayersForSources(m: maplibregl.Map | MapRef, sourceIds: string[]) {
 
 /** Return only the visible layer ids from a list on the given map */
 function filterVisibleLayers(m: maplibregl.Map | MapRef, layerIds: string[]) {
-  return layerIds.filter((id) => m.getLayoutProperty(id, "visibility") !== "none");
+  return layerIds.filter(
+    (id) => m.getLayoutProperty(id, "visibility") !== "none",
+  );
 }
 
 /** Copy a runtime-added image from the live map -> offscreen map */
-function copyImageById(map: maplibregl.Map | MapRef, newMap: maplibregl.Map, id: string) {
+function copyImageById(
+  map: maplibregl.Map | MapRef,
+  newMap: maplibregl.Map,
+  id: string,
+) {
   // @ts-ignore
   const img = map.getImage?.(id);
   if (!img) return;
@@ -155,7 +161,6 @@ function copyImageById(map: maplibregl.Map | MapRef, newMap: maplibregl.Map, id:
   const sdf = !!img.sdf;
   if (!newMap.hasImage(id)) newMap.addImage(id, data, { pixelRatio, sdf });
 }
-
 
 const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
   const mapLabels = document.createElement("canvas");
@@ -297,10 +302,12 @@ const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
       attributionControl: false,
     });
     // Copy any runtime-added images (ensures volcano/seamount icons render on offscreen map)
-newMap.on("styleimagemissing", (e: any) => copyImageById(map!, newMap, e.id));
-// Eager copy all already-registered images
-const existing = (map as any).listImages?.() ?? [];
-existing.forEach((id: string) => copyImageById(map!, newMap, id));
+    newMap.on("styleimagemissing", (e: { id: string }) =>
+      copyImageById(map!, newMap, e.id),
+    );
+    // Eager copy all already-registered images
+    const existing = (map as any).listImages?.() ?? [];
+    existing.forEach((id: string) => copyImageById(map!, newMap, id));
 
     const imagePromises: Promise<{ name: string; blob: Blob | null }>[] = [];
     const layersToExport: (string | string[])[] = [];
@@ -391,18 +398,28 @@ existing.forEach((id: string) => copyImageById(map!, newMap, id));
         const seamountSourceIds = ["smt", "smtInInvest"];
 
         if (dataVisibility.vlc) {
-          const vlcLayers = filterVisibleLayers(newMap, findLayersForSources(newMap, volcanoSourceIds));
+          const vlcLayers = filterVisibleLayers(
+            newMap,
+            findLayersForSources(newMap, volcanoSourceIds),
+          );
           if (vlcLayers.length) {
             layersToExport.push(vlcLayers);
-            vlcLayers.forEach((id) => newMap.setLayoutProperty(id, "visibility", "none"));
+            vlcLayers.forEach((id) =>
+              newMap.setLayoutProperty(id, "visibility", "none"),
+            );
           }
         }
 
         if (dataVisibility.smt) {
-          const smtLayers = filterVisibleLayers(newMap, findLayersForSources(newMap, seamountSourceIds));
+          const smtLayers = filterVisibleLayers(
+            newMap,
+            findLayersForSources(newMap, seamountSourceIds),
+          );
           if (smtLayers.length) {
             layersToExport.push(smtLayers);
-            smtLayers.forEach((id) => newMap.setLayoutProperty(id, "visibility", "none"));
+            smtLayers.forEach((id) =>
+              newMap.setLayoutProperty(id, "visibility", "none"),
+            );
           }
         }
 
