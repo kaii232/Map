@@ -54,7 +54,7 @@ const DataFormFilters = ({
   });
 
   const [, setCommittedMode] = useAtom(gnssModeAtom);
-  const [modeDraft, setModeDraft] = useAtom(gnssModeDraftAtom);
+  const modeDraft = useAtomValue(gnssModeDraftAtom);
 
   const submitAction = async (values: z.infer<typeof formSchema>) => {
     startTransition(async () => {
