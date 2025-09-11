@@ -41,6 +41,23 @@ type ColorConfig<T extends Record<string, string | string[]> = {}> =
       };
     };
 
+// local helper types to avoid `any`
+type SolidCfg = { type: "solid"; default: string; label: string };
+type GnssColors = { icon: string; vector: string };
+
+// This mirrors the color shapes you already use in `colorsAtom`
+type DataColorsShape = {
+  vlc: string;
+  smt: string;
+  gnss: GnssColors;
+  rock: string;
+  flt: string;
+  hf: string[];
+  seis: string[];
+  slab2: string[];
+  slip: string[];
+};
+
 /** Renders a solid colour picker. Only updates the colour on save */
 const SolidColorPicker = ({
   buttonId,
@@ -234,33 +251,25 @@ const ColorControl = ({
 
     // ---- GNSS ONLY: dropdown + render only the relevant pickers
     if (dataKey === "gnss") {
-      const visibleKeys =
+      // which pickers to show in the UI
+      const visibleKeys: ReadonlyArray<keyof GnssColors> =
         uiMode === "points"
-          ? (["icon"] as const)
+          ? ["icon"]
           : uiMode === "vectors"
-            ? (["vector"] as const)
-            : (["icon", "vector"] as const);
+            ? ["vector"]
+            : ["icon", "vector"];
 
-      // narrow both colors and pickers for safe indexing
-      const gnssColors = (dataColors as any).gnss as {
-        icon: string;
-        vector: string;
-      };
+      // typed views of your atoms/config (no `any`)
+      const gnssColors = (dataColors as unknown as DataColorsShape).gnss;
       const gnssPickers = (
         colorConfig.gnss as Extract<ColorConfig, { type: "multi" }>
-      ).pickers as {
-        icon: { type: "solid"; default: string; label: string };
-        vector: { type: "solid"; default: string; label: string };
-      };
+      ).pickers as Record<keyof GnssColors, SolidCfg>;
 
       return (
         <>
           <div className="space-y-1">
             <div className="my-3 text-sm">Display</div>
-            <Select
-              value={modeDraft ?? undefined} // undefined => shows placeholder
-              onValueChange={(v) => setModeDraft(v)} // only update draft here
-            >
+            <Select value={uiMode} onValueChange={(v) => setModeDraft(v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -280,13 +289,13 @@ const ColorControl = ({
               defaultColor={gnssPickers[k].default}
               label={gnssPickers[k].label}
               onSave={(color) =>
-                setDataColors((prev) => ({
-                  ...prev,
-                  gnss: {
-                    ...(prev as any).gnss,
-                    [k]: color,
-                  },
-                }))
+                setDataColors((prev) => {
+                  const p = prev as unknown as DataColorsShape;
+                  return {
+                    ...p,
+                    gnss: { ...p.gnss, [k]: color },
+                  } as typeof prev;
+                })
               }
             />
           ))}
