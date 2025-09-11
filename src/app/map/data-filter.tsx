@@ -10,6 +10,7 @@ import { TOAST_MESSAGE } from "@/lib/utils";
 import { ActionReturn, LoadData } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAtom, useAtomValue } from "jotai";
+import { gnssModeAtom, gnssModeDraftAtom } from "./atoms";
 import { memo, ReactNode, useMemo, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -52,8 +53,14 @@ const DataFormFilters = ({
     defaultValues: defaults,
   });
 
+  const [, setCommittedMode] = useAtom(gnssModeAtom);
+  const [modeDraft, setModeDraft] = useAtom(gnssModeDraftAtom);
+
   const submitAction = async (values: z.infer<typeof formSchema>) => {
     startTransition(async () => {
+      if (dataKey === "gnss" && modeDraft) {
+        setCommittedMode(modeDraft);
+      }
       toast(`Loading ${TOAST_MESSAGE[dataKey]}...`, {
         icon: <Spinner className="size-5" />,
         duration: Infinity,

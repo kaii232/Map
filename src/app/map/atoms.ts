@@ -22,6 +22,21 @@ export const drawingAtom = atom<Polygon | MultiPolygon>();
 /** Open state of the side panel */
 export const panelOpenAtom = atom(true);
 
+// "points" | "vectors" | "both" (use a plain string; no custom type)
+export const gnssModeAtom = atom("both");
+
+// UI-only selection that hasn’t been applied yet
+export const gnssModeDraftAtom = atom<string | null>(null);
+
+export const gnssIconsVisibleAtom = atom((get) => {
+  const m = get(gnssModeAtom);
+  return m === "points" || m === "both";
+});
+export const gnssVectorsVisibleAtom = atom((get) => {
+  const m = get(gnssModeAtom);
+  return m === "vectors" || m === "both";
+});
+
 export const defaultVisibility = () => {
   const defaultVal: Record<string, true> = {};
   Object.keys(ALL_FILTERS_CLIENT).forEach((val) => {

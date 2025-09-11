@@ -41,6 +41,8 @@ import {
   dataVisibilityAtom,
   drawingAtom,
   rangeAtom,
+  gnssIconsVisibleAtom,
+  gnssVectorsVisibleAtom,
 } from "./atoms";
 import Basemaps from "./basemaps";
 import Controls from "./controls";
@@ -384,6 +386,9 @@ export default function DatabaseMap({
 
   const setDrawing = useSetAtom(drawingAtom);
   const ranges = useAtomValue(rangeAtom);
+
+  const showIcons = useAtomValue(gnssIconsVisibleAtom);
+  const showVectors = useAtomValue(gnssVectorsVisibleAtom);
 
   const onUpdate = useCallback(
     (features: GeoJSONStoreFeatures[] | undefined) => {
@@ -811,6 +816,19 @@ export default function DatabaseMap({
             >
               {Array.isArray(val) ? (
                 val.map((layer) => {
+                  const isGnss = typedKey === "gnss";
+                  const isIconLayer =
+                    isGnss && ["Icon", "Label"].includes(layer.id);
+                  const isVectorLayer =
+                    isGnss &&
+                    ["Vector", "VectorArrow", "Uncertainty"].includes(layer.id);
+
+                  const visible =
+                    dataVisibility[typedKey] &&
+                    (!isGnss ||
+                      (isIconLayer && showIcons) ||
+                      (isVectorLayer && showVectors) ||
+                      (!isIconLayer && !isVectorLayer)); // any other GNSS sublayer
                   return (
                     <Layer
                       {...layer}
@@ -818,9 +836,7 @@ export default function DatabaseMap({
                       id={typedKey + layer.id}
                       layout={{
                         ...layer.layout,
-                        visibility: dataVisibility[typedKey]
-                          ? "visible"
-                          : "none",
+                        visibility: visible ? "visible" : "none",
                       }}
                     />
                   );
