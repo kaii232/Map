@@ -8,10 +8,6 @@ import { downloadZip } from "client-zip";
 import { ExtractAtomValue, useAtomValue, useSetAtom } from "jotai";
 import { Download } from "lucide-react";
 import maplibregl from "maplibre-gl";
-import type {
-  MapStyleImageMissingEvent,
-  StyleImageInterface,
-} from "maplibre-gl";
 import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MapRef, useMap } from "react-map-gl/maplibre";
@@ -31,16 +27,36 @@ const SOURCES_LAYERS: Record<
   crustThickness: ["crustThickness"],
 };
 
-// Types MapLibre might return from getImage
-type GetImageReturn =
-  | StyleImageInterface
+// Accepted by maplibre-gl addImage
+type StyleImageLike = {
+  width: number;
+  height: number;
+  data: Uint8Array | Uint8ClampedArray;
+};
+type AcceptedImage =
+  | StyleImageLike
   | ImageBitmap
   | ImageData
-  | {
-      data: StyleImageInterface | ImageBitmap | ImageData;
-      pixelRatio?: number;
-      sdf?: boolean;
-    };
+  | HTMLImageElement;
+
+type WrappedImage = {
+  data:
+    | StyleImageLike
+    | ImageBitmap
+    | ImageData
+    | HTMLCanvasElement
+    | HTMLImageElement;
+  pixelRatio?: number;
+  sdf?: boolean;
+};
+
+type GetImageReturn =
+  | StyleImageLike
+  | ImageBitmap
+  | ImageData
+  | HTMLCanvasElement
+  | HTMLImageElement
+  | WrappedImage;
 
 /** Zips and downloads the files */
 const downladFiles = async (images: { name: string; blob: Blob | null }[]) => {
@@ -144,10 +160,8 @@ function findLayersForSources(m: maplibregl.Map | MapRef, sourceIds: string[]) {
   const style = m.getStyle();
   const ids: string[] = [];
   for (const lyr of style.layers ?? []) {
-    // @ts-ignore
-    const src = lyr.source as string | undefined;
-    if (!src) continue;
-    if (sourceIds.includes(src)) ids.push(lyr.id);
+    const src = (lyr as { source?: string }).source;
+    if (src && sourceIds.includes(src)) ids.push(lyr.id);
   }
   return ids;
 }
@@ -159,7 +173,7 @@ function filterVisibleLayers(m: maplibregl.Map | MapRef, layerIds: string[]) {
   );
 }
 
-// Narrow optional methods
+// Narrow optional methods without `any`
 function asImageAPI(m: maplibregl.Map | MapRef): {
   getImage?: (id: string) => GetImageReturn | undefined;
   listImages?: () => string[];
@@ -170,15 +184,32 @@ function asImageAPI(m: maplibregl.Map | MapRef): {
   };
 }
 
-// Type guard: checks if the returned object is the wrapped form
-function isWrappedImage(
-  img: GetImageReturn,
-): img is {
-  data: StyleImageInterface | ImageBitmap | ImageData;
-  pixelRatio?: number;
-  sdf?: boolean;
-} {
-  return typeof (img as { data?: unknown }).data !== "undefined";
+function isWrappedImage(img: GetImageReturn): img is WrappedImage {
+  return typeof (img as WrappedImage).data !== "undefined" && !("width" in img);
+}
+
+function isCanvas(x: unknown): x is HTMLCanvasElement {
+  return (
+    typeof HTMLCanvasElement !== "undefined" && x instanceof HTMLCanvasElement
+  );
+}
+
+function toAcceptedImage(
+  input:
+    | StyleImageLike
+    | ImageBitmap
+    | ImageData
+    | HTMLCanvasElement
+    | HTMLImageElement,
+): AcceptedImage {
+  if (isCanvas(input)) {
+    const ctx = input.getContext("2d");
+    // If context is missing (very rare), fall back to a transparent 1x1
+    const imageData =
+      ctx?.getImageData(0, 0, input.width, input.height) ?? new ImageData(1, 1);
+    return imageData;
+  }
+  return input as AcceptedImage;
 }
 
 function copyImageById(
@@ -190,7 +221,12 @@ function copyImageById(
   const img = api.getImage?.(id);
   if (!img) return;
 
-  let data: StyleImageInterface | ImageBitmap | ImageData;
+  let data:
+    | StyleImageLike
+    | ImageBitmap
+    | ImageData
+    | HTMLCanvasElement
+    | HTMLImageElement;
   let pixelRatio = 1;
   let sdf = false;
 
@@ -203,9 +239,11 @@ function copyImageById(
   }
 
   if (!dstMap.hasImage(id)) {
-    dstMap.addImage(id, data, { pixelRatio, sdf });
+    const normalized: AcceptedImage = toAcceptedImage(data);
+    dstMap.addImage(id, normalized, { pixelRatio, sdf });
   }
 }
+
 const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
   const mapLabels = document.createElement("canvas");
   mapLabels.width = map.getCanvas().width;
@@ -345,15 +383,14 @@ const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
       fadeDuration: 0,
       attributionControl: false,
     });
-    // Copy any runtime-added images (ensures volcano/seamount icons render on offscreen map)
-    newMap.on("styleimagemissing", (e: { id: string }) =>
-      copyImageById(map!, newMap, e.id),
-    );
-    // Eager copy all already-registered images
-    const existing =
-      (map as unknown as { listImages?: () => string[] }).listImages?.() ?? [];
+    // Serve missing sprites on demand (inline type to avoid unused import)
+    newMap.on("styleimagemissing", (e: { id: string }) => {
+      copyImageById(map!, newMap, e.id);
+    });
 
-    existing.forEach((id: string) => copyImageById(map!, newMap, id));
+    // Eagerly copy all existing images from the live map (no `any`)
+    const existing = asImageAPI(map!).listImages?.() ?? [];
+    existing.forEach((id) => copyImageById(map!, newMap, id));
 
     const imagePromises: Promise<{ name: string; blob: Blob | null }>[] = [];
     const layersToExport: (string | string[])[] = [];
@@ -424,7 +461,9 @@ const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
           if (Array.isArray(layer)) {
             const group: string[] = []; //Technically if one layer is visible all are visible so this could just be a boolean, but who knows
             layer.forEach((layerPart) => {
-              if (newMap.getLayer(layerPart)?.visibility === "visible") {
+              if (
+                newMap.getLayoutProperty(layerPart, "visibility") !== "none"
+              ) {
                 group.push(layerPart);
                 newMap.setLayoutProperty(layerPart, "visibility", "none");
               }
@@ -433,7 +472,7 @@ const DownloadControl = ({ layerIds }: { layerIds: (string | string[])[] }) => {
             return;
           }
 
-          if (newMap.getLayer(layer)?.visibility === "visible") {
+          if (newMap.getLayoutProperty(layer, "visibility") !== "none") {
             layersToExport.push(layer);
             newMap.setLayoutProperty(layer, "visibility", "none");
           }
