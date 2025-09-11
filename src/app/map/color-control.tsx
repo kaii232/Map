@@ -304,30 +304,31 @@ const ColorControl = ({
     }
 
     // ---- non-GNSS multi: use the narrowed cfgMulti
-    return Object.entries(cfgMulti.pickers).map(([colorKey, config]) => {
-      if ((config as any).type === "solid") {
-        const current = (dataColors as any)[dataKey][colorKey] as string;
-        return (
-          <SolidColorPicker
-            key={colorKey}
-            currentColor={current}
-            buttonId={colorKey}
-            defaultColor={(config as any).default}
-            label={(config as any).label}
-            onSave={(color) =>
-              setDataColors((prev) => ({
-                ...prev,
-                [dataKey]: {
-                  ...(prev as any)[dataKey],
-                  [colorKey]: color,
-                },
-              }))
-            }
-          />
-        );
-      }
-      return null;
-    });
+    // return Object.entries(cfgMulti.pickers).map(([colorKey, config]) => {
+    //   if ((config as any).type === "solid") {
+    //     const current = (dataColors as any)[dataKey][colorKey] as string;
+    //     return (
+    //       <SolidColorPicker
+    //         key={colorKey}
+    //         currentColor={current}
+    //         buttonId={colorKey}
+    //         defaultColor={(config as any).default}
+    //         label={(config as any).label}
+    //         onSave={(color) =>
+    //           setDataColors((prev) => ({
+    //             ...prev,
+    //             [dataKey]: {
+    //               ...(prev as any)[dataKey],
+    //               [colorKey]: color,
+    //             },
+    //           }))
+    //         }
+    //       />
+    //     );
+    //   }
+    //   return null;
+    // });
+    return null; // no other multi configs yet
   }
 };
 
