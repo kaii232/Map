@@ -8,6 +8,10 @@ import { downloadZip } from "client-zip";
 import { ExtractAtomValue, useAtomValue, useSetAtom } from "jotai";
 import { Download } from "lucide-react";
 import maplibregl from "maplibre-gl";
+import type {
+  MapStyleImageMissingEvent,
+  StyleImageInterface,
+} from "maplibre-gl";
 import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MapRef, useMap } from "react-map-gl/maplibre";
@@ -26,6 +30,17 @@ const SOURCES_LAYERS: Record<
   seafloorAge: ["seafloorAge"],
   crustThickness: ["crustThickness"],
 };
+
+// Types MapLibre might return from getImage
+type GetImageReturn =
+  | StyleImageInterface
+  | ImageBitmap
+  | ImageData
+  | {
+      data: StyleImageInterface | ImageBitmap | ImageData;
+      pixelRatio?: number;
+      sdf?: boolean;
+    };
 
 /** Zips and downloads the files */
 const downladFiles = async (images: { name: string; blob: Blob | null }[]) => {
@@ -144,24 +159,53 @@ function filterVisibleLayers(m: maplibregl.Map | MapRef, layerIds: string[]) {
   );
 }
 
-/** Copy a runtime-added image from the live map -> offscreen map */
-function copyImageById(
-  map: maplibregl.Map | MapRef,
-  newMap: maplibregl.Map,
-  id: string,
-) {
-  // @ts-ignore
-  const img = map.getImage?.(id);
-  if (!img) return;
-  // @ts-ignore
-  const data = img.data ?? img;
-  // @ts-ignore
-  const pixelRatio = img.pixelRatio ?? 1;
-  // @ts-ignore
-  const sdf = !!img.sdf;
-  if (!newMap.hasImage(id)) newMap.addImage(id, data, { pixelRatio, sdf });
+// Narrow optional methods
+function asImageAPI(m: maplibregl.Map | MapRef): {
+  getImage?: (id: string) => GetImageReturn | undefined;
+  listImages?: () => string[];
+} {
+  return m as unknown as {
+    getImage?: (id: string) => GetImageReturn | undefined;
+    listImages?: () => string[];
+  };
 }
 
+// Type guard: checks if the returned object is the wrapped form
+function isWrappedImage(
+  img: GetImageReturn,
+): img is {
+  data: StyleImageInterface | ImageBitmap | ImageData;
+  pixelRatio?: number;
+  sdf?: boolean;
+} {
+  return typeof (img as { data?: unknown }).data !== "undefined";
+}
+
+function copyImageById(
+  srcMap: maplibregl.Map | MapRef,
+  dstMap: maplibregl.Map,
+  id: string,
+) {
+  const api = asImageAPI(srcMap);
+  const img = api.getImage?.(id);
+  if (!img) return;
+
+  let data: StyleImageInterface | ImageBitmap | ImageData;
+  let pixelRatio = 1;
+  let sdf = false;
+
+  if (isWrappedImage(img)) {
+    data = img.data;
+    pixelRatio = img.pixelRatio ?? 1;
+    sdf = !!img.sdf;
+  } else {
+    data = img;
+  }
+
+  if (!dstMap.hasImage(id)) {
+    dstMap.addImage(id, data, { pixelRatio, sdf });
+  }
+}
 const drawMapLabels = async (map: maplibregl.Map | MapRef) => {
   const mapLabels = document.createElement("canvas");
   mapLabels.width = map.getCanvas().width;
