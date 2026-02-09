@@ -36,7 +36,11 @@ type DrizzleSelect = Record<string, AnyPgColumn | SQL>;
 type SQLFilters = (SQL | undefined)[];
 
 export type ActionReturn<
-  K = { geojson: FeatureCollection; units?: Record<string, string> },
+  K = {
+    geojson: FeatureCollection;
+    units?: Record<string, string>;
+    formats?: Record<string, NumberFormatRule>;
+  },
   T = unknown,
 > =
   | {
@@ -82,6 +86,12 @@ const sqlToGeojson = (
 const defineUnits = <T extends Record<string, unknown>>(
   units: Partial<Record<keyof UnionToIntersection<T>, string>>,
 ) => units;
+
+type NumberFormatRule = { type: "number"; dp: number };
+
+const defineFormats = <T extends Record<string, unknown>>(
+  formats: Partial<Record<keyof UnionToIntersection<T>, NumberFormatRule>>,
+) => formats;
 
 /** Restricts data if the user is not logged in */
 const isLoggedIn = async () => {
@@ -437,6 +447,7 @@ type Loaders = {
     getData: (download: boolean) => {
       units: Record<string, string>;
       dataQuery: PgSelect;
+      formats?: Record<string, NumberFormatRule>;
     };
     /** Returns the drizzle SQL filters based on the user's values */
     getFilters: Loaders[P]["filter"] extends false
@@ -558,7 +569,11 @@ const LOADERS_DEFINITION: Loaders = {
         rake: "°",
         lockingDepth: "km",
       });
-      return { dataQuery, units };
+      const formats = defineFormats<typeof fltSelect>({
+        length: { type: "number", dp: 3 },
+      });
+
+      return { dataQuery, units, formats };
     },
     getClusterFilters(ids) {
       return inArray(fltInInvest.fltId, ids);
@@ -967,7 +982,7 @@ export const LoadData = async <T extends LoaderType>(
           : []
         : await loader.getFilters(params.data?.drawing);
 
-  const { units, dataQuery } = loader.getData(!!params.downloadOpts);
+  const { units, formats, dataQuery } = loader.getData(!!params.downloadOpts);
 
   const queryResponse = await processSQLData(
     dataQuery,
@@ -984,6 +999,7 @@ export const LoadData = async <T extends LoaderType>(
       data: {
         geojson: queryResponse.geojson,
         units,
+        ...(formats && { formats }),
       },
       metadata: queryResponse.range,
     } as LoaderReturn<T>;

@@ -187,12 +187,12 @@ const fltFilters = createDataFilter({
   //   type: "range",
   //   units: "km",
   // },
-  types: {
-    dbCol: fltInInvest.fltType,
-    nullCol: fltInInvest.fltType,
-    type: "select",
-    name: "Type",
-  },
+  // types: {
+  //   dbCol: fltInInvest.fltType,
+  //   nullCol: fltInInvest.fltType,
+  //   type: "select",
+  //   name: "Type",
+  // },
   catalogs: {
     dbCol: biblInInvest.biblTitle,
     nullCol: fltInInvest.fltSrcId,

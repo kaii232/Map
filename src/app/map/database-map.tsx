@@ -191,36 +191,42 @@ const PopupContent = memo(
     units?: string;
   }) => {
     if (objKey === "geometry" || !value) return null;
-    if (typeof value === "string" && value.includes("https://"))
+
+    const displayValue =
+      typeof value === "number" && objKey === "length"
+        ? value.toFixed(3)
+        : value;
+
+    if (typeof displayValue === "string" && displayValue.includes("https://"))
       return (
         <div className="text-sm text-neutral-300">
           <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
           <Link
-            href={value}
+            href={displayValue}
             target="_blank"
             className="text-blue-400 hover:underline"
           >
-            {value}
+            {displayValue}
           </Link>
         </div>
       );
-    if (typeof value === "string" && value.includes("doi:"))
+    if (typeof displayValue === "string" && displayValue.includes("doi:"))
       return (
         <div className="text-sm text-neutral-300">
           <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
           <Link
-            href={value.replace("doi:", "https://doi.org/")}
+            href={displayValue.replace("doi:", "https://doi.org/")}
             target="_blank"
             className="text-blue-400 hover:underline"
           >
-            {value}
+            {displayValue}
           </Link>
         </div>
       );
     return (
       <div className="text-sm text-neutral-300">
         <span className="font-semibold">{camelCaseToWords(objKey)}:</span>{" "}
-        {value}
+        {displayValue}
         {formatUnits(units)}
       </div>
     );
