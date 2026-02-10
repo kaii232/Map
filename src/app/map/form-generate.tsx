@@ -92,98 +92,6 @@ function parseDraft(draft: string): number | null {
   return isFiniteNumber(n) ? n : null;
 }
 
-type RangeDraftProps = {
-  minBound: number;
-  maxBound: number;
-  step: number;
-  value: [number, number];
-  units?: string;
-  onCommit: (next: [number, number]) => void;
-  onBlur: () => void;
-};
-
-function RangeDraftInputs({
-  minBound,
-  maxBound,
-  step,
-  value,
-  units,
-  onCommit,
-  onBlur,
-}: RangeDraftProps) {
-  const [draftMin, setDraftMin] = React.useState<string>(String(value[0]));
-  const [draftMax, setDraftMax] = React.useState<string>(String(value[1]));
-
-  // Keep drafts synced when slider changes the value
-  React.useEffect(() => {
-    setDraftMin(String(value[0]));
-  }, [value[0]]);
-
-  React.useEffect(() => {
-    setDraftMax(String(value[1]));
-  }, [value[1]]);
-
-  const commit = (which: "min" | "max") => {
-    const currentMin = value[0];
-    const currentMax = value[1];
-
-    const nextMinParsed = parseDraft(draftMin);
-    const nextMaxParsed = parseDraft(draftMax);
-
-    const rawMin = nextMinParsed !== null ? nextMinParsed : currentMin;
-    const rawMax = nextMaxParsed !== null ? nextMaxParsed : currentMax;
-
-    const clampedMin = clamp(rawMin, minBound, maxBound);
-    const clampedMax = clamp(rawMax, minBound, maxBound);
-
-    const ordered: [number, number] = [
-      Math.min(clampedMin, clampedMax),
-      Math.max(clampedMin, clampedMax),
-    ];
-
-    onCommit(ordered);
-
-    // Normalize drafts to committed values (prevents weird strings lingering)
-    setDraftMin(String(ordered[0]));
-    setDraftMax(String(ordered[1]));
-
-    onBlur();
-  };
-
-  const handleKeyDown =
-    (which: "min" | "max") => (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key !== "Enter") return;
-      e.preventDefault();
-      commit(which);
-    };
-
-  return (
-    <div className="flex items-center gap-2">
-      <Input
-        type="text"
-        inputMode="decimal"
-        className="h-9 w-24"
-        value={draftMin}
-        onChange={(e) => setDraftMin(e.target.value)}
-        onBlur={() => commit("min")}
-        onKeyDown={handleKeyDown("min")}
-        aria-label={`Minimum ${units ?? ""}`.trim()}
-      />
-      <span className="text-neutral-500">–</span>
-      <Input
-        type="text"
-        inputMode="decimal"
-        className="h-9 w-24"
-        value={draftMax}
-        onChange={(e) => setDraftMax(e.target.value)}
-        onBlur={() => commit("max")}
-        onKeyDown={handleKeyDown("max")}
-        aria-label={`Maximum ${units ?? ""}`.trim()}
-      />
-    </div>
-  );
-}
-
 type SingleDraftProps = {
   minBound: number;
   maxBound: number;
@@ -233,6 +141,137 @@ function SingleDraftInput({
       }}
       aria-label={`Value ${units ?? ""}`.trim()}
     />
+  );
+}
+
+function RangeField({
+  filterName,
+  units,
+  valueArr,
+  minDefault,
+  maxDefault,
+  onChange,
+  onBlur,
+}: {
+  filterName: string;
+  units?: string;
+  valueArr: number[];
+  minDefault: number;
+  maxDefault: number;
+  onChange: (next: [number, number]) => void;
+  onBlur: () => void;
+}) {
+  const step = maxDefault - minDefault < 10 ? 0.1 : 1;
+
+  const clampLocal = (v: number) =>
+    Math.min(Math.max(v, minDefault), maxDefault);
+  const ordered = (a: number, b: number): [number, number] => [
+    Math.min(a, b),
+    Math.max(a, b),
+  ];
+
+  const minVal = clampLocal(valueArr[0] ?? minDefault);
+  const maxVal = clampLocal(valueArr[1] ?? maxDefault);
+
+  const [draftMin, setDraftMin] = React.useState<string>(String(minVal));
+  const [draftMax, setDraftMax] = React.useState<string>(String(maxVal));
+
+  React.useEffect(() => {
+    setDraftMin(String(minVal));
+  }, [minVal]);
+
+  React.useEffect(() => {
+    setDraftMax(String(maxVal));
+  }, [maxVal]);
+
+  const commit = (which: "min" | "max") => {
+    const parseOne = (s: string, fallback: number) => {
+      const trimmed = s.trim();
+      if (trimmed === "") return fallback;
+      const n = Number(trimmed);
+      return Number.isFinite(n) ? n : fallback;
+    };
+
+    const nextMinRaw = parseOne(draftMin, minVal);
+    const nextMaxRaw = parseOne(draftMax, maxVal);
+
+    const next = ordered(clampLocal(nextMinRaw), clampLocal(nextMaxRaw));
+    onChange(next);
+
+    setDraftMin(String(next[0]));
+    setDraftMax(String(next[1]));
+    onBlur();
+  };
+
+  return (
+    <FormItem className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <FormLabel className="text-neutral-50">{filterName}</FormLabel>
+        <FormDescription className="space-x-2">
+          <span>
+            {Number(minVal.toFixed(1))}
+            {formatUnits(units)}
+          </span>
+          <span>–</span>
+          <span>
+            {Number(maxVal.toFixed(1))}
+            {formatUnits(units)}
+          </span>
+        </FormDescription>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Input
+          type="text"
+          inputMode="decimal"
+          value={draftMin}
+          onChange={(e) => setDraftMin(e.target.value)}
+          onBlur={() => commit("min")}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            commit("min");
+          }}
+          className="h-10 flex-1 border border-neutral-700 bg-neutral-900/60 text-neutral-50 hover:bg-neutral-900"
+        />
+        <span className="text-sm text-neutral-500">–</span>
+        <Input
+          type="text"
+          inputMode="decimal"
+          value={draftMax}
+          onChange={(e) => setDraftMax(e.target.value)}
+          onBlur={() => commit("max")}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            commit("max");
+          }}
+          className="h-10 flex-1 border border-neutral-700 bg-neutral-900/60 text-neutral-50 hover:bg-neutral-900"
+        />
+        {units ? (
+          <span className="pl-1 text-xs text-neutral-500">
+            {formatUnits(units)}
+          </span>
+        ) : null}
+      </div>
+
+      <FormControl>
+        <Slider
+          onValueChange={(v) => {
+            if (!Array.isArray(v) || v.length !== 2) return;
+            const next = ordered(clampLocal(v[0]), clampLocal(v[1]));
+            onChange(next);
+          }}
+          onBlur={onBlur}
+          value={[minVal, maxVal]}
+          min={minDefault}
+          max={maxDefault}
+          step={step}
+        />
+      </FormControl>
+
+      <FormMessage />
+    </FormItem>
   );
 }
 
@@ -296,134 +335,16 @@ export default function FormGenerate<
                   ? defaults[key][1]
                   : 0;
 
-              const step = maxDefault - minDefault < 10 ? 0.1 : 1;
-
-              const clamp = (v: number) =>
-                Math.min(Math.max(v, minDefault), maxDefault);
-
-              const ordered = (a: number, b: number): [number, number] => [
-                Math.min(a, b),
-                Math.max(a, b),
-              ];
-
-              const minVal = clamp(valueArr[0]);
-              const maxVal = clamp(valueArr[1]);
-
-              const [draftMin, setDraftMin] = React.useState<string>(
-                String(minVal),
-              );
-              const [draftMax, setDraftMax] = React.useState<string>(
-                String(maxVal),
-              );
-
-              React.useEffect(() => {
-                setDraftMin(String(minVal));
-              }, [minVal]);
-
-              React.useEffect(() => {
-                setDraftMax(String(maxVal));
-              }, [maxVal]);
-
-              const parseDraft = (s: string, fallback: number) => {
-                const trimmed = s.trim();
-                if (trimmed === "") return fallback;
-                const n = Number(trimmed);
-                return Number.isFinite(n) ? n : fallback;
-              };
-
-              const commit = (which: "min" | "max") => {
-                const nextMinRaw = parseDraft(draftMin, minVal);
-                const nextMaxRaw = parseDraft(draftMax, maxVal);
-
-                const nextMin = clamp(nextMinRaw);
-                const nextMax = clamp(nextMaxRaw);
-
-                const next = ordered(nextMin, nextMax);
-                field.onChange(next);
-
-                // normalize displayed strings
-                setDraftMin(String(next[0]));
-                setDraftMax(String(next[1]));
-                field.onBlur();
-              };
-
               return (
-                <FormItem className="space-y-3">
-                  {/* Header: keep original UI */}
-                  <div className="flex items-center justify-between gap-2">
-                    <FormLabel className="text-neutral-50">
-                      {filter.name}
-                    </FormLabel>
-                    <FormDescription className="space-x-2">
-                      <span>
-                        {Number(minVal.toFixed(1))}
-                        {formatUnits(filter.units)}
-                      </span>
-                      <span>–</span>
-                      <span>
-                        {Number(maxVal.toFixed(1))}
-                        {formatUnits(filter.units)}
-                      </span>
-                    </FormDescription>
-                  </div>
-
-                  {/* Manual inputs: under name, above slider */}
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={draftMin}
-                      onChange={(e) => setDraftMin(e.target.value)}
-                      onBlur={() => commit("min")}
-                      onKeyDown={(e) => {
-                        if (e.key !== "Enter") return;
-                        e.preventDefault();
-                        commit("min");
-                      }}
-                      className="h-10 flex-1 border border-neutral-700 bg-neutral-900/60 text-neutral-50 hover:bg-neutral-900"
-                    />
-                    <span className="text-sm text-neutral-500">–</span>
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={draftMax}
-                      onChange={(e) => setDraftMax(e.target.value)}
-                      onBlur={() => commit("max")}
-                      onKeyDown={(e) => {
-                        if (e.key !== "Enter") return;
-                        e.preventDefault();
-                        commit("max");
-                      }}
-                      className="h-10 flex-1 border border-neutral-700 bg-neutral-900/60 text-neutral-50 hover:bg-neutral-900"
-                    />
-                    {filter.units ? (
-                      <span className="pl-1 text-xs text-neutral-500">
-                        {formatUnits(filter.units)}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {/* Slider */}
-                  <FormControl>
-                    <Slider
-                      onValueChange={(v) => {
-                        if (!Array.isArray(v) || v.length !== 2) return;
-                        const next = ordered(clamp(v[0]), clamp(v[1]));
-                        field.onChange(next);
-                      }}
-                      onBlur={field.onBlur}
-                      name={field.name}
-                      ref={field.ref}
-                      disabled={field.disabled}
-                      value={[minVal, maxVal]}
-                      min={minDefault}
-                      max={maxDefault}
-                      step={step}
-                    />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
+                <RangeField
+                  filterName={filter.name}
+                  units={filter.units}
+                  valueArr={valueArr as number[]}
+                  minDefault={minDefault}
+                  maxDefault={maxDefault}
+                  onChange={(next) => field.onChange(next)}
+                  onBlur={field.onBlur}
+                />
               );
             }}
           />
