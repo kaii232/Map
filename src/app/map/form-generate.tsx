@@ -39,7 +39,6 @@ import { CalendarDays, Search } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { useAtomValue, useSetAtom } from "jotai";
 import { dataAtom, flyToAtom } from "@/app/map/atoms";
-import type { Feature, Point } from "geojson";
 
 type FormGenerateProps<T extends ClientFilterDefine<GenericFilterDefine>> = {
   /** The React Hook Form instance */
@@ -95,7 +94,6 @@ function parseDraft(draft: string): number | null {
 type SingleDraftProps = {
   minBound: number;
   maxBound: number;
-  step: number;
   value: number;
   units?: string;
   onCommit: (next: number) => void;
@@ -105,7 +103,6 @@ type SingleDraftProps = {
 function SingleDraftInput({
   minBound,
   maxBound,
-  step,
   value,
   units,
   onCommit,
@@ -184,7 +181,7 @@ function RangeField({
     setDraftMax(String(maxVal));
   }, [maxVal]);
 
-  const commit = (which: "min" | "max") => {
+  const commit = () => {
     const parseOne = (s: string, fallback: number) => {
       const trimmed = s.trim();
       if (trimmed === "") return fallback;
@@ -226,11 +223,11 @@ function RangeField({
           inputMode="decimal"
           value={draftMin}
           onChange={(e) => setDraftMin(e.target.value)}
-          onBlur={() => commit("min")}
+          onBlur={commit}
           onKeyDown={(e) => {
             if (e.key !== "Enter") return;
             e.preventDefault();
-            commit("min");
+            commit();
           }}
           className="h-10 flex-1 border border-neutral-700 bg-neutral-900/60 text-neutral-50 hover:bg-neutral-900"
         />
@@ -240,11 +237,11 @@ function RangeField({
           inputMode="decimal"
           value={draftMax}
           onChange={(e) => setDraftMax(e.target.value)}
-          onBlur={() => commit("max")}
+          onBlur={commit}
           onKeyDown={(e) => {
             if (e.key !== "Enter") return;
             e.preventDefault();
-            commit("max");
+            commit();
           }}
           className="h-10 flex-1 border border-neutral-700 bg-neutral-900/60 text-neutral-50 hover:bg-neutral-900"
         />
@@ -282,6 +279,9 @@ export default function FormGenerate<
   T extends ClientFilterDefine<GenericFilterDefine>,
 >({ form, defaults, initialData, filters, dataKey }: FormGenerateProps<T>) {
   const isLarge = useMediaQuery("(min-width:640px)");
+
+  const loaded = useAtomValue(dataAtom);
+  const setFlyTo = useSetAtom(flyToAtom);
 
   return Object.entries(filters).map(([key, filter]) => {
     return (
@@ -391,7 +391,6 @@ export default function FormGenerate<
                     <SingleDraftInput
                       minBound={minDefault}
                       maxBound={maxVal}
-                      step={step}
                       value={current}
                       units={filter.units}
                       onCommit={(next) => setValue(next)}
@@ -529,9 +528,6 @@ export default function FormGenerate<
             control={form.control}
             name={key}
             render={({ field }) => {
-              const loaded = useAtomValue(dataAtom);
-              const setFlyTo = useSetAtom(flyToAtom);
-
               const handleKeyDown = (
                 e: React.KeyboardEvent<HTMLInputElement>,
               ) => {
