@@ -9,13 +9,13 @@ import { createDefaultValues, createZodSchema } from "@/lib/filters";
 import { TOAST_MESSAGE } from "@/lib/utils";
 import { ActionReturn, LoadData } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { gnssModeAtom, gnssModeDraftAtom } from "./atoms";
 import { memo, ReactNode, useMemo, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { dataAtom, drawingAtom } from "./atoms";
+import { dataAtom, drawingAtom, flyToAtom } from "./atoms";
 import FormGenerate from "./form-generate";
 
 /** This component renders out the given filters for the data type */
@@ -56,6 +56,8 @@ const DataFormFilters = ({
   const [, setCommittedMode] = useAtom(gnssModeAtom);
   const modeDraft = useAtomValue(gnssModeDraftAtom);
 
+  const setFlyTo = useSetAtom(flyToAtom);
+
   const submitAction = async (values: z.infer<typeof formSchema>) => {
     startTransition(async () => {
       if (dataKey === "gnss" && modeDraft) {
@@ -90,6 +92,27 @@ const DataFormFilters = ({
             },
           },
         }));
+        if (dataKey === "vlc") {
+          const searchVal = (values as { search?: string }).search?.trim();
+          if (searchVal && data.data.geojson.features.length > 0) {
+            // prefer exact match first
+            const q = searchVal.toLowerCase();
+            const exact = data.data.geojson.features.find((f) => {
+              const name = String(f.properties?.name ?? "").toLowerCase();
+              return name === q;
+            });
+
+            const target = exact ?? data.data.geojson.features[0];
+            if (target.geometry.type === "Point") {
+              const [lng, lat] = target.geometry.coordinates as [
+                number,
+                number,
+              ];
+              setFlyTo({ center: [lng, lat], zoom: 9 });
+            }
+          }
+        }
+
         if (onDataLoad) onDataLoad(data);
       } else toast.error(data.error);
     });
@@ -100,6 +123,7 @@ const DataFormFilters = ({
       <Form {...form}>
         <form className="space-y-6" onSubmit={form.handleSubmit(submitAction)}>
           <FormGenerate
+            dataKey={dataKey}
             defaults={defaults}
             filters={filters}
             form={form}

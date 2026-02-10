@@ -37,6 +37,9 @@ import { useMediaQuery } from "@/lib/use-media-query";
 import { formatUnits } from "@/lib/utils";
 import { CalendarDays, Search } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
+import { useAtomValue, useSetAtom } from "jotai";
+import { dataAtom, flyToAtom } from "@/app/map/atoms";
+import type { Feature, Point } from "geojson";
 
 type FormGenerateProps<T extends ClientFilterDefine<GenericFilterDefine>> = {
   /** The React Hook Form instance */
@@ -69,6 +72,8 @@ type FormGenerateProps<T extends ClientFilterDefine<GenericFilterDefine>> = {
   initialData: InferFilterTypes<T>;
   /** The filters for the data type */
   filters: T;
+  /** The current dataset key */
+  dataKey: string;
 };
 
 function clamp(value: number, min: number, max: number): number {
@@ -236,7 +241,7 @@ function SingleDraftInput({
  */
 export default function FormGenerate<
   T extends ClientFilterDefine<GenericFilterDefine>,
->({ form, defaults, initialData, filters }: FormGenerateProps<T>) {
+>({ form, defaults, initialData, filters, dataKey }: FormGenerateProps<T>) {
   const isLarge = useMediaQuery("(min-width:640px)");
 
   return Object.entries(filters).map(([key, filter]) => {
@@ -602,24 +607,60 @@ export default function FormGenerate<
             key={key}
             control={form.control}
             name={key}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-neutral-50">{filter.name}</FormLabel>
-                <FormControl>
-                  <Input
-                    left={<Search />}
-                    placeholder={filter.placeholder}
-                    {...field}
-                    value={field.value as string}
-                    autoComplete="off"
-                    autoCorrect="off"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const loaded = useAtomValue(dataAtom);
+              const setFlyTo = useSetAtom(flyToAtom);
+
+              const handleKeyDown = (
+                e: React.KeyboardEvent<HTMLInputElement>,
+              ) => {
+                if (e.key !== "Enter") return;
+
+                if (dataKey !== "vlc") return;
+
+                const q = String(field.value ?? "")
+                  .trim()
+                  .toLowerCase();
+                if (!q) return;
+
+                const feats = loaded.vlc?.geojson?.features ?? [];
+                const match = feats.find((f) => {
+                  const name = String(f.properties?.name ?? "").toLowerCase();
+                  return name.includes(q);
+                });
+
+                if (!match || match.geometry.type !== "Point") return;
+
+                const [lng, lat] = match.geometry.coordinates as [
+                  number,
+                  number,
+                ];
+                setFlyTo({ center: [lng, lat], zoom: 9 });
+              };
+
+              return (
+                <FormItem>
+                  <FormLabel className="text-neutral-50">
+                    {filter.name}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      left={<Search />}
+                      placeholder={filter.placeholder}
+                      {...field}
+                      value={field.value as string}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      onKeyDown={handleKeyDown}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         )}
+
         {FILTER_STRATEGIES[filter.type].getAllowNull && (
           <FormField
             control={form.control}

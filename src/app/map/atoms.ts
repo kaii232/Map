@@ -115,3 +115,10 @@ export const colorsAtom = atom({
   keyof typeof ALL_FILTERS_CLIENT,
   string | string[] | Record<string, string | string[]>
 >);
+
+export type FlyToRequest = {
+  center: [number, number];
+  zoom?: number;
+};
+
+export const flyToAtom = atom<FlyToRequest | null>(null);

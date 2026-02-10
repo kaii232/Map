@@ -50,6 +50,8 @@ import DownloadControl from "./download-control";
 import DrawControl from "./draw-control";
 import MapLayers, { MAP_LAYER_UNITS } from "./map-layers";
 import RestartTour from "./restart-tour";
+import { useEffect } from "react";
+import { flyToAtom } from "./atoms";
 
 const drawOptionsModes: (
   | "polygon"
@@ -415,6 +417,18 @@ export default function DatabaseMap({
     },
     [setDrawing],
   );
+
+  const flyToRequest = useAtomValue(flyToAtom);
+
+  useEffect(() => {
+    if (!map || !flyToRequest) return;
+    map.flyTo({
+      center: flyToRequest.center,
+      zoom: flyToRequest.zoom ?? 9,
+      duration: 900,
+      essential: true,
+    });
+  }, [map, flyToRequest]);
 
   const onHover = useCallback(
     (event: MapLayerMouseEvent) => {
