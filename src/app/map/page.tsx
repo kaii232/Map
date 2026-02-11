@@ -20,6 +20,7 @@ import { eq } from "drizzle-orm";
 import { Metadata } from "next";
 import { headers } from "next/headers";
 import DatabaseMap from "./database-map";
+import MapScale from "./map-scale";
 
 // Disable caching
 export const revalidate = 0;
@@ -190,6 +191,7 @@ export default async function DatabasePage() {
           }}
         />
       </TourRoot>
+      <MapScale />
     </main>
   );
 }

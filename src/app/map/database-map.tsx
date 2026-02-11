@@ -52,6 +52,7 @@ import MapLayers, { MAP_LAYER_UNITS } from "./map-layers";
 import RestartTour from "./restart-tour";
 import { useEffect } from "react";
 import { flyToAtom } from "./atoms";
+import BackTo2DControl from "./back-to-2d-contol";
 
 const drawOptionsModes: (
   | "polygon"
@@ -424,7 +425,7 @@ export default function DatabaseMap({
     if (!map || !flyToRequest) return;
     map.flyTo({
       center: flyToRequest.center,
-      zoom: flyToRequest.zoom ?? 9,
+      zoom: flyToRequest.zoom ?? 6,
       duration: 900,
       essential: true,
     });
@@ -817,6 +818,7 @@ export default function DatabaseMap({
       >
         <ScaleControl />
         <NavigationControl />
+        <BackTo2DControl />
         <DrawControl modes={drawOptionsModes} open onUpdate={onUpdate} />
         <TerrainControl source={"terrain"} exaggeration={1.5} />
         <DownloadControl layerIds={mapDataIds} />
