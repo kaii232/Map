@@ -32,12 +32,21 @@ const BackTo2D = () => {
         onClick={() => {
           if (!map) return;
 
-          map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+          map.easeTo({
+            pitch: 0,
+            bearing: 0,
+            duration: 600,
+          });
 
-          // Disable terrain if enabled (true 2D)
-          if (typeof (map as any).getTerrain === "function") {
-            const terrain = (map as any).getTerrain?.();
-            if (terrain) (map as any).setTerrain(null);
+          if ("getTerrain" in map && typeof map.getTerrain === "function") {
+            const terrain = map.getTerrain();
+            if (
+              terrain &&
+              "setTerrain" in map &&
+              typeof map.setTerrain === "function"
+            ) {
+              map.setTerrain(null);
+            }
           }
         }}
       >
