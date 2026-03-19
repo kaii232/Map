@@ -123,7 +123,7 @@ const ColorRamps = ({ className }: { className?: string }) => {
   return (
     <div
       className={cn(
-        "absolute bottom-2.5 mb-8 ml-2.5 flex w-32 flex-col gap-2 bg-background p-1 text-xs text-neutral-300",
+        "absolute bottom-2.5 mb-8 ml-2.5 flex w-40 flex-col gap-2 bg-background p-1 text-xs text-neutral-300",
         className,
       )}
     >
@@ -134,7 +134,7 @@ const ColorRamps = ({ className }: { className?: string }) => {
             <span className="mb-0.5 block">{legend.name}</span>
             <div
               role="presentation"
-              className={`mb-1 h-6 w-full bg-[image:var(--gradient)]`}
+              className={`mb-1 h-8 w-full bg-[image:var(--gradient)]`}
               style={{ "--gradient": legend.color } as CSSProperties}
             ></div>
             <div className="flex w-full justify-between">

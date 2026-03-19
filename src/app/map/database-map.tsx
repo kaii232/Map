@@ -197,7 +197,7 @@ const PopupContent = memo(
 
     const displayValue =
       typeof value === "number" && objKey === "length"
-        ? value.toFixed(3)
+        ? value.toFixed(0)
         : value;
 
     if (typeof displayValue === "string" && displayValue.includes("https://"))
